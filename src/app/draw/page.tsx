@@ -66,34 +66,21 @@ export default function DrawPage() {
       if (!autoAdvancePausedRef.current) setShowFingerTap(true);
     };
 
-    // 첫 라운드에만 안내 음성을 재생하고, 재추첨부터는 바로 손가락 탭으로 넘어갑니다.
+    // 재추첨(2회차 이상)은 안내 음성 없이 바로 손가락 탭으로 진행합니다.
     if (drawRound > 0) {
       const timer = setTimeout(triggerTap, 800);
       return () => clearTimeout(timer);
     }
 
+    // 첫 라운드: 안내 음성은 최선 재생만 시도하고, 손가락 탭은 재생 성공 여부와 무관하게
+    // 고정된 지연(4초) 후 확실히 나타나도록 합니다.
     const audio = readyAudioRef.current;
-    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
-    const safetyTimer = setTimeout(triggerTap, 20000);
-
-    if (!audio) {
-      return () => clearTimeout(safetyTimer);
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
     }
-
-    audio.currentTime = 0;
-    const playPromise = audio.play();
-    if (playPromise?.catch) {
-      playPromise.catch(() => {
-        fallbackTimer = setTimeout(triggerTap, 3000);
-      });
-    }
-
-    audio.addEventListener("ended", triggerTap);
-    return () => {
-      audio.removeEventListener("ended", triggerTap);
-      clearTimeout(safetyTimer);
-      if (fallbackTimer) clearTimeout(fallbackTimer);
-    };
+    const timer = setTimeout(triggerTap, 4000);
+    return () => clearTimeout(timer);
   }, [phase, drawRound]);
 
   async function handleStart() {
@@ -386,8 +373,11 @@ function FingerTap({
       className="pointer-events-none fixed z-50 select-none drop-shadow-2xl"
       style={{ left: rect.left, width: rect.width, height: rect.height }}
       initial={{ top: startTop, opacity: 0 }}
-      animate={{ top: [startTop, startTop, rect.top, rect.top - 30], opacity: [0, 1, 1, 1] }}
-      transition={{ duration: 1.1, times: [0, 0.2, 0.7, 1], ease: "easeOut" }}
+      animate={{
+        top: [startTop, startTop, rect.top, rect.top, rect.top - 40],
+        opacity: [0, 1, 1, 1, 1],
+      }}
+      transition={{ duration: 2.2, times: [0, 0.25, 0.55, 0.85, 1], ease: "easeOut" }}
       onAnimationComplete={onComplete}
       onError={(e) => {
         (e.currentTarget as HTMLImageElement).style.display = "none";

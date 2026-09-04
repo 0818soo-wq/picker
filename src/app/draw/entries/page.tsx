@@ -36,6 +36,18 @@ export default function EntriesListPage() {
     };
   }, []);
 
+  async function handleDelete(entry: Entry) {
+    const ok = window.confirm(`"${entry.department} ${entry.name}" 접수를 삭제할까요? 삭제하면 추첨 대상에서도 제외됩니다.`);
+    if (!ok) return;
+
+    const res = await fetch(`/api/admin/entries/${entry.id}`, { method: "DELETE" });
+    if (!res.ok) {
+      window.alert("삭제에 실패했습니다.");
+      return;
+    }
+    setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+  }
+
   const filtered = useMemo(() => {
     const q = query.trim();
     return entries
@@ -89,7 +101,7 @@ export default function EntriesListPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} />
+              <EntryCard key={entry.id} entry={entry} onDelete={() => handleDelete(entry)} />
             ))}
           </div>
         )}
@@ -123,7 +135,7 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
   );
 }
 
-function EntryCard({ entry }: { entry: Entry }) {
+function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div
@@ -142,11 +154,20 @@ function EntryCard({ entry }: { entry: Entry }) {
         <span className="text-[11px] text-slate-400">
           {entry.group_type === "draw" ? "지역단장" : "파트장"}
         </span>
-        {entry.is_winner && (
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-600">
-            당첨
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {entry.is_winner && (
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-600">
+              당첨
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onDelete}
+            className="rounded-full px-2 py-0.5 text-[11px] font-medium text-red-500 hover:bg-red-50"
+          >
+            삭제
+          </button>
+        </div>
       </div>
     </div>
   );
