@@ -137,7 +137,7 @@ export default function DrawPage() {
     const text =
       drawRound <= 1
         ? `당첨자는 ${resolved.department} ${resolved.name}${resolved.titleSuffix}입니다. 축하합니다!`
-        : `${resolved.name}${resolved.titleSuffix}`;
+        : `${resolved.name}${resolved.titleSuffix} 축하합니다!`;
     let audioUrl: string | null = null;
     fetch("/api/admin/speak", {
       method: "POST",
