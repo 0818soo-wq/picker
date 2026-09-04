@@ -66,21 +66,56 @@ export default function DrawPage() {
       if (!autoAdvancePausedRef.current) setShowFingerTap(true);
     };
 
-    // 재추첨(2회차 이상)은 안내 음성 없이 바로 손가락 탭으로 진행합니다.
-    if (drawRound > 0) {
-      const timer = setTimeout(triggerTap, 800);
-      return () => clearTimeout(timer);
+    if (drawRound === 0) {
+      // 첫 라운드: 안내 음성이 온전히 끝난 뒤에 손가락 탭으로 넘어갑니다 (겹침 방지).
+      const audio = readyAudioRef.current;
+      if (!audio) {
+        const timer = setTimeout(triggerTap, 500);
+        return () => clearTimeout(timer);
+      }
+
+      audio.currentTime = 0;
+      let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
+      const playPromise = audio.play();
+      if (playPromise?.catch) {
+        playPromise.catch(() => {
+          fallbackTimer = setTimeout(triggerTap, 1500);
+        });
+      }
+
+      audio.addEventListener("ended", triggerTap);
+      return () => {
+        audio.removeEventListener("ended", triggerTap);
+        if (fallbackTimer) clearTimeout(fallbackTimer);
+      };
     }
 
-    // 첫 라운드: 안내 음성은 최선 재생만 시도하고, 손가락 탭은 재생 성공 여부와 무관하게
-    // 고정된 지연(4초) 후 확실히 나타나도록 합니다.
-    const audio = readyAudioRef.current;
-    if (audio) {
-      audio.currentTime = 0;
-      audio.play().catch(() => {});
-    }
-    const timer = setTimeout(triggerTap, 4000);
-    return () => clearTimeout(timer);
+    // 재추첨(2회차 이상): "다음 추첨입니다"를 사장님 목소리로 재생한 뒤 손가락 탭으로 진행합니다.
+    let cancelled = false;
+    let audioUrl: string | null = null;
+    const fallbackTimer = setTimeout(triggerTap, 3000);
+
+    fetch("/api/admin/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: "다음 추첨입니다." }),
+    })
+      .then((res) => (res.ok ? res.blob() : null))
+      .then((blob) => {
+        if (cancelled || !blob) return;
+        clearTimeout(fallbackTimer);
+        audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        audio.addEventListener("ended", triggerTap);
+        audio.play().catch(triggerTap);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      clearTimeout(fallbackTimer);
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+    };
   }, [phase, drawRound]);
 
   async function handleStart() {
@@ -121,6 +156,10 @@ export default function DrawPage() {
   function handleNextRound() {
     setPhase("ready");
     setWinner(null);
+  }
+
+  function handleReplayIntro() {
+    setPhase("landing");
   }
 
   useEffect(() => {
@@ -307,6 +346,10 @@ export default function DrawPage() {
           <span>·</span>
           <button type="button" onClick={handleReset} className="hover:text-slate-500">
             초기화
+          </button>
+          <span>·</span>
+          <button type="button" onClick={handleReplayIntro} className="hover:text-slate-500">
+            사장님 추첨시작
           </button>
           <span>·</span>
           <button type="button" onClick={handleLogout} className="hover:text-slate-500">

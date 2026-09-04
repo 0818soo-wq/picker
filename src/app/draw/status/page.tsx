@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ATTENDEES } from "@/lib/attendees";
+import { ATTENDEES, classifyAttendeeGroup, type Attendee } from "@/lib/attendees";
 import { stripLeaderTitle } from "@/lib/format";
 
 type Entry = {
@@ -39,13 +39,13 @@ export default function StatusPage() {
   );
 
   const attendees = useMemo(() => ATTENDEES.filter((a) => a.attending), []);
-  const submittedCount = attendees.filter((a) => submittedNames.has(a.name)).length;
-  const pendingList = attendees.filter((a) => !submittedNames.has(a.name));
-  const total = attendees.length;
-  const rate = total > 0 ? Math.round((submittedCount / total) * 100) : 0;
-
-  const filteredPending = pendingList.filter(
-    (a) => !query.trim() || a.name.includes(query) || a.department.includes(query) || a.title.includes(query)
+  const regionAttendees = useMemo(
+    () => attendees.filter((a) => classifyAttendeeGroup(a) === "region"),
+    [attendees]
+  );
+  const hqAttendees = useMemo(
+    () => attendees.filter((a) => classifyAttendeeGroup(a) === "hq"),
+    [attendees]
   );
 
   return (
@@ -59,59 +59,95 @@ export default function StatusPage() {
           <p className="mt-1 text-sm text-slate-500">{REFRESH_INTERVAL_MS / 1000}초마다 자동으로 갱신됩니다.</p>
         </div>
 
-        <div className="mb-6 grid grid-cols-3 gap-3">
-          <DashboardStat label="참석 예정" value={total} />
-          <DashboardStat label="제출 완료" value={submittedCount} />
-          <DashboardStat label="미제출" value={total - submittedCount} />
-        </div>
-
-        <div className="mb-2 h-3 w-full overflow-hidden rounded-full bg-slate-200">
-          <div
-            className="h-full bg-[#13294b] transition-all duration-500"
-            style={{ width: `${rate}%` }}
-          />
-        </div>
-        <p className="mb-6 text-right text-sm text-slate-500">제출률 {rate}%</p>
-
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="이름 / 소속 / 직책 검색"
-          className="mb-4 w-full max-w-xs rounded-full border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none focus:border-[#13294b]"
+          className="mb-8 w-full max-w-xs rounded-full border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none focus:border-[#13294b]"
         />
 
         {loading ? (
           <p className="text-sm text-slate-500">불러오는 중...</p>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-            <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
-              미제출 명단 ({filteredPending.length}명)
-            </div>
-            <ul className="divide-y divide-slate-100">
-              {filteredPending.map((a, i) => (
-                <li
-                  key={`${a.name}-${i}`}
-                  className="flex items-center justify-between px-4 py-2 text-sm"
-                >
-                  <span className="text-slate-800">
-                    {a.department} {a.title} {a.name}
-                  </span>
-                  <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
-                    미제출
-                  </span>
-                </li>
-              ))}
-              {filteredPending.length === 0 && (
-                <li className="px-4 py-6 text-center text-sm text-slate-400">
-                  검색 결과가 없거나 전원 제출 완료했습니다.
-                </li>
-              )}
-            </ul>
+          <div className="flex flex-col gap-10">
+            <GroupSection
+              title="지역단 (추첨 대상)"
+              attendees={regionAttendees}
+              submittedNames={submittedNames}
+              query={query}
+            />
+            <GroupSection
+              title="본사 스텝"
+              attendees={hqAttendees}
+              submittedNames={submittedNames}
+              query={query}
+            />
           </div>
         )}
       </div>
     </main>
+  );
+}
+
+function GroupSection({
+  title,
+  attendees,
+  submittedNames,
+  query,
+}: {
+  title: string;
+  attendees: Attendee[];
+  submittedNames: Set<string>;
+  query: string;
+}) {
+  const total = attendees.length;
+  const submittedCount = attendees.filter((a) => submittedNames.has(a.name)).length;
+  const pendingList = attendees.filter((a) => !submittedNames.has(a.name));
+  const rate = total > 0 ? Math.round((submittedCount / total) * 100) : 0;
+
+  const filteredPending = pendingList.filter(
+    (a) => !query.trim() || a.name.includes(query) || a.department.includes(query) || a.title.includes(query)
+  );
+
+  return (
+    <section>
+      <h2 className="mb-3 text-lg font-bold text-slate-900">{title}</h2>
+
+      <div className="mb-4 grid grid-cols-3 gap-3">
+        <DashboardStat label="참석 예정" value={total} />
+        <DashboardStat label="제출 완료" value={submittedCount} />
+        <DashboardStat label="미제출" value={total - submittedCount} />
+      </div>
+
+      <div className="mb-2 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+        <div className="h-full bg-[#13294b] transition-all duration-500" style={{ width: `${rate}%` }} />
+      </div>
+      <p className="mb-4 text-right text-sm text-slate-500">제출률 {rate}%</p>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
+          미제출 명단 ({filteredPending.length}명)
+        </div>
+        <ul className="divide-y divide-slate-100">
+          {filteredPending.map((a, i) => (
+            <li key={`${a.name}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm">
+              <span className="text-slate-800">
+                {a.department} {a.title} {a.name}
+              </span>
+              <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
+                미제출
+              </span>
+            </li>
+          ))}
+          {filteredPending.length === 0 && (
+            <li className="px-4 py-6 text-center text-sm text-slate-400">
+              검색 결과가 없거나 전원 제출 완료했습니다.
+            </li>
+          )}
+        </ul>
+      </div>
+    </section>
   );
 }
 

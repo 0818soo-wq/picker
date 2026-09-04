@@ -28,13 +28,15 @@ export function resolveWinnerDisplay(rawName: string, rawDepartment: string): Re
   const name = stripLeaderTitle(rawName);
   const department = rawDepartment.trim();
   const record = findAttendeeByName(name);
+  const alreadyHasSuffix = hasDepartmentSuffix(department);
 
   if (!record) {
-    return { department, name, titleSuffix: "단장님" };
+    // 명단에서 못 찾은 경우, 소속에 접미사가 없으면 지역단 추첨 기본값으로 보정합니다.
+    const fallbackDepartment = !alreadyHasSuffix && department ? `${department}지역단` : department;
+    return { department: fallbackDepartment, name, titleSuffix: "단장님" };
   }
 
-  const resolvedDepartment =
-    department && hasDepartmentSuffix(department) ? department : record.department || department;
+  const resolvedDepartment = alreadyHasSuffix ? department : record.department || department;
 
   return {
     department: resolvedDepartment,

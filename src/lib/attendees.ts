@@ -314,3 +314,12 @@ export function findAttendeeByName(name: string): Attendee | undefined {
 export function titleSuffixFor(title: string): "단장님" | "파트장님" {
   return PART_LEADER_TITLES.has(title) ? "파트장님" : "단장님";
 }
+
+const REGION_DEPARTMENT_SUFFIXES = ["지역단", "영업단", "사업단", "FP센터"];
+
+// 지역단/영업단/사업단/FP센터 소속(지역 조직)과 그 외 본사 스텝을 구분합니다.
+export function classifyAttendeeGroup(attendee: Attendee): "region" | "hq" {
+  return REGION_DEPARTMENT_SUFFIXES.some((suffix) => attendee.department.endsWith(suffix))
+    ? "region"
+    : "hq";
+}

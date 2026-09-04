@@ -15,7 +15,9 @@ const ITEM_WIDTH = 210;
 const ITEM_HEIGHT = 300;
 const ITEM_GAP = 16;
 const SLOT_STEP = ITEM_WIDTH + ITEM_GAP;
-const SPIN_ITEM_COUNT = 28;
+// 당첨 카드가 배열의 맨 끝이 아니라 릴 중간쯤에서 멈추도록, 앞/뒤에 카드가 남도록 구성합니다.
+const LEAD_COUNT = 24;
+const TRAIL_COUNT = 6;
 
 const BADGE_TEXT = "CSM전략회의 소통의 장 1";
 
@@ -26,6 +28,20 @@ function shuffle<T>(items: T[]): T[] {
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
+}
+
+// base 배열만으로 length개를 채우되, 배치 경계에서 같은 카드가 연속으로 나오지 않도록 합니다.
+function buildFillerSequence(base: ReelEntry[], length: number): ReelEntry[] {
+  if (base.length === 0) return [];
+  const result: ReelEntry[] = [];
+  while (result.length < length) {
+    const batch = shuffle(base);
+    if (batch.length > 1 && result.length > 0 && batch[0].id === result[result.length - 1].id) {
+      [batch[0], batch[1]] = [batch[1], batch[0]];
+    }
+    result.push(...batch);
+  }
+  return result.slice(0, length);
 }
 
 export default function SlotReel({
@@ -44,14 +60,18 @@ export default function SlotReel({
   const reelItems = useMemo<ReelEntry[]>(() => {
     const sourcePool = pool.filter((item) => item.id !== winner.id);
     const base = sourcePool.length > 0 ? sourcePool : [winner];
-    const filler: ReelEntry[] = [];
-    while (filler.length < SPIN_ITEM_COUNT) {
-      filler.push(...shuffle(base));
-    }
-    return [...filler.slice(0, SPIN_ITEM_COUNT), winner];
+    const totalFillerNeeded = LEAD_COUNT + TRAIL_COUNT;
+
+    // 후보가 충분하면 중복 없이 무작위로 뽑고, 부족할 때만 최소한으로 반복합니다.
+    const filler =
+      base.length >= totalFillerNeeded
+        ? shuffle(base).slice(0, totalFillerNeeded)
+        : buildFillerSequence(base, totalFillerNeeded);
+
+    return [...filler.slice(0, LEAD_COUNT), winner, ...filler.slice(LEAD_COUNT, totalFillerNeeded)];
   }, [pool, winner]);
 
-  const winnerIndex = reelItems.length - 1;
+  const winnerIndex = LEAD_COUNT;
 
   useEffect(() => {
     const el = containerRef.current;
