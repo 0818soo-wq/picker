@@ -184,9 +184,9 @@ export default function DrawPage() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="text-xs text-slate-400 hover:text-slate-600"
+                className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-800"
               >
-                당첨 기록 초기화 (리허설용)
+                초기화
               </button>
             </div>
           )}
