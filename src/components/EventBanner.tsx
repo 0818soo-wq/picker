@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const EVENT_BADGE = "'26.하 CSM전략회의 이벤트 Agent";
 const EVENT_TITLE_LINE1 = "우리 조직의 새로운 축,";
 const EVENT_TITLE_PREFIX = "어떠한 ";
@@ -23,12 +25,36 @@ export default function EventBanner({
   subtitleLine1?: string;
   subtitleLine2?: string;
 }) {
+  // 커스텀 문구 없이 기본 문구 그대로 쓰는 경우(대기/추첨 화면, 접수 화면)는
+  // 원본 디자인 사진을 그대로 사용해 원본과 동일하게 보여줍니다.
+  const isDefault = badge === EVENT_BADGE && titleLine1 === EVENT_TITLE_LINE1;
+
+  if (isDefault) {
+    return (
+      <Image
+        src="/images/event-banner.jpg"
+        alt=""
+        width={1086}
+        height={599}
+        priority
+        className="block h-auto w-full"
+      />
+    );
+  }
+
   return (
     <div
       className="relative isolate overflow-hidden px-6 py-10 sm:px-10 sm:py-12"
       style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
     >
-      <MountainBackdrop />
+      <Image
+        src="/images/event-banner-mountain.jpg"
+        alt=""
+        aria-hidden="true"
+        width={1086}
+        height={169}
+        className="absolute inset-x-0 bottom-0 h-2/3 w-full object-cover opacity-90"
+      />
       <LightBeam className="absolute right-10 top-0 h-full w-1.5 sm:right-16" />
       <CompassIcon className="absolute left-2 top-1/2 hidden h-24 w-24 -translate-y-1/2 text-slate-700/60 sm:left-4 sm:block sm:h-28 sm:w-28" />
 
