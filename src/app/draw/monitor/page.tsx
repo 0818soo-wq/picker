@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { MountainBackdrop } from "@/components/EventBanner";
 import { resolveWinnerDisplay } from "@/lib/format";
@@ -60,13 +60,57 @@ export default function MonitorPage() {
     return counts;
   }, [winners]);
 
-  function handleAnnounceWinner(w: Entry) {
+  // 당첨자별 축하 음성을 미리 받아둡니다. 클릭 시점에 바로 fetch부터 하면
+  // 재생이 사용자 클릭과 비동기로 분리되어 일부 브라우저(사파리 등)의
+  // 자동재생 정책에 막힐 수 있어, 당첨자가 뜨는 즉시 미리 준비해둡니다.
+  const announceCacheRef = useRef<Map<string, { url: string; audio: HTMLAudioElement }>>(new Map());
+
+  const announceTextFor = useCallback((w: Entry) => {
     const resolved = resolveWinnerDisplay(w.name, w.department);
-    const text = `축하합니다 ${resolved.department} ${resolved.name}${resolved.titleSuffix}!`;
+    return `축하합니다 ${resolved.department} ${resolved.name}${resolved.titleSuffix}!`;
+  }, []);
+
+  useEffect(() => {
+    const cache = announceCacheRef.current;
+    for (const w of winners) {
+      if (cache.has(w.id)) continue;
+      fetch("/api/admin/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: announceTextFor(w) }),
+      })
+        .then((res) => (res.ok ? res.blob() : null))
+        .then((blob) => {
+          if (!blob || cache.has(w.id)) return;
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.preload = "auto";
+          cache.set(w.id, { url, audio });
+        })
+        .catch(() => {});
+    }
+  }, [winners, announceTextFor]);
+
+  useEffect(() => {
+    const cache = announceCacheRef.current;
+    return () => {
+      cache.forEach(({ url }) => URL.revokeObjectURL(url));
+      cache.clear();
+    };
+  }, []);
+
+  function handleAnnounceWinner(w: Entry) {
+    const prepared = announceCacheRef.current.get(w.id);
+    if (prepared) {
+      prepared.audio.currentTime = 0;
+      prepared.audio.play().catch(() => {});
+      return;
+    }
+    // 폴백: 아직 준비되지 않았다면 그 자리에서 요청해 재생합니다.
     fetch("/api/admin/speak", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text: announceTextFor(w) }),
     })
       .then((res) => (res.ok ? res.blob() : null))
       .then((blob) => {
