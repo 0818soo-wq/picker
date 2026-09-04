@@ -212,7 +212,7 @@ export default function DrawPage() {
       <div className="pointer-events-none absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
 
-      {phase !== "cover" && phase !== "landing" && (
+      {(phase === "ready" || phase === "spin") && (
         <motion.button
           type="button"
           onClick={handleReset}
