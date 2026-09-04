@@ -102,7 +102,8 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
               label={labels.name}
               value={name}
               onChange={setName}
-              placeholder="이름"
+              placeholder="예: 홍길동"
+              hint="직책 없이 이름만 입력하세요"
             />
           </div>
 
@@ -128,11 +129,13 @@ function UnderlineField({
   value,
   onChange,
   placeholder,
+  hint,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  hint?: string;
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
@@ -146,6 +149,7 @@ function UnderlineField({
         placeholder={placeholder}
         className="border-b-2 border-slate-300 bg-transparent px-1 py-2 text-base text-slate-900 outline-none focus:border-[#13294b]"
       />
+      {hint && <span className="text-xs font-normal text-slate-400">{hint}</span>}
     </label>
   );
 }

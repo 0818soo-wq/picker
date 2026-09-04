@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import EventBanner from "@/components/EventBanner";
 import SlotReel, { type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet from "@/components/WinnerSheet";
+import { stripLeaderTitle } from "@/lib/format";
 
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "landing" | "ready" | "spin" | "reveal";
@@ -27,6 +28,7 @@ export default function DrawPage() {
   const introRef = useRef<HTMLVideoElement>(null);
   const winRef = useRef<HTMLVideoElement>(null);
   const readyAudioRef = useRef<HTMLAudioElement>(null);
+  const startButtonRef = useRef<HTMLButtonElement>(null);
   const autoAdvancePausedRef = useRef(autoAdvancePaused);
 
   useEffect(() => {
@@ -142,7 +144,7 @@ export default function DrawPage() {
       video.play().catch(() => {});
     }
 
-    const text = `당첨자는 ${winner.department} ${winner.name}단장입니다. 축하합니다!`;
+    const text = `당첨자는 ${winner.department} ${stripLeaderTitle(winner.name)}단장입니다. 축하합니다!`;
     let audioUrl: string | null = null;
     fetch("/api/admin/speak", {
       method: "POST",
@@ -214,6 +216,7 @@ export default function DrawPage() {
 
                 <div className="relative">
                   <motion.button
+                    ref={startButtonRef}
                     type="button"
                     onClick={handleStart}
                     disabled={starting || entriesLoading || remaining.length === 0}
@@ -233,6 +236,7 @@ export default function DrawPage() {
 
                   {showFingerTap && (
                     <FingerTap
+                      targetRef={startButtonRef}
                       onComplete={() => {
                         setShowFingerTap(false);
                         handleStart();
@@ -326,32 +330,58 @@ export default function DrawPage() {
   );
 }
 
-// finger.png(1056x1489) 기준 손끝 좌표는 이미지 내 (37%, 2%) 지점 — 180도 회전 후에는
-// 박스 내 (63%, 98%) 지점이 되며, 이 지점이 버튼 중앙에 닿도록 위치를 계산했습니다.
-const FINGER_BOX_WIDTH = 135;
-const FINGER_BOX_HEIGHT = 190;
-const FINGER_BOX_LEFT = 43;
-const FINGER_BOX_TOP = -154;
+// finger.png(1056x1489)의 손끝(검지 끝) 좌표는 이미지 내 (37%, 2%) 지점입니다.
+// 화면 아래에서 손이 올라와 이 지점이 버튼 중앙에 닿도록 위치를 계산합니다.
+const FINGER_ASPECT = 1056 / 1489;
+const FINGERTIP_X_FRAC = 0.37;
+const FINGERTIP_Y_FRAC = 0.02;
 
-function FingerTap({ onComplete }: { onComplete: () => void }) {
+function FingerTap({
+  targetRef,
+  onComplete,
+}: {
+  targetRef: React.RefObject<HTMLButtonElement | null>;
+  onComplete: () => void;
+}) {
+  const [rect, setRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    const el = targetRef.current;
+    if (!el || typeof window === "undefined") {
+      onComplete();
+      return;
+    }
+
+    const targetBox = el.getBoundingClientRect();
+    const targetX = targetBox.left + targetBox.width / 2;
+    const targetY = targetBox.top + targetBox.height / 2;
+
+    const height = window.innerHeight * 0.6;
+    const width = height * FINGER_ASPECT;
+    const left = targetX - width * FINGERTIP_X_FRAC;
+    const restTop = targetY - height * FINGERTIP_Y_FRAC;
+
+    setRect({ left, top: restTop, width, height });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- targetRef.current, onComplete는 마운트 시 1회만 측정하면 됩니다.
+  }, []);
+
+  if (!rect) return null;
+
+  const startTop = window.innerHeight + 60;
+
   return (
-    <motion.div
-      className="pointer-events-none absolute select-none"
-      style={{ left: FINGER_BOX_LEFT, top: FINGER_BOX_TOP, width: FINGER_BOX_WIDTH, height: FINGER_BOX_HEIGHT }}
-      initial={{ opacity: 0, y: -50 }}
-      animate={{ opacity: [0, 1, 1, 1], y: [-50, -50, 0, -20] }}
-      transition={{ duration: 1, times: [0, 0.25, 0.6, 1], ease: "easeOut" }}
+    <motion.img
+      src="/images/finger.png"
+      alt=""
+      className="pointer-events-none fixed z-50 select-none drop-shadow-2xl"
+      style={{ left: rect.left, width: rect.width, height: rect.height }}
+      initial={{ top: startTop, opacity: 0 }}
+      animate={{ top: [startTop, startTop, rect.top, rect.top - 30], opacity: [0, 1, 1, 1] }}
+      transition={{ duration: 1.1, times: [0, 0.2, 0.7, 1], ease: "easeOut" }}
       onAnimationComplete={onComplete}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/images/finger.png"
-        alt=""
-        className="h-full w-full rotate-180 drop-shadow-xl"
-        onError={(e) => {
-          (e.currentTarget as HTMLImageElement).style.display = "none";
-        }}
-      />
-    </motion.div>
+      onError={(e) => {
+        (e.currentTarget as HTMLImageElement).style.display = "none";
+      }}
+    />
   );
 }
