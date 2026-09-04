@@ -77,6 +77,10 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
         <EventBanner />
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
+          <p className="-mb-4 text-xs text-slate-400">
+            나의 부서를 위한 마음을 담아 정성들여서 써주세요.
+          </p>
+
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value.slice(0, MAX_CONTENT_LENGTH))}
