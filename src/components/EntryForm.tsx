@@ -10,7 +10,13 @@ const CONTENT_ROWS = 9;
 const MAX_CONTENT_LENGTH = 2000;
 const MAX_FIELD_LENGTH = 100;
 
+const FIELD_LABELS: Record<GroupType, { department: string; name: string; departmentPlaceholder: string }> = {
+  draw: { department: "지역단", name: "지역단장", departmentPlaceholder: "예: OO지역단" },
+  no_draw: { department: "파트", name: "파트장", departmentPlaceholder: "예: OO파트" },
+};
+
 export default function EntryForm({ groupType }: { groupType: GroupType }) {
+  const labels = FIELD_LABELS[groupType];
   const [department, setDepartment] = useState("");
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
@@ -87,13 +93,13 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <UnderlineField
-              label="지역단/파트"
+              label={labels.department}
               value={department}
               onChange={setDepartment}
-              placeholder="예: OO지역단"
+              placeholder={labels.departmentPlaceholder}
             />
             <UnderlineField
-              label="지역단장/파트장"
+              label={labels.name}
               value={name}
               onChange={setName}
               placeholder="이름"

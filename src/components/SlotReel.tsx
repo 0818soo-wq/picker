@@ -144,13 +144,13 @@ function MiniPaperCard({ item }: { item: ReelEntry }) {
 
         <div className="mt-2 flex shrink-0 gap-2 border-t border-slate-200 pt-1.5">
           <div className="min-w-0 flex-1">
-            <p className="text-[7px] text-slate-400">지역단/파트</p>
+            <p className="text-[7px] text-slate-400">지역단</p>
             <p className="truncate border-b border-slate-300 pb-0.5 text-[10px] font-semibold text-slate-800">
               {item.department}
             </p>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[7px] text-slate-400">지역단장/파트장</p>
+            <p className="text-[7px] text-slate-400">지역단장</p>
             <p className="truncate border-b border-slate-300 pb-0.5 text-[10px] font-semibold text-slate-800">
               {item.name}
             </p>
