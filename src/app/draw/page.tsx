@@ -366,9 +366,11 @@ export default function DrawPage() {
             로그아웃
           </button>
         </div>
-        <button type="button" onClick={handleBackToMain} className="text-xs text-slate-300 hover:text-slate-500">
-          메인화면가기
-        </button>
+        {phase !== "ready" && (
+          <button type="button" onClick={handleBackToMain} className="text-xs text-slate-300 hover:text-slate-500">
+            메인화면가기
+          </button>
+        )}
       </div>
       )}
     </main>
