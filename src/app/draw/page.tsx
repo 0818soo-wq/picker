@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import EventBanner from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
@@ -12,7 +10,6 @@ type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "
 type Phase = "landing" | "ready" | "spin" | "reveal";
 
 export default function DrawPage() {
-  const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [phase, setPhase] = useState<Phase>("ready");
@@ -22,8 +19,6 @@ export default function DrawPage() {
   const [drawCount, setDrawCount] = useState(1);
   const [starting, setStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [autoAdvancePaused, setAutoAdvancePaused] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const introRef = useRef<HTMLVideoElement>(null);
   const winRef = useRef<HTMLVideoElement>(null);
@@ -53,12 +48,12 @@ export default function DrawPage() {
   }
 
   useEffect(() => {
-    if (phase !== "landing" || autoAdvancePaused) return;
+    if (phase !== "landing") return;
     const video = introRef.current;
     if (!video) return;
     video.currentTime = 0;
     video.play().catch(() => {});
-  }, [phase, autoAdvancePaused]);
+  }, [phase]);
 
   async function handleStart() {
     if (starting || remaining.length === 0) return;
@@ -129,17 +124,6 @@ export default function DrawPage() {
     }
   }, [phase, roundWinners, fetchEntries]);
 
-  async function handleReset() {
-    if (!window.confirm("모든 당첨 기록을 초기화할까요? 리허설/테스트 용도로만 사용하세요.")) return;
-    await fetch("/api/admin/reset", { method: "POST" });
-    await fetchEntries();
-  }
-
-  async function handleLogout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin-login");
-  }
-
   return (
     <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
       {phase === "landing" && (
@@ -164,6 +148,18 @@ export default function DrawPage() {
             className="absolute bottom-6 right-6 z-10 rounded-full bg-black/40 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-black/60"
           >
             스킵
+          </button>
+        </div>
+      )}
+
+      {phase !== "landing" && (
+        <div
+          className={`mb-2 flex w-full justify-end ${
+            phase === "spin" && isMultiDraw ? "max-w-6xl" : phase === "reveal" && isMultiDraw ? "max-w-5xl" : "max-w-3xl"
+          }`}
+        >
+          <button type="button" onClick={handleShowIntro} className="text-xs text-slate-400 hover:text-slate-600">
+            추첨하기
           </button>
         </div>
       )}
@@ -307,57 +303,9 @@ export default function DrawPage() {
           지역단장 접수 {drawGroup.length} · 추첨 대상 {remaining.length} · 당첨자 {winners.length} · 본사 파트장 접수{" "}
           {staffGroup.length}
         </span>
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex items-center gap-3 text-xs text-slate-300">
-            <button type="button" onClick={handleBackToMain} className="hover:text-slate-500">
-              메인화면가기
-            </button>
-            <span>·</span>
-            <button type="button" onClick={handleShowIntro} className="text-slate-500 hover:text-slate-700">
-              사장님 추첨하기
-            </button>
-            <span>·</span>
-            <button
-              type="button"
-              onClick={() => setShowMoreMenu((v) => !v)}
-              className="hover:text-slate-500"
-            >
-              {showMoreMenu ? "접기" : "더보기"}
-            </button>
-          </div>
-
-          {showMoreMenu && (
-            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
-              <button
-                type="button"
-                onClick={() => setAutoAdvancePaused((v) => !v)}
-                className="hover:text-slate-500"
-              >
-                {autoAdvancePaused ? "자동진행 재개" : "자동진행중지"}
-              </button>
-              <span>·</span>
-              <button type="button" onClick={handleReset} className="hover:text-slate-500">
-                초기화
-              </button>
-              <span>·</span>
-              <Link href="/draw/status" className="hover:text-slate-500">
-                참여자 현황
-              </Link>
-              <span>·</span>
-              <Link href="/draw/entries" className="hover:text-slate-500">
-                접수 목록 보기
-              </Link>
-              <span>·</span>
-              <Link href="/draw/monitor" className="hover:text-slate-500">
-                실시간 현황(무음)
-              </Link>
-              <span>·</span>
-              <button type="button" onClick={handleLogout} className="hover:text-slate-500">
-                로그아웃
-              </button>
-            </div>
-          )}
-        </div>
+        <button type="button" onClick={handleBackToMain} className="text-xs text-slate-300 hover:text-slate-500">
+          메인화면가기
+        </button>
       </div>
     </main>
   );
