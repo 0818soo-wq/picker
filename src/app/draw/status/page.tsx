@@ -102,13 +102,15 @@ function GroupSection({
   query: string;
 }) {
   const total = attendees.length;
-  const submittedCount = attendees.filter((a) => submittedNames.has(a.name)).length;
+  const submittedList = attendees.filter((a) => submittedNames.has(a.name));
   const pendingList = attendees.filter((a) => !submittedNames.has(a.name));
+  const submittedCount = submittedList.length;
   const rate = total > 0 ? Math.round((submittedCount / total) * 100) : 0;
 
-  const filteredPending = pendingList.filter(
-    (a) => !query.trim() || a.name.includes(query) || a.department.includes(query) || a.title.includes(query)
-  );
+  const matchesQuery = (a: Attendee) =>
+    !query.trim() || a.name.includes(query) || a.department.includes(query) || a.title.includes(query);
+  const filteredSubmitted = submittedList.filter(matchesQuery);
+  const filteredPending = pendingList.filter(matchesQuery);
 
   return (
     <section>
@@ -125,11 +127,34 @@ function GroupSection({
       </div>
       <p className="mb-4 text-right text-sm text-slate-500">제출률 {rate}%</p>
 
+      <div className="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
+          제출 명단 ({filteredSubmitted.length}명)
+        </div>
+        <ul className="max-h-[40vh] divide-y divide-slate-100 overflow-y-auto">
+          {filteredSubmitted.map((a, i) => (
+            <li key={`${a.name}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm">
+              <span className="text-slate-800">
+                {a.department} {a.title} {a.name}
+              </span>
+              <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-600">
+                제출
+              </span>
+            </li>
+          ))}
+          {filteredSubmitted.length === 0 && (
+            <li className="px-4 py-6 text-center text-sm text-slate-400">
+              검색 결과가 없거나 아직 제출한 인원이 없습니다.
+            </li>
+          )}
+        </ul>
+      </div>
+
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
           미제출 명단 ({filteredPending.length}명)
         </div>
-        <ul className="max-h-[60vh] divide-y divide-slate-100 overflow-y-auto">
+        <ul className="max-h-[40vh] divide-y divide-slate-100 overflow-y-auto">
           {filteredPending.map((a, i) => (
             <li key={`${a.name}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm">
               <span className="text-slate-800">
