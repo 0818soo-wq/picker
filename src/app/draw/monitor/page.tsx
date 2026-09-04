@@ -49,8 +49,24 @@ export default function MonitorPage() {
   );
   const remaining = drawGroup.length - winners.length;
 
+  function handleAnnounceWinner(w: Entry) {
+    const resolved = resolveWinnerDisplay(w.name, w.department);
+    const text = `축하합니다 ${resolved.department} ${resolved.name}${resolved.titleSuffix}!`;
+    fetch("/api/admin/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    })
+      .then((res) => (res.ok ? res.blob() : null))
+      .then((blob) => {
+        if (!blob) return;
+        new Audio(URL.createObjectURL(blob)).play().catch(() => {});
+      })
+      .catch(() => {});
+  }
+
   return (
-    <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
+    <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="w-full max-w-3xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -80,9 +96,9 @@ export default function MonitorPage() {
               <Stat label="본사 파트장 접수" value={staffGroup.length} />
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
-                당첨자 목록 ({winners.length}명)
+            <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+              <div className="px-4 py-2 text-sm font-medium text-slate-500">
+                당첨자 목록 ({winners.length}명) · 이름을 누르면 사장님 목소리로 축하 인사를 들려드려요
               </div>
               <ul className="divide-y divide-slate-100">
                 {winners.map((w, i) => {
@@ -91,7 +107,10 @@ export default function MonitorPage() {
                     <li key={w.id}>
                       <button
                         type="button"
-                        onClick={() => setSelectedWinner(w)}
+                        onClick={() => {
+                          setSelectedWinner(w);
+                          handleAnnounceWinner(w);
+                        }}
                         className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-slate-50"
                       >
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#13294b] text-xs font-bold text-white">
@@ -155,7 +174,7 @@ export default function MonitorPage() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl border border-slate-200 bg-white py-4 shadow-sm">
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-white py-4 shadow-sm">
       <span className="text-2xl font-bold text-slate-900">{value}</span>
       <span className="text-xs text-slate-500">{label}</span>
     </div>

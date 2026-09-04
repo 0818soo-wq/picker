@@ -49,7 +49,7 @@ export default function StatusPage() {
   );
 
   return (
-    <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
+    <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="w-full max-w-6xl">
         <div className="mb-6">
           <Link href="/draw#main" className="text-sm text-slate-500 hover:text-slate-700">
@@ -64,7 +64,7 @@ export default function StatusPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="이름 / 소속 / 직책 검색"
-          className="mb-8 w-full max-w-xs rounded-full border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none focus:border-[#13294b]"
+          className="mb-8 w-full max-w-xs rounded-full border-0 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900"
         />
 
         {loading ? (
@@ -127,8 +127,8 @@ function GroupSection({
       </div>
       <p className="mb-4 text-right text-sm text-slate-500">제출률 {rate}%</p>
 
-      <div className="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
+      <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-sm">
+        <div className="px-4 py-2 text-sm font-medium text-slate-500">
           제출 명단 ({filteredSubmitted.length}명)
         </div>
         <ul className="max-h-[40vh] divide-y divide-slate-100 overflow-y-auto">
@@ -150,8 +150,8 @@ function GroupSection({
         </ul>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+        <div className="px-4 py-2 text-sm font-medium text-slate-500">
           미제출 명단 ({filteredPending.length}명)
         </div>
         <ul className="max-h-[40vh] divide-y divide-slate-100 overflow-y-auto">

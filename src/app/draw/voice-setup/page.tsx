@@ -45,7 +45,7 @@ export default function VoiceSetupPage() {
       : null;
 
   return (
-    <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
+    <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="w-full max-w-xl">
         <Link href="/draw" className="text-sm text-slate-500 hover:text-slate-700">
           ← 추첨 화면으로
@@ -55,7 +55,7 @@ export default function VoiceSetupPage() {
           음성 샘플(mp3/wav, 25MB 이하)을 올리면 API에서 바로 사용 가능한 커스텀 보이스를 생성합니다.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 rounded-2xl bg-white p-6 shadow-sm">
           <label className="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
             보이스 이름
             <input
@@ -64,7 +64,7 @@ export default function VoiceSetupPage() {
               onChange={(e) => setName(e.target.value)}
               maxLength={30}
               required
-              className="rounded-lg border border-slate-300 px-3 py-2 text-base text-slate-900 outline-none focus:border-[#13294b]"
+              className="rounded-xl border-0 px-3 py-2 text-base text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900"
             />
           </label>
 
@@ -75,7 +75,7 @@ export default function VoiceSetupPage() {
               accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav"
               required
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none"
+              className="rounded-xl border-0 px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-slate-200"
             />
           </label>
 

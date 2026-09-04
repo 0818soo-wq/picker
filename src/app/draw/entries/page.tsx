@@ -62,7 +62,7 @@ export default function EntriesListPage() {
   const remainingCount = drawCount - winnerCount;
 
   return (
-    <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
+    <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="w-full max-w-5xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -77,7 +77,7 @@ export default function EntriesListPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="소속 또는 이름 검색"
-            className="w-full max-w-xs rounded-full border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none focus:border-[#13294b] sm:w-64"
+            className="w-full max-w-xs rounded-full border-0 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 sm:w-64"
           />
         </div>
 
@@ -113,7 +113,7 @@ export default function EntriesListPage() {
 
 function DashboardStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl border border-slate-200 bg-white py-4 shadow-sm">
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-white py-4 shadow-sm">
       <span className="text-2xl font-bold text-slate-900">{value}</span>
       <span className="text-xs text-slate-500">{label}</span>
     </div>
@@ -125,10 +125,8 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-        active
-          ? "bg-[#13294b] text-white"
-          : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+      className={`rounded-full px-4 py-1.5 text-sm font-medium shadow-sm transition-colors ${
+        active ? "bg-[#13294b] text-white" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
       }`}
     >
       {label}
@@ -140,7 +138,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
   const suspicious = isSuspiciousEntry(entry.content);
 
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
       {suspicious && (
         <span
           title="장난 또는 잘못된 접수로 의심됩니다. 내용을 확인해 주세요."

@@ -19,6 +19,17 @@
   font-family: "Paperlogy", var(--font-geist-sans), sans-serif;
 }
 
+@font-face {
+  font-family: "BMJUA";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/BMJUA/BMJUA.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+.font-cute {
+  font-family: "BMJUA", "Pretendard", sans-serif;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

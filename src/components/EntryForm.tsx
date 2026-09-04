@@ -63,7 +63,7 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
 
   if (status === "success") {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-slate-100 px-6 py-24 text-center">
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#f5f5f7] px-6 py-24 text-center">
         <div className="text-5xl">✅</div>
         <h1 className="text-2xl font-bold text-slate-900">접수가 잘 되었습니다.</h1>
         <p className="text-slate-600">CSM을 위한 축의 전환을 이뤄내시길 기원합니다!</p>
@@ -72,7 +72,7 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
+    <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-xl">
         <EventBanner />
 
