@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import EventBanner from "@/components/EventBanner";
 import SlotReel, { type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet from "@/components/WinnerSheet";
-import { stripLeaderTitle } from "@/lib/format";
+import { resolveWinnerDisplay } from "@/lib/format";
 
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "landing" | "ready" | "spin" | "reveal";
@@ -144,7 +144,8 @@ export default function DrawPage() {
       video.play().catch(() => {});
     }
 
-    const text = `당첨자는 ${winner.department} ${stripLeaderTitle(winner.name)}단장입니다. 축하합니다!`;
+    const resolved = resolveWinnerDisplay(winner.name, winner.department);
+    const text = `당첨자는 ${resolved.department} ${resolved.name}${resolved.titleSuffix}입니다. 축하합니다!`;
     let audioUrl: string | null = null;
     fetch("/api/admin/speak", {
       method: "POST",
@@ -306,6 +307,10 @@ export default function DrawPage() {
         <div className="flex items-center gap-3 text-xs text-slate-300">
           <Link href="/draw/entries" className="hover:text-slate-500">
             접수 목록 보기
+          </Link>
+          <span>·</span>
+          <Link href="/draw/status" className="hover:text-slate-500">
+            참여자 현황
           </Link>
           <span>·</span>
           <button type="button" onClick={handleReset} className="hover:text-slate-500">

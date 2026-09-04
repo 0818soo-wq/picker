@@ -1,5 +1,5 @@
 import EventBanner from "@/components/EventBanner";
-import { stripLeaderTitle } from "@/lib/format";
+import { resolveWinnerDisplay } from "@/lib/format";
 
 export default function WinnerSheet({
   department,
@@ -10,14 +10,16 @@ export default function WinnerSheet({
   name: string;
   content: string;
 }) {
+  const resolved = resolveWinnerDisplay(name, department);
+
   return (
     <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-xl">
       <EventBanner
         badge="당첨자 발표"
         titleLine1="🎉 당첨을 축하합니다!"
-        titlePrefix={`${department} `}
-        titleHighlight={stripLeaderTitle(name)}
-        titleSuffix=" 단장님"
+        titlePrefix={`${resolved.department} `}
+        titleHighlight={resolved.name}
+        titleSuffix={` ${resolved.titleSuffix}`}
         subtitleLine1="소중한 의견을 나눠주셔서 감사합니다."
         subtitleLine2=""
       />
