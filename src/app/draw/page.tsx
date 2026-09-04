@@ -11,6 +11,8 @@ import WinnerSheet from "@/components/WinnerSheet";
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "landing" | "ready" | "spin" | "reveal";
 
+const NEXT_ROUND_DELAY_MS = 6000;
+
 export default function DrawPage() {
   const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -21,9 +23,11 @@ export default function DrawPage() {
   const [drawRound, setDrawRound] = useState(0);
   const [starting, setStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showFingerTap, setShowFingerTap] = useState(false);
 
   const introRef = useRef<HTMLVideoElement>(null);
   const winRef = useRef<HTMLVideoElement>(null);
+  const readyAudioRef = useRef<HTMLAudioElement>(null);
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch("/api/admin/entries", { cache: "no-store" });
@@ -64,10 +68,42 @@ export default function DrawPage() {
     };
   }, [phase]);
 
+  useEffect(() => {
+    if (phase !== "ready") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 라운드가 바뀔 때마다 손가락 탭 오버레이를 초기화합니다.
+    setShowFingerTap(false);
+
+    const audio = readyAudioRef.current;
+    const triggerTap = () => setShowFingerTap(true);
+
+    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
+    const safetyTimer = setTimeout(triggerTap, 20000);
+
+    if (!audio) {
+      return () => clearTimeout(safetyTimer);
+    }
+
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise?.catch) {
+      playPromise.catch(() => {
+        fallbackTimer = setTimeout(triggerTap, 3000);
+      });
+    }
+
+    audio.addEventListener("ended", triggerTap);
+    return () => {
+      audio.removeEventListener("ended", triggerTap);
+      clearTimeout(safetyTimer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+    };
+  }, [phase]);
+
   async function handleStart() {
     if (starting || remaining.length === 0) return;
     setErrorMessage(null);
     setStarting(true);
+    new Audio("/audio/spin.mp3").play().catch(() => {});
     try {
       const currentPool = remaining.map(({ id, department, name, content }) => ({
         id,
@@ -96,6 +132,11 @@ export default function DrawPage() {
     }
   }
 
+  function handleNextRound() {
+    setPhase("ready");
+    setWinner(null);
+  }
+
   useEffect(() => {
     if (phase !== "reveal" || !winner) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 당첨 확정 후 최신 통계를 다시 불러옵니다.
@@ -106,8 +147,11 @@ export default function DrawPage() {
       video.play().catch(() => {});
     }
 
-    const text = `축하합니다 ${winner.department} ${winner.name}단장입니다`;
+    const text = `당첨자는 ${winner.department} ${winner.name}단장입니다. 축하합니다!`;
     let audioUrl: string | null = null;
+    let nextRoundTimer: ReturnType<typeof setTimeout> | undefined;
+    const safetyTimer = setTimeout(handleNextRound, 15000);
+
     fetch("/api/admin/speak", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -117,19 +161,21 @@ export default function DrawPage() {
       .then((blob) => {
         if (!blob) return;
         audioUrl = URL.createObjectURL(blob);
-        new Audio(audioUrl).play().catch(() => {});
+        const audio = new Audio(audioUrl);
+        audio.addEventListener("ended", () => {
+          clearTimeout(safetyTimer);
+          nextRoundTimer = setTimeout(handleNextRound, NEXT_ROUND_DELAY_MS);
+        });
+        audio.play().catch(() => {});
       })
       .catch(() => {});
 
     return () => {
+      clearTimeout(safetyTimer);
+      if (nextRoundTimer) clearTimeout(nextRoundTimer);
       if (audioUrl) URL.revokeObjectURL(audioUrl);
     };
   }, [phase, winner, fetchEntries]);
-
-  function handleNextRound() {
-    setPhase("ready");
-    setWinner(null);
-  }
 
   async function handleReset() {
     if (!window.confirm("모든 당첨 기록을 초기화할까요? 리허설/테스트 용도로만 사용하세요.")) return;
@@ -163,6 +209,8 @@ export default function DrawPage() {
           <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
             {phase === "ready" && (
               <div className="flex flex-col items-center gap-10">
+                <audio ref={readyAudioRef} src="/audio/ready.mp3" className="hidden" />
+
                 <div className="flex flex-col items-center gap-2 rounded-3xl border border-slate-200 bg-gradient-to-b from-blue-50 to-white px-10 py-7 shadow-sm">
                   <span className="text-sm font-medium text-slate-500">총 제출된 &lsquo;축&rsquo;의 개수</span>
                   <span className="flex items-baseline gap-1 text-5xl font-extrabold text-[#13294b]">
@@ -175,23 +223,34 @@ export default function DrawPage() {
                   <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{errorMessage}</p>
                 )}
 
-                <motion.button
-                  type="button"
-                  onClick={handleStart}
-                  disabled={starting || entriesLoading || remaining.length === 0}
-                  initial={{ opacity: 0, scale: 0.7 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="flex h-16 w-64 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white transition-colors hover:bg-[#1c3a68] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {entriesLoading
-                    ? "불러오는 중..."
-                    : remaining.length === 0
-                      ? "추첨 대상 없음"
-                      : starting
-                        ? "준비 중..."
-                        : "추첨 시작"}
-                </motion.button>
+                <div className="relative">
+                  <motion.button
+                    type="button"
+                    onClick={handleStart}
+                    disabled={starting || entriesLoading || remaining.length === 0}
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="flex h-16 w-64 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white transition-colors hover:bg-[#1c3a68] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {entriesLoading
+                      ? "불러오는 중..."
+                      : remaining.length === 0
+                        ? "추첨 대상 없음"
+                        : starting
+                          ? "준비 중..."
+                          : "추첨 시작"}
+                  </motion.button>
+
+                  {showFingerTap && (
+                    <FingerTap
+                      onComplete={() => {
+                        setShowFingerTap(false);
+                        handleStart();
+                      }}
+                    />
+                  )}
+                </div>
 
                 {winners.length > 0 && (
                   <div className="w-full max-w-xl">
@@ -266,5 +325,22 @@ export default function DrawPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function FingerTap({ onComplete }: { onComplete: () => void }) {
+  return (
+    <motion.img
+      src="/images/finger.png"
+      alt=""
+      className="pointer-events-none absolute -right-6 -top-28 h-40 w-40 origin-bottom-right select-none drop-shadow-xl"
+      initial={{ opacity: 0, y: -40, rotate: -6 }}
+      animate={{ opacity: [0, 1, 1, 1], y: [-40, -40, 4, -16], rotate: [-6, -6, -2, -6] }}
+      transition={{ duration: 1, times: [0, 0.25, 0.55, 1], ease: "easeOut" }}
+      onAnimationComplete={onComplete}
+      onError={(e) => {
+        (e.currentTarget as HTMLImageElement).style.display = "none";
+      }}
+    />
   );
 }
