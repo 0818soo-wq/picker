@@ -12,6 +12,25 @@ import { resolveWinnerDisplay } from "@/lib/format";
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "landing" | "ready" | "spin" | "reveal";
 
+// 오디오가 충분히 버퍼링된 뒤 재생을 시작해 목소리 앞부분이 잘리는 문제를 방지합니다.
+function playWhenReady(audio: HTMLAudioElement, onError?: () => void) {
+  audio.preload = "auto";
+  let started = false;
+  const attempt = () => {
+    if (started) return;
+    started = true;
+    audio.play().catch(() => onError?.());
+  };
+  if (audio.readyState >= 3) {
+    attempt();
+  } else {
+    audio.addEventListener("canplaythrough", attempt, { once: true });
+    audio.load();
+    // canplaythrough가 늦게 오는 경우를 대비한 폴백입니다.
+    setTimeout(attempt, 600);
+  }
+}
+
 export default function DrawPage() {
   const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -107,7 +126,7 @@ export default function DrawPage() {
         audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
         audio.addEventListener("ended", triggerTap);
-        audio.play().catch(triggerTap);
+        playWhenReady(audio, triggerTap);
       })
       .catch(() => {});
 
@@ -187,7 +206,7 @@ export default function DrawPage() {
       .then((blob) => {
         if (!blob) return;
         audioUrl = URL.createObjectURL(blob);
-        new Audio(audioUrl).play().catch(() => {});
+        playWhenReady(new Audio(audioUrl));
       })
       .catch(() => {});
 
@@ -342,6 +361,10 @@ export default function DrawPage() {
           <span>·</span>
           <Link href="/draw/status" className="hover:text-slate-500">
             참여자 현황
+          </Link>
+          <span>·</span>
+          <Link href="/draw/monitor" className="hover:text-slate-500">
+            실시간 현황(무음)
           </Link>
           <span>·</span>
           <button type="button" onClick={handleReset} className="hover:text-slate-500">
