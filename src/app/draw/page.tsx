@@ -42,7 +42,6 @@ export default function DrawPage() {
   }, []);
 
   const drawGroup = entries.filter((e) => e.group_type === "draw");
-  const staffGroup = entries.filter((e) => e.group_type === "no_draw");
   const remaining = drawGroup.filter((e) => !e.is_winner);
   const winners = drawGroup.filter((e) => e.is_winner);
   const isMultiDraw = roundWinners.length > 1;
@@ -397,10 +396,6 @@ export default function DrawPage() {
 
       {phase !== "cover" && phase !== "landing" && (
       <div className="mt-10 flex flex-col items-center gap-2">
-        <span className="text-[10px] tracking-wide text-slate-300">
-          지역단장 접수 {drawGroup.length} · 추첨 대상 {remaining.length} · 당첨자 {winners.length} · 본사 파트장 접수{" "}
-          {staffGroup.length}
-        </span>
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
           <button type="button" onClick={handleShowCover} className="hover:text-slate-500">
             대문화면가기
