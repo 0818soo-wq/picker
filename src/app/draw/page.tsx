@@ -11,8 +11,6 @@ import WinnerSheet from "@/components/WinnerSheet";
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "landing" | "ready" | "spin" | "reveal";
 
-const NEXT_ROUND_DELAY_MS = 6000;
-
 export default function DrawPage() {
   const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -24,10 +22,16 @@ export default function DrawPage() {
   const [starting, setStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showFingerTap, setShowFingerTap] = useState(false);
+  const [autoAdvancePaused, setAutoAdvancePaused] = useState(false);
 
   const introRef = useRef<HTMLVideoElement>(null);
   const winRef = useRef<HTMLVideoElement>(null);
   const readyAudioRef = useRef<HTMLAudioElement>(null);
+  const autoAdvancePausedRef = useRef(autoAdvancePaused);
+
+  useEffect(() => {
+    autoAdvancePausedRef.current = autoAdvancePaused;
+  }, [autoAdvancePaused]);
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch("/api/admin/entries", { cache: "no-store" });
@@ -46,36 +50,27 @@ export default function DrawPage() {
   const remaining = drawGroup.filter((e) => !e.is_winner);
   const winners = drawGroup.filter((e) => e.is_winner);
 
-  useEffect(() => {
-    if (phase !== "landing") return;
+  function handleIntroClick() {
     const video = introRef.current;
-    const goNext = () => setPhase("ready");
-
-    if (!video) {
-      goNext();
-      return;
-    }
-
-    video.currentTime = 0;
-    const playPromise = video.play();
-    if (playPromise?.catch) playPromise.catch(() => goNext());
-
-    const fallback = setTimeout(goNext, 15000);
-    video.addEventListener("ended", goNext);
-    return () => {
-      video.removeEventListener("ended", goNext);
-      clearTimeout(fallback);
-    };
-  }, [phase]);
+    if (!video || !video.paused) return;
+    video.play().catch(() => {});
+  }
 
   useEffect(() => {
-    if (phase !== "ready") return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- 라운드가 바뀔 때마다 손가락 탭 오버레이를 초기화합니다.
+    if (phase !== "ready" || autoAdvancePausedRef.current) return;
     setShowFingerTap(false);
 
-    const audio = readyAudioRef.current;
-    const triggerTap = () => setShowFingerTap(true);
+    const triggerTap = () => {
+      if (!autoAdvancePausedRef.current) setShowFingerTap(true);
+    };
 
+    // 첫 라운드에만 안내 음성을 재생하고, 재추첨부터는 바로 손가락 탭으로 넘어갑니다.
+    if (drawRound > 0) {
+      const timer = setTimeout(triggerTap, 800);
+      return () => clearTimeout(timer);
+    }
+
+    const audio = readyAudioRef.current;
     let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
     const safetyTimer = setTimeout(triggerTap, 20000);
 
@@ -97,7 +92,7 @@ export default function DrawPage() {
       clearTimeout(safetyTimer);
       if (fallbackTimer) clearTimeout(fallbackTimer);
     };
-  }, [phase]);
+  }, [phase, drawRound]);
 
   async function handleStart() {
     if (starting || remaining.length === 0) return;
@@ -149,9 +144,6 @@ export default function DrawPage() {
 
     const text = `당첨자는 ${winner.department} ${winner.name}단장입니다. 축하합니다!`;
     let audioUrl: string | null = null;
-    let nextRoundTimer: ReturnType<typeof setTimeout> | undefined;
-    const safetyTimer = setTimeout(handleNextRound, 15000);
-
     fetch("/api/admin/speak", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -161,18 +153,11 @@ export default function DrawPage() {
       .then((blob) => {
         if (!blob) return;
         audioUrl = URL.createObjectURL(blob);
-        const audio = new Audio(audioUrl);
-        audio.addEventListener("ended", () => {
-          clearTimeout(safetyTimer);
-          nextRoundTimer = setTimeout(handleNextRound, NEXT_ROUND_DELAY_MS);
-        });
-        audio.play().catch(() => {});
+        new Audio(audioUrl).play().catch(() => {});
       })
       .catch(() => {});
 
     return () => {
-      clearTimeout(safetyTimer);
-      if (nextRoundTimer) clearTimeout(nextRoundTimer);
       if (audioUrl) URL.revokeObjectURL(audioUrl);
     };
   }, [phase, winner, fetchEntries]);
@@ -191,14 +176,24 @@ export default function DrawPage() {
   return (
     <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
       {phase === "landing" && (
-        <div className="flex flex-1 items-center justify-center py-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+          onClick={handleIntroClick}
+        >
           <video
             ref={introRef}
             src="/videos/intro.mp4"
-            className="max-h-[70vh] w-full max-w-2xl rounded-2xl border border-slate-200 bg-white"
+            className="h-full w-full object-cover"
             playsInline
+            onEnded={() => setPhase("ready")}
             onError={() => setPhase("ready")}
           />
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/30 text-white">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur">
+              <div className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-white" />
+            </div>
+            <p className="text-sm font-medium">화면을 클릭하면 시작합니다</p>
+          </div>
         </div>
       )}
 
@@ -298,10 +293,10 @@ export default function DrawPage() {
           <button
             type="button"
             onClick={handleNextRound}
-            className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
-          >
-            다음 추첨
-          </button>
+            aria-label="다음 추첨"
+            title="다음 추첨"
+            className="h-3 w-3 rounded-full bg-blue-600 transition-transform hover:scale-125"
+          />
         </div>
       )}
 
@@ -322,6 +317,15 @@ export default function DrawPage() {
           <button type="button" onClick={handleLogout} className="hover:text-slate-500">
             로그아웃
           </button>
+          <span>·</span>
+          <button
+            type="button"
+            onClick={() => setAutoAdvancePaused((v) => !v)}
+            aria-label={autoAdvancePaused ? "자동 진행 재개" : "자동 진행 정지"}
+            title={autoAdvancePaused ? "자동 진행 재개" : "자동 진행 정지"}
+            className="h-2.5 w-2.5 rounded-full bg-red-500 transition-transform hover:scale-125"
+            style={{ opacity: autoAdvancePaused ? 0.4 : 1 }}
+          />
         </div>
       </div>
     </main>
