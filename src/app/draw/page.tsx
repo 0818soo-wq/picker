@@ -210,22 +210,6 @@ export default function DrawPage() {
                     </ul>
                   </div>
                 )}
-
-                <div className="flex gap-3">
-                  <Link
-                    href="/draw/entries"
-                    className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-800"
-                  >
-                    접수 목록 보기
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-800"
-                  >
-                    초기화
-                  </button>
-                </div>
               </div>
             )}
 
@@ -267,13 +251,19 @@ export default function DrawPage() {
           지역단장 접수 {drawGroup.length} · 추첨 대상 {remaining.length} · 당첨자 {winners.length} · 본사 파트장 접수{" "}
           {staffGroup.length}
         </span>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="text-sm text-slate-400 hover:text-slate-600"
-        >
-          로그아웃
-        </button>
+        <div className="flex items-center gap-3 text-xs text-slate-300">
+          <Link href="/draw/entries" className="hover:text-slate-500">
+            접수 목록 보기
+          </Link>
+          <span>·</span>
+          <button type="button" onClick={handleReset} className="hover:text-slate-500">
+            초기화
+          </button>
+          <span>·</span>
+          <button type="button" onClick={handleLogout} className="hover:text-slate-500">
+            로그아웃
+          </button>
+        </div>
       </div>
     </main>
   );
