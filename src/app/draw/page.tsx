@@ -2,10 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import EventBanner, { CompassIcon, LightBeam, MountainBackdrop } from "@/components/EventBanner";
+import { AnimatePresence, motion } from "framer-motion";
+import EventBanner from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
+import Confetti from "@/components/Confetti";
+
+// 애플 느낌의 부드러운 전환에 쓰는 이징/트랜지션 프리셋입니다.
+const APPLE_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const fadeUp = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+  transition: { duration: 0.5, ease: APPLE_EASE },
+};
 
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "cover" | "landing" | "ready" | "spin" | "reveal";
@@ -197,7 +207,7 @@ export default function DrawPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
+    <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       {phase !== "cover" && phase !== "landing" && (
         <button
           type="button"
@@ -217,44 +227,54 @@ export default function DrawPage() {
         </button>
       )}
 
+      <AnimatePresence mode="wait">
       {phase === "cover" && (
-        <div
-          className="relative isolate flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-10 overflow-hidden rounded-3xl px-6 py-16 text-center shadow-xl"
-          style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
+        <motion.div
+          key="cover"
+          {...fadeUp}
+          className="flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-12 px-6 py-16 text-center"
         >
-          <MountainBackdrop />
-          <LightBeam className="absolute right-12 top-0 h-full w-1.5 opacity-80 sm:right-20" />
-          <CompassIcon className="relative z-10 h-20 w-20 text-slate-700/60 sm:h-24 sm:w-24" />
-          <h1 className="relative z-10 flex flex-col items-center gap-2 font-paperlogy">
-            <span className="text-lg font-medium tracking-wide text-slate-700 sm:text-2xl">
+          <h1 className="flex flex-col items-center gap-3 font-paperlogy">
+            <span className="text-base font-medium tracking-wide text-slate-500 sm:text-xl">
               &lsquo;26.하 CSM전략회의 이벤트
             </span>
-            <span className="text-3xl font-extrabold tracking-tight text-[#13294b] sm:text-5xl">
+            <span className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl">
               AI 당첨자 추첨 <span className="text-blue-600">Agent</span>
             </span>
           </h1>
 
-          <div className="relative z-10 flex flex-wrap items-center justify-center gap-4">
-            <button
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <motion.button
               type="button"
               onClick={handleStartWithVideo}
-              className="flex h-14 w-44 items-center justify-center rounded-full bg-[#13294b] text-base font-bold text-white transition-colors hover:bg-[#1c3a68]"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.2, ease: APPLE_EASE }}
+              className="flex h-12 w-40 items-center justify-center rounded-full bg-slate-900 text-base font-semibold text-white shadow-sm"
             >
               추첨하기
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               onClick={handleBackToMain}
-              className="flex h-14 w-44 items-center justify-center rounded-full border border-[#13294b] bg-white/80 text-base font-bold text-[#13294b] transition-colors hover:bg-white"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.2, ease: APPLE_EASE }}
+              className="flex h-12 w-40 items-center justify-center rounded-full bg-white text-base font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200"
             >
               관리하기
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {phase === "landing" && (
-        <div
+        <motion.div
+          key="landing"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4, ease: APPLE_EASE }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black"
           onClick={handleIntroClick}
         >
@@ -276,12 +296,14 @@ export default function DrawPage() {
           >
             스킵
           </button>
-        </div>
+        </motion.div>
       )}
 
       {(phase === "ready" || phase === "spin") && (
-        <div
-          className={`w-full overflow-hidden rounded-3xl bg-white shadow-xl ${
+        <motion.div
+          key="main"
+          {...fadeUp}
+          className={`w-full overflow-hidden rounded-3xl bg-white shadow-[0_2px_40px_rgba(0,0,0,0.06)] ${
             phase === "spin" && isMultiDraw ? "max-w-6xl" : "max-w-3xl"
           }`}
         >
@@ -382,11 +404,16 @@ export default function DrawPage() {
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {phase === "reveal" && roundWinners.length > 0 && (
-        <div className={`flex w-full flex-col items-center gap-6 ${isMultiDraw ? "max-w-5xl" : "max-w-2xl"}`}>
+        <motion.div
+          key="reveal"
+          {...fadeUp}
+          className={`flex w-full flex-col items-center gap-6 ${isMultiDraw ? "max-w-5xl" : "max-w-2xl"}`}
+        >
+          <Confetti />
           <video
             ref={winRef}
             src="/videos/win.mp4"
@@ -413,8 +440,9 @@ export default function DrawPage() {
           >
             추첨화면으로
           </button>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {phase !== "cover" && phase !== "landing" && (
       <div className="mt-10 flex flex-col items-center gap-2">
