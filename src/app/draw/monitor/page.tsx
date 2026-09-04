@@ -8,6 +8,7 @@ type Entry = {
   id: string;
   department: string;
   name: string;
+  content: string;
   group_type: "draw" | "no_draw";
   is_winner: boolean;
   won_at: string | null;
@@ -20,6 +21,7 @@ export default function MonitorPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [selectedWinner, setSelectedWinner] = useState<Entry | null>(null);
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch("/api/admin/entries", { cache: "no-store" });
@@ -86,19 +88,25 @@ export default function MonitorPage() {
                 {winners.map((w, i) => {
                   const resolved = resolveWinnerDisplay(w.name, w.department);
                   return (
-                    <li key={w.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#13294b] text-xs font-bold text-white">
-                        {i + 1}
-                      </span>
-                      <span className="text-slate-800">
-                        {resolved.department} {resolved.name}
-                        {resolved.titleSuffix}
-                      </span>
-                      {w.won_at && (
-                        <span className="ml-auto text-xs text-slate-400">
-                          {new Date(w.won_at).toLocaleTimeString("ko-KR")}
+                    <li key={w.id}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedWinner(w)}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-slate-50"
+                      >
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#13294b] text-xs font-bold text-white">
+                          {i + 1}
                         </span>
-                      )}
+                        <span className="text-slate-800">
+                          {resolved.department} {resolved.name}
+                          {resolved.titleSuffix}
+                        </span>
+                        {w.won_at && (
+                          <span className="ml-auto text-xs text-slate-400">
+                            {new Date(w.won_at).toLocaleTimeString("ko-KR")}
+                          </span>
+                        )}
+                      </button>
                     </li>
                   );
                 })}
@@ -112,6 +120,35 @@ export default function MonitorPage() {
           </>
         )}
       </div>
+
+      {selectedWinner && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setSelectedWinner(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium text-slate-500">{selectedWinner.department}</p>
+                <p className="text-lg font-bold text-slate-900">{selectedWinner.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedWinner(null)}
+                className="rounded-full px-2 py-1 text-sm text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                닫기
+              </button>
+            </div>
+            <p className="max-h-[50vh] overflow-y-auto whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
+              {selectedWinner.content}
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

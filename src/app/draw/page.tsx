@@ -17,8 +17,10 @@ export default function DrawPage() {
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [phase, setPhase] = useState<Phase>("ready");
   const [winner, setWinner] = useState<ReelEntry | null>(null);
+  const [winnerQueue, setWinnerQueue] = useState<ReelEntry[]>([]);
   const [pool, setPool] = useState<ReelEntry[]>([]);
   const [drawRound, setDrawRound] = useState(0);
+  const [drawCount, setDrawCount] = useState(1);
   const [starting, setStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [autoAdvancePaused, setAutoAdvancePaused] = useState(false);
@@ -69,7 +71,11 @@ export default function DrawPage() {
         content,
       }));
 
-      const res = await fetch("/api/admin/draw", { method: "POST" });
+      const res = await fetch("/api/admin/draw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ count: drawCount }),
+      });
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -78,7 +84,15 @@ export default function DrawPage() {
         return;
       }
 
-      setWinner(data.winner);
+      const [firstWinner, ...restWinners] = (data.winners ?? []) as ReelEntry[];
+      if (!firstWinner) {
+        setErrorMessage("추첨에 실패했습니다.");
+        setStarting(false);
+        return;
+      }
+
+      setWinner(firstWinner);
+      setWinnerQueue(restWinners);
       setPool(currentPool);
       setDrawRound((r) => r + 1);
       setPhase("spin");
@@ -89,9 +103,19 @@ export default function DrawPage() {
     }
   }
 
+  function handleNextInQueue() {
+    const [nextWinner, ...rest] = winnerQueue;
+    if (!nextWinner) return;
+    setWinner(nextWinner);
+    setWinnerQueue(rest);
+    setDrawRound((r) => r + 1);
+    setPhase("spin");
+  }
+
   function handleBackToMain() {
     setPhase("ready");
     setWinner(null);
+    setWinnerQueue([]);
   }
 
   function handleShowIntro() {
@@ -173,23 +197,41 @@ export default function DrawPage() {
                   <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{errorMessage}</p>
                 )}
 
-                <motion.button
-                  type="button"
-                  onClick={handleStart}
-                  disabled={starting || entriesLoading || remaining.length === 0}
-                  initial={{ opacity: 0, scale: 0.7 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="flex h-16 w-64 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white transition-colors hover:bg-[#1c3a68] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {entriesLoading
-                    ? "불러오는 중..."
-                    : remaining.length === 0
-                      ? "추첨 대상 없음"
-                      : starting
-                        ? "준비 중..."
-                        : "추첨 시작"}
-                </motion.button>
+                <div className="flex flex-col items-center gap-3">
+                  <label className="flex items-center gap-2 text-sm text-slate-500">
+                    한 번에 추첨할 인원
+                    <select
+                      value={drawCount}
+                      onChange={(e) => setDrawCount(Number(e.target.value))}
+                      disabled={starting}
+                      className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm font-semibold text-slate-800 outline-none focus:border-[#13294b]"
+                    >
+                      {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                        <option key={n} value={n}>
+                          {n}명
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <motion.button
+                    type="button"
+                    onClick={handleStart}
+                    disabled={starting || entriesLoading || remaining.length === 0}
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="flex h-16 w-64 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white transition-colors hover:bg-[#1c3a68] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {entriesLoading
+                      ? "불러오는 중..."
+                      : remaining.length === 0
+                        ? "추첨 대상 없음"
+                        : starting
+                          ? "준비 중..."
+                          : "추첨 시작"}
+                  </motion.button>
+                </div>
 
                 {winners.length > 0 && (
                   <div className="w-full max-w-xl">
@@ -234,13 +276,23 @@ export default function DrawPage() {
             }}
           />
           <WinnerSheet department={winner.department} name={winner.name} content={winner.content} />
-          <button
-            type="button"
-            onClick={handleBackToMain}
-            className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
-          >
-            추첨화면으로
-          </button>
+          {winnerQueue.length > 0 ? (
+            <button
+              type="button"
+              onClick={handleNextInQueue}
+              className="flex h-14 w-64 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
+            >
+              다음 당첨자 보기 ({winnerQueue.length}명 남음)
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleBackToMain}
+              className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
+            >
+              추첨화면으로
+            </button>
+          )}
         </div>
       )}
 
@@ -249,38 +301,42 @@ export default function DrawPage() {
           지역단장 접수 {drawGroup.length} · 추첨 대상 {remaining.length} · 당첨자 {winners.length} · 본사 파트장 접수{" "}
           {staffGroup.length}
         </span>
-        <div className="flex items-center gap-3 text-xs text-slate-300">
-          <Link href="/draw/entries" className="hover:text-slate-500">
-            접수 목록 보기
-          </Link>
-          <span>·</span>
-          <Link href="/draw/status" className="hover:text-slate-500">
-            참여자 현황
-          </Link>
-          <span>·</span>
-          <Link href="/draw/monitor" className="hover:text-slate-500">
-            실시간 현황(무음)
-          </Link>
-          <span>·</span>
-          <button type="button" onClick={handleReset} className="hover:text-slate-500">
-            초기화
-          </button>
-          <span>·</span>
-          <button type="button" onClick={handleShowIntro} className="hover:text-slate-500">
-            사장님 추첨시작
-          </button>
-          <span>·</span>
-          <button
-            type="button"
-            onClick={() => setAutoAdvancePaused((v) => !v)}
-            className="hover:text-slate-500"
-          >
-            {autoAdvancePaused ? "자동진행 재개" : "자동진행중지"}
-          </button>
-          <span>·</span>
-          <button type="button" onClick={handleLogout} className="hover:text-slate-500">
-            로그아웃
-          </button>
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={handleShowIntro} className="text-slate-500 hover:text-slate-700">
+              사장님 추첨시작
+            </button>
+            <span>·</span>
+            <button
+              type="button"
+              onClick={() => setAutoAdvancePaused((v) => !v)}
+              className="hover:text-slate-500"
+            >
+              {autoAdvancePaused ? "자동진행 재개" : "자동진행중지"}
+            </button>
+            <span>·</span>
+            <button type="button" onClick={handleReset} className="hover:text-slate-500">
+              초기화
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 sm:ml-6">
+            <Link href="/draw/status" className="hover:text-slate-500">
+              참여자 현황
+            </Link>
+            <span>·</span>
+            <Link href="/draw/entries" className="hover:text-slate-500">
+              접수 목록 보기
+            </Link>
+            <span>·</span>
+            <Link href="/draw/monitor" className="hover:text-slate-500">
+              실시간 현황(무음)
+            </Link>
+            <span>·</span>
+            <button type="button" onClick={handleLogout} className="hover:text-slate-500">
+              로그아웃
+            </button>
+          </div>
         </div>
       </div>
     </main>
