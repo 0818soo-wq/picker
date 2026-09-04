@@ -17,13 +17,7 @@ const CONTENT_ROWS = 9;
 const MAX_CONTENT_LENGTH = 2000;
 const MAX_FIELD_LENGTH = 100;
 
-export default function EntryForm({
-  groupType,
-  groupLabel,
-}: {
-  groupType: GroupType;
-  groupLabel: string;
-}) {
+export default function EntryForm({ groupType }: { groupType: GroupType }) {
   const [department, setDepartment] = useState("");
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
@@ -109,10 +103,6 @@ export default function EntryForm({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
-          <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
-            {groupLabel}
-          </span>
-
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value.slice(0, MAX_CONTENT_LENGTH))}
