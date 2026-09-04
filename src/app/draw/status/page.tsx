@@ -123,7 +123,7 @@ function GroupSection({
       </div>
 
       <div className="mb-2 h-3 w-full overflow-hidden rounded-full bg-slate-200">
-        <div className="h-full bg-[#13294b] transition-all duration-500" style={{ width: `${rate}%` }} />
+        <div className="h-full bg-slate-900 transition-all duration-500" style={{ width: `${rate}%` }} />
       </div>
       <p className="mb-4 text-right text-sm text-slate-500">제출률 {rate}%</p>
 

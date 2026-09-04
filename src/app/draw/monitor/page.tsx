@@ -49,6 +49,16 @@ export default function MonitorPage() {
   );
   const remaining = drawGroup.length - winners.length;
 
+  // 같은 시각(won_at)에 당첨된 인원은 한 번에 뽑힌 것으로 간주해 라운드 인원수를 계산합니다.
+  const roundSizeByWonAt = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const w of winners) {
+      if (!w.won_at) continue;
+      counts.set(w.won_at, (counts.get(w.won_at) ?? 0) + 1);
+    }
+    return counts;
+  }, [winners]);
+
   function handleAnnounceWinner(w: Entry) {
     const resolved = resolveWinnerDisplay(w.name, w.department);
     const text = `축하합니다 ${resolved.department} ${resolved.name}${resolved.titleSuffix}!`;
@@ -113,7 +123,7 @@ export default function MonitorPage() {
                         }}
                         className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-slate-50"
                       >
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#13294b] text-xs font-bold text-white">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
                           {i + 1}
                         </span>
                         <span className="text-slate-800">
@@ -121,8 +131,8 @@ export default function MonitorPage() {
                           {resolved.titleSuffix}
                         </span>
                         {w.won_at && (
-                          <span className="ml-auto text-xs text-slate-400">
-                            {new Date(w.won_at).toLocaleTimeString("ko-KR")}
+                          <span className="ml-auto whitespace-nowrap text-xs text-slate-400">
+                            {new Date(w.won_at).toLocaleTimeString("ko-KR")} ({roundSizeByWonAt.get(w.won_at) ?? 1}명)
                           </span>
                         )}
                       </button>

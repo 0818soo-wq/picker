@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import EventBanner from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
 import Confetti from "@/components/Confetti";
@@ -309,14 +308,17 @@ export default function DrawPage() {
             phase === "spin" && isMultiDraw ? "max-w-6xl" : "max-w-3xl"
           }`}
         >
-          <EventBanner />
+          <div className="flex flex-col items-center gap-1 px-6 pt-10 text-center sm:px-10">
+            <span className="text-xs font-medium text-slate-400">&lsquo;26.하 CSM전략회의 이벤트 Agent</span>
+            <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">축의 전환 추첨</h1>
+          </div>
 
           <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
             {phase === "ready" && (
               <div className="flex flex-col items-center gap-10">
                 <div className="flex flex-col items-center gap-2 rounded-3xl bg-gradient-to-b from-blue-50 to-white px-10 py-7 shadow-sm">
                   <span className="text-sm font-medium text-slate-500">총 제출된 &lsquo;축&rsquo;의 개수</span>
-                  <span className="flex items-baseline gap-1 text-5xl font-extrabold text-[#13294b]">
+                  <span className="flex items-baseline gap-1 text-5xl font-extrabold text-slate-900">
                     {entries.length}
                     <span className="text-xl font-semibold text-slate-400">개</span>
                   </span>
@@ -340,7 +342,7 @@ export default function DrawPage() {
                         transition={{ duration: 0.15, ease: APPLE_EASE }}
                         className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           drawCount === n
-                            ? "bg-[#13294b] text-white"
+                            ? "bg-slate-900 text-white"
                             : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
                         }`}
                       >
@@ -358,7 +360,7 @@ export default function DrawPage() {
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="flex h-16 w-64 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white shadow-sm transition-colors hover:bg-[#1c3a68] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-16 w-64 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-white shadow-sm transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {entriesLoading
                       ? "불러오는 중..."
@@ -445,7 +447,7 @@ export default function DrawPage() {
             onClick={handleBackToMain}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white shadow-sm hover:bg-[#1c3a68]"
+            className="flex h-14 w-56 items-center justify-center rounded-full bg-slate-900 text-base font-semibold text-white shadow-sm hover:bg-slate-700"
           >
             추첨화면으로
           </motion.button>

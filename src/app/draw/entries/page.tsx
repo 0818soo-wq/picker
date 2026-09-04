@@ -126,7 +126,7 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
       type="button"
       onClick={onClick}
       className={`rounded-full px-4 py-1.5 text-sm font-medium shadow-sm transition-colors ${
-        active ? "bg-[#13294b] text-white" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+        active ? "bg-slate-900 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
       }`}
     >
       {label}
