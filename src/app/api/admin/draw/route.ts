@@ -8,7 +8,8 @@ export async function POST() {
 
   const { data: eligible, error } = await supabase
     .from("entries")
-    .select("id, department, name, photo_url")
+    .select("id, department, name, content")
+    .eq("group_type", "draw")
     .eq("is_winner", false);
 
   if (error) {
@@ -27,7 +28,7 @@ export async function POST() {
     .update({ is_winner: true, won_at: new Date().toISOString() })
     .eq("id", winner.id)
     .eq("is_winner", false)
-    .select("id, department, name, photo_url")
+    .select("id, department, name, content")
     .maybeSingle();
 
   if (updateError || !updated) {

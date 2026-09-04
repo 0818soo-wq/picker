@@ -7,10 +7,11 @@ export type ReelEntry = {
   id: string;
   department: string;
   name: string;
-  photo_url: string;
+  content: string;
 };
 
-const ITEM_WIDTH = 200;
+const ITEM_WIDTH = 220;
+const ITEM_HEIGHT = 220;
 const ITEM_GAP = 16;
 const SLOT_STEP = ITEM_WIDTH + ITEM_GAP;
 const SPIN_ITEM_COUNT = 28;
@@ -96,14 +97,12 @@ export default function SlotReel({
         {reelItems.map((item, index) => (
           <div
             key={`${item.id}-${index}`}
-            className="flex shrink-0 flex-col overflow-hidden rounded-xl bg-zinc-800"
-            style={{ width: ITEM_WIDTH }}
+            className="flex shrink-0 flex-col justify-center gap-2 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center"
+            style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={item.photo_url} alt="" className="h-56 w-full object-cover" />
-            <div className="truncate px-2 py-1.5 text-center text-xs text-zinc-200">
-              {item.department} · {item.name}
-            </div>
+            <p className="truncate text-xs text-zinc-400">{item.department}</p>
+            <p className="truncate text-lg font-bold text-white">{item.name}</p>
+            <p className="mt-1 line-clamp-4 text-xs leading-relaxed text-zinc-300">{item.content}</p>
           </div>
         ))}
       </motion.div>

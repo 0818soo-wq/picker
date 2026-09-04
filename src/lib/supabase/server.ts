@@ -1,7 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-const BUCKET = "entry-photos";
-
 export function createServiceRoleClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -16,5 +14,3 @@ export function createServiceRoleClient() {
     auth: { persistSession: false },
   });
 }
-
-export const ENTRY_PHOTO_BUCKET = BUCKET;

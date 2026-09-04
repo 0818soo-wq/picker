@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import SlotReel, { type ReelEntry } from "@/components/SlotReel";
 
-type Entry = ReelEntry & { is_winner: boolean; created_at: string };
+type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "idle" | "intro" | "spin" | "reveal";
 
 export default function DrawPage() {
@@ -33,19 +33,21 @@ export default function DrawPage() {
     fetchEntries().finally(() => setLoading(false));
   }, [fetchEntries]);
 
-  const remaining = entries.filter((e) => !e.is_winner);
-  const winners = entries.filter((e) => e.is_winner);
+  const drawGroup = entries.filter((e) => e.group_type === "draw");
+  const staffGroup = entries.filter((e) => e.group_type === "no_draw");
+  const remaining = drawGroup.filter((e) => !e.is_winner);
+  const winners = drawGroup.filter((e) => e.is_winner);
 
   async function handleStart() {
     if (starting || remaining.length === 0) return;
     setErrorMessage(null);
     setStarting(true);
     try {
-      const currentPool = remaining.map(({ id, department, name, photo_url }) => ({
+      const currentPool = remaining.map(({ id, department, name, content }) => ({
         id,
         department,
         name,
-        photo_url,
+        content,
       }));
 
       const res = await fetch("/api/admin/draw", { method: "POST" });
@@ -141,10 +143,11 @@ export default function DrawPage() {
 
         {phase === "idle" && (
           <div className="flex flex-1 flex-col items-center justify-center gap-10">
-            <div className="flex gap-8 text-center">
-              <Stat label="총 접수" value={entries.length} />
-              <Stat label="남은 인원" value={remaining.length} />
+            <div className="flex flex-wrap justify-center gap-8 text-center">
+              <Stat label="지역단장 접수" value={drawGroup.length} />
+              <Stat label="추첨 대상" value={remaining.length} />
               <Stat label="당첨자" value={winners.length} />
+              <Stat label="본사 파트장 접수" value={staffGroup.length} />
             </div>
 
             {errorMessage && (
@@ -167,10 +170,8 @@ export default function DrawPage() {
                   {winners.map((w) => (
                     <li
                       key={w.id}
-                      className="flex items-center gap-3 rounded-lg bg-zinc-900 px-4 py-2"
+                      className="flex items-center gap-3 rounded-lg bg-zinc-900 px-4 py-3"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={w.photo_url} alt="" className="h-10 w-10 rounded-full object-cover" />
                       <span className="text-sm">
                         {w.department} · {w.name}
                       </span>
@@ -214,22 +215,19 @@ export default function DrawPage() {
             <video
               ref={winRef}
               src="/videos/win.mp4"
-              className="max-h-[45vh] w-full max-w-md rounded-2xl bg-zinc-900"
+              className="max-h-[40vh] w-full max-w-md rounded-2xl bg-zinc-900"
               playsInline
               onError={(e) => {
                 (e.currentTarget as HTMLVideoElement).style.display = "none";
               }}
             />
-            <div className="flex flex-col items-center gap-3 text-center">
+            <div className="flex w-full max-w-lg flex-col items-center gap-3 text-center">
               <p className="text-xl font-semibold text-yellow-400">🎉 당첨을 축하합니다 🎉</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={winner.photo_url}
-                alt=""
-                className="h-48 w-48 rounded-2xl border-4 border-yellow-400 object-cover"
-              />
               <p className="text-2xl font-bold">
                 {winner.department} · {winner.name}
+              </p>
+              <p className="max-h-40 w-full overflow-y-auto whitespace-pre-wrap rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm leading-relaxed text-zinc-200">
+                {winner.content}
               </p>
             </div>
             <button
