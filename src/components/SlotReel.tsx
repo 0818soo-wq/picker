@@ -125,6 +125,172 @@ export default function SlotReel({
   );
 }
 
+const COMPACT_ITEM_WIDTH = 118;
+const COMPACT_ITEM_HEIGHT = 150;
+const COMPACT_ITEM_GAP = 10;
+const COMPACT_SLOT_STEP = COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP;
+const COMPACT_LEAD_COUNT = 14;
+const COMPACT_TRAIL_COUNT = 4;
+const COMPACT_BASE_DURATION = 3.6;
+// 여러 명을 동시에 뽑을 때, 릴이 한꺼번에 딱 멈추지 않고 순서대로 "파바바박" 걸리는 느낌을 주기 위한 간격입니다.
+const COMPACT_SETTLE_STAGGER = 0.22;
+
+// 한 번에 여러 명을 추첨할 때, 당첨자 수(N)에 맞춰 상단/하단 행을 균형 있게 나눕니다.
+// 8명: 4+4, 7명: 4+3, 6명: 3+3 ... 항상 상단이 하단보다 많거나 같습니다.
+export function splitBalancedRows<T>(items: T[]): { top: T[]; bottom: T[] } {
+  const topCount = Math.ceil(items.length / 2);
+  return { top: items.slice(0, topCount), bottom: items.slice(topCount) };
+}
+
+export function MultiSlotReel({
+  pool,
+  winners,
+  onAllSettled,
+}: {
+  pool: ReelEntry[];
+  winners: ReelEntry[];
+  onAllSettled: () => void;
+}) {
+  const { top, bottom } = splitBalancedRows(winners);
+  const settledCount = useRef(0);
+
+  function handleRowSettle() {
+    settledCount.current += 1;
+    if (settledCount.current >= winners.length) onAllSettled();
+  }
+
+  return (
+    <div className="flex w-full flex-col items-center gap-4">
+      <div className="flex flex-wrap justify-center gap-3">
+        {top.map((winner, i) => (
+          <CompactReelRow
+            key={winner.id}
+            pool={pool}
+            winner={winner}
+            duration={COMPACT_BASE_DURATION + i * COMPACT_SETTLE_STAGGER}
+            onSettle={handleRowSettle}
+          />
+        ))}
+      </div>
+      {bottom.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-3">
+          {bottom.map((winner, i) => (
+            <CompactReelRow
+              key={winner.id}
+              pool={pool}
+              winner={winner}
+              duration={COMPACT_BASE_DURATION + (top.length + i) * COMPACT_SETTLE_STAGGER}
+              onSettle={handleRowSettle}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CompactReelRow({
+  pool,
+  winner,
+  duration,
+  onSettle,
+}: {
+  pool: ReelEntry[];
+  winner: ReelEntry;
+  duration: number;
+  onSettle: () => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [targetX, setTargetX] = useState<number | null>(null);
+
+  const reelItems = useMemo<ReelEntry[]>(() => {
+    const sourcePool = pool.filter((item) => item.id !== winner.id);
+    const base = sourcePool.length > 0 ? sourcePool : [winner];
+    const totalFillerNeeded = COMPACT_LEAD_COUNT + COMPACT_TRAIL_COUNT;
+
+    const filler =
+      base.length >= totalFillerNeeded
+        ? shuffle(base).slice(0, totalFillerNeeded)
+        : buildFillerSequence(base, totalFillerNeeded);
+
+    return [...filler.slice(0, COMPACT_LEAD_COUNT), winner, ...filler.slice(COMPACT_LEAD_COUNT, totalFillerNeeded)];
+  }, [pool, winner]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    setContainerWidth(el.offsetWidth);
+
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setContainerWidth(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setTargetX(-(COMPACT_LEAD_COUNT * COMPACT_SLOT_STEP));
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 py-3"
+      style={{ width: COMPACT_ITEM_WIDTH * 2 + COMPACT_ITEM_GAP }}
+    >
+      <div
+        className="pointer-events-none absolute inset-y-0 left-1/2 z-10 -translate-x-1/2 rounded-xl border-[3px] border-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.35)]"
+        style={{ width: COMPACT_ITEM_WIDTH }}
+      />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-slate-50 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-slate-50 to-transparent" />
+
+      <motion.div
+        className="flex items-stretch"
+        style={{
+          gap: COMPACT_ITEM_GAP,
+          paddingLeft: containerWidth ? containerWidth / 2 - COMPACT_ITEM_WIDTH / 2 : 0,
+        }}
+        animate={{ x: targetX ?? 0 }}
+        transition={targetX === null ? { duration: 0 } : { duration, ease: [0.11, 0.83, 0.24, 1] }}
+        onAnimationComplete={() => {
+          if (targetX !== null) onSettle();
+        }}
+      >
+        {reelItems.map((item, index) => (
+          <CompactPaperCard key={`${item.id}-${index}`} item={item} />
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function CompactPaperCard({ item }: { item: ReelEntry }) {
+  return (
+    <div
+      className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+      style={{ width: COMPACT_ITEM_WIDTH, height: COMPACT_ITEM_HEIGHT }}
+    >
+      <div
+        className="relative isolate flex flex-1 items-center justify-center overflow-hidden px-2 py-2"
+        style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
+      >
+        <MountainBackdrop />
+        <CompassIcon className="relative z-10 h-6 w-6 text-slate-700/60" />
+      </div>
+      <div className="flex shrink-0 flex-col items-center gap-0.5 px-2 py-2 text-center">
+        <p className="truncate text-[8px] text-slate-400">{item.department}</p>
+        <p className="truncate text-[10px] font-bold text-slate-800">{item.name}</p>
+      </div>
+    </div>
+  );
+}
+
 function MiniPaperCard({ item }: { item: ReelEntry }) {
   return (
     <div

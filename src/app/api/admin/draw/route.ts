@@ -15,7 +15,7 @@ function shuffle<T>(items: T[]): T[] {
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const requestedCount = Math.floor(Number((body as { count?: unknown })?.count) || 1);
-  const count = Math.min(Math.max(requestedCount, 1), 10);
+  const count = Math.min(Math.max(requestedCount, 1), 8);
 
   const supabase = createServiceRoleClient();
 

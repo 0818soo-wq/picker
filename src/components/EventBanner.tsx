@@ -38,10 +38,14 @@ export default function EventBanner({
         </span>
         <h1 className="text-2xl font-extrabold leading-snug text-slate-900 sm:text-3xl">
           {titleLine1}
-          <br />
-          {titlePrefix}
-          <span className="text-blue-600">{titleHighlight}</span>
-          {titleSuffix}
+          {(titlePrefix || titleHighlight || titleSuffix) && (
+            <>
+              <br />
+              {titlePrefix}
+              <span className="text-blue-600">{titleHighlight}</span>
+              {titleSuffix}
+            </>
+          )}
         </h1>
         {(subtitleLine1 || subtitleLine2) && (
           <p className="text-sm leading-relaxed text-slate-600 sm:text-base">

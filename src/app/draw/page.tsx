@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import EventBanner from "@/components/EventBanner";
-import SlotReel, { type ReelEntry } from "@/components/SlotReel";
-import WinnerSheet from "@/components/WinnerSheet";
+import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
+import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
 
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "landing" | "ready" | "spin" | "reveal";
@@ -16,8 +16,7 @@ export default function DrawPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [phase, setPhase] = useState<Phase>("ready");
-  const [winner, setWinner] = useState<ReelEntry | null>(null);
-  const [winnerQueue, setWinnerQueue] = useState<ReelEntry[]>([]);
+  const [roundWinners, setRoundWinners] = useState<ReelEntry[]>([]);
   const [pool, setPool] = useState<ReelEntry[]>([]);
   const [drawRound, setDrawRound] = useState(0);
   const [drawCount, setDrawCount] = useState(1);
@@ -84,15 +83,14 @@ export default function DrawPage() {
         return;
       }
 
-      const [firstWinner, ...restWinners] = (data.winners ?? []) as ReelEntry[];
-      if (!firstWinner) {
+      const drawnWinners = (data.winners ?? []) as ReelEntry[];
+      if (drawnWinners.length === 0) {
         setErrorMessage("추첨에 실패했습니다.");
         setStarting(false);
         return;
       }
 
-      setWinner(firstWinner);
-      setWinnerQueue(restWinners);
+      setRoundWinners(drawnWinners);
       setPool(currentPool);
       setDrawRound((r) => r + 1);
       setPhase("spin");
@@ -103,19 +101,9 @@ export default function DrawPage() {
     }
   }
 
-  function handleNextInQueue() {
-    const [nextWinner, ...rest] = winnerQueue;
-    if (!nextWinner) return;
-    setWinner(nextWinner);
-    setWinnerQueue(rest);
-    setDrawRound((r) => r + 1);
-    setPhase("spin");
-  }
-
   function handleBackToMain() {
     setPhase("ready");
-    setWinner(null);
-    setWinnerQueue([]);
+    setRoundWinners([]);
   }
 
   function handleShowIntro() {
@@ -129,7 +117,7 @@ export default function DrawPage() {
   }
 
   useEffect(() => {
-    if (phase !== "reveal" || !winner) return;
+    if (phase !== "reveal" || roundWinners.length === 0) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 당첨 확정 후 최신 통계를 다시 불러옵니다.
     fetchEntries();
     const video = winRef.current;
@@ -137,7 +125,7 @@ export default function DrawPage() {
       video.currentTime = 0;
       video.play().catch(() => {});
     }
-  }, [phase, winner, fetchEntries]);
+  }, [phase, roundWinners, fetchEntries]);
 
   async function handleReset() {
     if (!window.confirm("모든 당첨 기록을 초기화할까요? 리허설/테스트 용도로만 사용하세요.")) return;
@@ -206,7 +194,7 @@ export default function DrawPage() {
                       disabled={starting}
                       className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm font-semibold text-slate-800 outline-none focus:border-[#13294b]"
                     >
-                      {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                      {Array.from({ length: 8 }, (_, i) => i + 1).map((n) => (
                         <option key={n} value={n}>
                           {n}명
                         </option>
@@ -253,17 +241,31 @@ export default function DrawPage() {
               </div>
             )}
 
-            {phase === "spin" && winner && (
+            {phase === "spin" && roundWinners.length > 0 && (
               <div className="flex flex-col items-center gap-4">
                 <p className="text-lg font-medium text-blue-600">추첨 중...</p>
-                <SlotReel key={drawRound} pool={pool} winner={winner} onSettle={() => setPhase("reveal")} />
+                {roundWinners.length === 1 ? (
+                  <SlotReel
+                    key={drawRound}
+                    pool={pool}
+                    winner={roundWinners[0]}
+                    onSettle={() => setPhase("reveal")}
+                  />
+                ) : (
+                  <MultiSlotReel
+                    key={drawRound}
+                    pool={pool}
+                    winners={roundWinners}
+                    onAllSettled={() => setPhase("reveal")}
+                  />
+                )}
               </div>
             )}
           </div>
         </div>
       )}
 
-      {phase === "reveal" && winner && (
+      {phase === "reveal" && roundWinners.length > 0 && (
         <div className="flex w-full max-w-2xl flex-col items-center gap-6">
           <video
             ref={winRef}
@@ -275,24 +277,22 @@ export default function DrawPage() {
               (e.currentTarget as HTMLVideoElement).style.display = "none";
             }}
           />
-          <WinnerSheet department={winner.department} name={winner.name} content={winner.content} />
-          {winnerQueue.length > 0 ? (
-            <button
-              type="button"
-              onClick={handleNextInQueue}
-              className="flex h-14 w-64 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
-            >
-              다음 당첨자 보기 ({winnerQueue.length}명 남음)
-            </button>
+          {roundWinners.length === 1 ? (
+            <WinnerSheet
+              department={roundWinners[0].department}
+              name={roundWinners[0].name}
+              content={roundWinners[0].content}
+            />
           ) : (
-            <button
-              type="button"
-              onClick={handleBackToMain}
-              className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
-            >
-              추첨화면으로
-            </button>
+            <WinnerNameGrid winners={roundWinners} />
           )}
+          <button
+            type="button"
+            onClick={handleBackToMain}
+            className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
+          >
+            추첨화면으로
+          </button>
         </div>
       )}
 
@@ -303,6 +303,10 @@ export default function DrawPage() {
         </span>
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
           <div className="flex items-center gap-3">
+            <button type="button" onClick={handleBackToMain} className="hover:text-slate-500">
+              메인화면가기
+            </button>
+            <span>·</span>
             <button type="button" onClick={handleShowIntro} className="text-slate-500 hover:text-slate-700">
               사장님 추첨시작
             </button>
