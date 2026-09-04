@@ -79,7 +79,13 @@ export default function MonitorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: announceTextFor(w) }),
       })
-        .then((res) => (res.ok ? res.blob() : null))
+        .then(async (res) => {
+          if (!res.ok) {
+            console.error("[monitor] 음성 준비 실패", res.status, await res.text().catch(() => ""));
+            return null;
+          }
+          return res.blob();
+        })
         .then((blob) => {
           if (!blob || cache.has(w.id)) return;
           const url = URL.createObjectURL(blob);
@@ -87,7 +93,7 @@ export default function MonitorPage() {
           audio.preload = "auto";
           cache.set(w.id, { url, audio });
         })
-        .catch(() => {});
+        .catch((err) => console.error("[monitor] 음성 준비 중 오류", err));
     }
   }, [winners, announceTextFor]);
 
@@ -103,7 +109,10 @@ export default function MonitorPage() {
     const prepared = announceCacheRef.current.get(w.id);
     if (prepared) {
       prepared.audio.currentTime = 0;
-      prepared.audio.play().catch(() => {});
+      prepared.audio.play().catch((err) => {
+        console.error("[monitor] 음성 재생 실패", err);
+        window.alert("음성 재생에 실패했습니다. 다시 눌러 주세요.");
+      });
       return;
     }
     // 폴백: 아직 준비되지 않았다면 그 자리에서 요청해 재생합니다.
@@ -112,12 +121,25 @@ export default function MonitorPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: announceTextFor(w) }),
     })
-      .then((res) => (res.ok ? res.blob() : null))
+      .then(async (res) => {
+        if (!res.ok) {
+          console.error("[monitor] 음성 생성 실패", res.status, await res.text().catch(() => ""));
+          window.alert("음성 생성에 실패했습니다.");
+          return null;
+        }
+        return res.blob();
+      })
       .then((blob) => {
         if (!blob) return;
-        new Audio(URL.createObjectURL(blob)).play().catch(() => {});
+        new Audio(URL.createObjectURL(blob)).play().catch((err) => {
+          console.error("[monitor] 음성 재생 실패", err);
+          window.alert("음성 재생에 실패했습니다. 다시 눌러 주세요.");
+        });
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("[monitor] 음성 요청 중 오류", err);
+        window.alert("네트워크 오류로 음성을 재생할 수 없습니다.");
+      });
   }
 
   return (
