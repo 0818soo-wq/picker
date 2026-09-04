@@ -100,7 +100,9 @@ export default function DrawPage() {
     if (starting || remaining.length === 0) return;
     setErrorMessage(null);
     setStarting(true);
-    new Audio("/audio/spin.mp3").play().catch(() => {});
+    if (drawRound === 0) {
+      new Audio("/audio/spin.mp3").play().catch(() => {});
+    }
     try {
       const currentPool = remaining.map(({ id, department, name, content }) => ({
         id,
@@ -145,7 +147,10 @@ export default function DrawPage() {
     }
 
     const resolved = resolveWinnerDisplay(winner.name, winner.department);
-    const text = `당첨자는 ${resolved.department} ${resolved.name}${resolved.titleSuffix}입니다. 축하합니다!`;
+    const text =
+      drawRound <= 1
+        ? `당첨자는 ${resolved.department} ${resolved.name}${resolved.titleSuffix}입니다. 축하합니다!`
+        : `${resolved.name}${resolved.titleSuffix}`;
     let audioUrl: string | null = null;
     fetch("/api/admin/speak", {
       method: "POST",
@@ -163,7 +168,7 @@ export default function DrawPage() {
     return () => {
       if (audioUrl) URL.revokeObjectURL(audioUrl);
     };
-  }, [phase, winner, fetchEntries]);
+  }, [phase, winner, drawRound, fetchEntries]);
 
   async function handleReset() {
     if (!window.confirm("모든 당첨 기록을 초기화할까요? 리허설/테스트 용도로만 사용하세요.")) return;
