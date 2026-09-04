@@ -122,6 +122,8 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
           >
             {status === "submitting" ? "접수 중..." : "제출하기"}
           </button>
+
+          <p className="-mt-4 text-center text-xs text-slate-400">추첨을 위해 실명을 정확히 적어주세요.</p>
         </form>
       </div>
     </main>
