@@ -191,13 +191,32 @@ export default function DrawPage() {
   }, [phase, roundWinners, fetchEntries]);
 
   async function handleReset() {
-    if (!window.confirm("모든 당첨 기록을 초기화할까요? 리허설/테스트 용도로만 사용하세요.")) return;
+    if (!window.confirm("초기화 하시겠습니까?")) return;
     await fetch("/api/admin/reset", { method: "POST" });
     await fetchEntries();
   }
 
   return (
     <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
+      {phase !== "cover" && phase !== "landing" && (
+        <button
+          type="button"
+          onClick={handleReset}
+          aria-label="초기화"
+          title="초기화"
+          className="fixed right-4 top-4 z-40 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-slate-400 shadow-sm backdrop-blur-sm transition-colors hover:bg-white hover:text-slate-600"
+        >
+          <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4.5 9A8 8 0 1 1 4 13"
+            />
+          </svg>
+        </button>
+      )}
+
       {phase === "cover" && (
         <div
           className="relative isolate flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-10 overflow-hidden rounded-3xl px-6 py-16 text-center shadow-xl"
@@ -284,21 +303,24 @@ export default function DrawPage() {
                 )}
 
                 <div className="flex flex-col items-center gap-3">
-                  <label className="flex items-center gap-2 text-sm text-slate-500">
-                    한 번에 추첨할 인원
-                    <select
-                      value={drawCount}
-                      onChange={(e) => setDrawCount(Number(e.target.value))}
-                      disabled={starting}
-                      className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm font-semibold text-slate-800 outline-none focus:border-[#13294b]"
-                    >
-                      {Array.from({ length: 8 }, (_, i) => i + 1).map((n) => (
-                        <option key={n} value={n}>
-                          {n}명
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <p className="text-sm text-slate-500">한 번에 추첨할 인원</p>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    {Array.from({ length: 8 }, (_, i) => i + 1).map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setDrawCount(n)}
+                        disabled={starting}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                          drawCount === n
+                            ? "bg-[#13294b] text-white"
+                            : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
 
                   <motion.button
                     type="button"
@@ -399,10 +421,6 @@ export default function DrawPage() {
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
           <button type="button" onClick={handleShowCover} className="hover:text-slate-500">
             대문화면가기
-          </button>
-          <span>·</span>
-          <button type="button" onClick={handleReset} className="hover:text-slate-500">
-            초기화
           </button>
           <span>·</span>
           <Link href="/draw/status" className="hover:text-slate-500">
