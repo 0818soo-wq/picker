@@ -39,9 +39,15 @@ function AdminLoginForm() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-[#f5f5f7] px-6 py-24">
-      <h1 className="text-2xl font-semibold text-slate-900">관리자 인증</h1>
-      <form onSubmit={handleSubmit} className="flex w-full max-w-xs flex-col gap-4">
+    <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#f5f5f7] px-6 py-24">
+      <div className="pointer-events-none absolute -left-16 top-10 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
+      <div className="pointer-events-none absolute -right-16 bottom-10 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
+
+      <form
+        onSubmit={handleSubmit}
+        className="relative z-10 flex w-full max-w-xs flex-col gap-4 rounded-3xl bg-white/60 p-8 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl"
+      >
+        <h1 className="mb-1 text-center text-xl font-semibold text-slate-900">관리자 인증</h1>
         <input
           type="password"
           autoFocus
@@ -49,7 +55,7 @@ function AdminLoginForm() {
           value={passcode}
           onChange={(e) => setPasscode(e.target.value)}
           placeholder="비밀번호"
-          className="rounded-2xl border-0 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900"
+          className="rounded-2xl border-0 bg-white/80 px-4 py-3 text-slate-900 shadow-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900"
         />
         {error && <p className="rounded-2xl bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>}
         <button

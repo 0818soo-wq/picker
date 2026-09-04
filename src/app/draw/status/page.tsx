@@ -49,13 +49,15 @@ export default function StatusPage() {
   );
 
   return (
-    <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
-      <div className="w-full max-w-6xl">
+    <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-indigo-200/30 blur-3xl" />
+      <div className="relative z-10 w-full max-w-6xl">
         <div className="mb-6">
           <Link href="/draw#main" className="text-sm text-slate-500 hover:text-slate-700">
             ← 추첨 화면으로
           </Link>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900">참여자 현황</h1>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">참여자 현황</h1>
           <p className="mt-1 text-sm text-slate-500">{REFRESH_INTERVAL_MS / 1000}초마다 자동으로 갱신됩니다.</p>
         </div>
 
@@ -127,7 +129,7 @@ function GroupSection({
       </div>
       <p className="mb-4 text-right text-sm text-slate-500">제출률 {rate}%</p>
 
-      <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-sm">
+      <div className="mb-4 overflow-hidden rounded-2xl bg-white/60 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
         <div className="px-4 py-2 text-sm font-medium text-slate-500">
           제출 명단 ({filteredSubmitted.length}명)
         </div>
@@ -150,7 +152,7 @@ function GroupSection({
         </ul>
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl bg-white/60 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
         <div className="px-4 py-2 text-sm font-medium text-slate-500">
           미제출 명단 ({filteredPending.length}명)
         </div>
@@ -178,7 +180,7 @@ function GroupSection({
 
 function DashboardStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl bg-white py-4 shadow-sm">
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-white/60 py-4 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
       <span className="text-2xl font-bold text-slate-900">{value}</span>
       <span className="text-xs text-slate-500">{label}</span>
     </div>

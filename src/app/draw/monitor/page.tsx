@@ -76,14 +76,18 @@ export default function MonitorPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
-      <div className="w-full max-w-3xl">
+    <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-indigo-200/30 blur-3xl" />
+      <div className="relative z-10 w-full max-w-3xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
           <div>
             <Link href="/draw#main" className="text-sm text-slate-500 hover:text-slate-700">
               ← 추첨 화면으로
             </Link>
-            <h1 className="mt-1 text-2xl font-bold text-slate-900">실시간 추첨 현황 (관리용)</h1>
+            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              실시간 추첨 현황 (관리용)
+            </h1>
             <p className="mt-1 text-sm text-slate-500">
               소리와 영상 없이 진행 상황만 확인하는 화면입니다. {REFRESH_INTERVAL_MS / 1000}초마다 자동 갱신됩니다.
             </p>
@@ -106,7 +110,7 @@ export default function MonitorPage() {
               <Stat label="본사 파트장 접수" value={staffGroup.length} />
             </div>
 
-            <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl bg-white/60 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
               <div className="px-4 py-2 text-sm font-medium text-slate-500">
                 당첨자 목록 ({winners.length}명) · 이름을 누르면 사장님 목소리로 축하 인사를 들려드려요
               </div>
@@ -184,7 +188,7 @@ export default function MonitorPage() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl bg-white py-4 shadow-sm">
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-white/60 py-4 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
       <span className="text-2xl font-bold text-slate-900">{value}</span>
       <span className="text-xs text-slate-500">{label}</span>
     </div>

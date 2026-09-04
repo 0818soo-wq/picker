@@ -3,6 +3,13 @@
 
 @font-face {
   font-family: "Paperlogy";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-4Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Paperlogy";
   src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-5Medium.woff2") format("woff2");
   font-weight: 500;
   font-display: swap;
@@ -10,8 +17,29 @@
 
 @font-face {
   font-family: "Paperlogy";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-6SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Paperlogy";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-7Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Paperlogy";
   src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-8ExtraBold.woff2") format("woff2");
   font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Paperlogy";
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-9Black.woff2") format("woff2");
+  font-weight: 900;
   font-display: swap;
 }
 
@@ -41,6 +69,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Pretendard", var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Paperlogy", "Pretendard", var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
   letter-spacing: -0.01em;
 }

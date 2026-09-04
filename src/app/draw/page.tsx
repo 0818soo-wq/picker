@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { SailboatIcon } from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
 import Confetti from "@/components/Confetti";
@@ -206,7 +207,11 @@ export default function DrawPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
+    <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
+
       {phase !== "cover" && phase !== "landing" && (
         <motion.button
           type="button"
@@ -235,11 +240,12 @@ export default function DrawPage() {
           {...fadeUp}
           className="flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-12 px-6 py-16 text-center"
         >
+          <SailboatIcon className="h-10 w-10 text-slate-900 sm:h-12 sm:w-12" />
           <h1 className="flex flex-col items-center gap-3 font-paperlogy">
             <span className="text-base font-medium tracking-wide text-slate-500 sm:text-xl">
               &lsquo;26.하 CSM전략회의 이벤트
             </span>
-            <span className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl">
+            <span className="text-5xl font-black leading-none tracking-tighter text-slate-900 sm:text-8xl">
               AI 당첨자 추첨 <span className="text-blue-600">Agent</span>
             </span>
           </h1>
@@ -304,19 +310,20 @@ export default function DrawPage() {
         <motion.div
           key="main"
           {...fadeUp}
-          className={`w-full overflow-hidden rounded-3xl bg-white shadow-[0_2px_40px_rgba(0,0,0,0.06)] ${
+          className={`relative w-full overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl ${
             phase === "spin" && isMultiDraw ? "max-w-6xl" : "max-w-3xl"
           }`}
         >
-          <div className="flex flex-col items-center gap-1 px-6 pt-10 text-center sm:px-10">
+          <div className="flex flex-col items-center gap-2 px-6 pt-10 text-center sm:px-10">
+            <SailboatIcon className="h-7 w-7 text-slate-900" />
             <span className="text-xs font-medium text-slate-400">&lsquo;26.하 CSM전략회의 이벤트 Agent</span>
-            <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">축의 전환 추첨</h1>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">축의 전환 추첨</h1>
           </div>
 
           <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
             {phase === "ready" && (
               <div className="flex flex-col items-center gap-10">
-                <div className="flex flex-col items-center gap-2 rounded-3xl bg-gradient-to-b from-blue-50 to-white px-10 py-7 shadow-sm">
+                <div className="flex flex-col items-center gap-2 rounded-3xl bg-white/50 px-10 py-7 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
                   <span className="text-sm font-medium text-slate-500">총 제출된 &lsquo;축&rsquo;의 개수</span>
                   <span className="flex items-baseline gap-1 text-5xl font-extrabold text-slate-900">
                     {entries.length}

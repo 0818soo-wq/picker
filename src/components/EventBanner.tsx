@@ -85,6 +85,38 @@ export function CompassIcon({ className }: { className?: string }) {
   );
 }
 
+export function SailboatIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="50" y1="10" x2="50" y2="66" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path
+        d="M50 16 L50 58 L23 58 Z"
+        fill="currentColor"
+        opacity="0.18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M50 24 L50 58 L73 58 Z"
+        fill="currentColor"
+        opacity="0.35"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M18 66 L82 66 L69 84 L31 84 Z" fill="currentColor" />
+      <path
+        d="M6 90 Q28 82 50 90 T94 90"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        opacity="0.45"
+      />
+    </svg>
+  );
+}
+
 export function MountainBackdrop() {
   return (
     <svg
