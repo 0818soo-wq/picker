@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { CompassIcon, LightBeam, MountainBackdrop } from "@/components/EventBanner";
 
 export type ReelEntry = {
   id: string;
@@ -10,11 +11,13 @@ export type ReelEntry = {
   content: string;
 };
 
-const ITEM_WIDTH = 220;
-const ITEM_HEIGHT = 220;
+const ITEM_WIDTH = 210;
+const ITEM_HEIGHT = 300;
 const ITEM_GAP = 16;
 const SLOT_STEP = ITEM_WIDTH + ITEM_GAP;
 const SPIN_ITEM_COUNT = 28;
+
+const BADGE_TEXT = "CSM전략회의 소통의 장 1";
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -95,33 +98,65 @@ export default function SlotReel({
         }}
       >
         {reelItems.map((item, index) => (
-          <div
-            key={`${item.id}-${index}`}
-            className="flex shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white text-center shadow-sm"
-            style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT }}
-          >
-            <div
-              className="h-3 w-full shrink-0"
-              style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #9fb9d6 100%)" }}
-            />
-            <div className="flex flex-1 flex-col justify-between overflow-hidden px-3 py-2">
-              <p
-                className="line-clamp-4 flex-1 overflow-hidden text-left text-[11px] leading-6 text-slate-600"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(to bottom, transparent 0, transparent 1.4rem, #e5e9ef 1.4rem, #e5e9ef calc(1.4rem + 1px))",
-                }}
-              >
-                {item.content}
-              </p>
-              <div className="mt-2 shrink-0 border-t border-slate-200 pt-1.5">
-                <p className="truncate text-[10px] text-slate-500">{item.department}</p>
-                <p className="truncate text-sm font-bold text-slate-900">{item.name}</p>
-              </div>
-            </div>
-          </div>
+          <MiniPaperCard key={`${item.id}-${index}`} item={item} />
         ))}
       </motion.div>
+    </div>
+  );
+}
+
+function MiniPaperCard({ item }: { item: ReelEntry }) {
+  return (
+    <div
+      className="flex shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+      style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT }}
+    >
+      <div
+        className="relative isolate shrink-0 overflow-hidden px-3 py-3"
+        style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
+      >
+        <MountainBackdrop />
+        <LightBeam className="absolute right-4 top-0 h-full w-1 opacity-80" />
+        <CompassIcon className="absolute left-1 top-1/2 h-9 w-9 -translate-y-1/2 text-slate-700/60" />
+
+        <div className="relative z-10 ml-9 flex flex-col gap-1">
+          <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-2 py-0.5 text-[7px] font-bold text-white">
+            {BADGE_TEXT}
+          </span>
+          <p className="text-[10px] font-extrabold leading-tight text-slate-900">
+            우리 조직의 새로운 축,
+            <br />
+            어떠한 <span className="text-blue-600">‘축의 전환’</span>이
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col justify-between overflow-hidden px-3 py-2">
+        <p
+          className="line-clamp-4 flex-1 overflow-hidden text-left text-[10px] leading-5 text-slate-600"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(to bottom, transparent 0, transparent 1.25rem, #e5e9ef 1.25rem, #e5e9ef calc(1.25rem + 1px))",
+          }}
+        >
+          {item.content}
+        </p>
+
+        <div className="mt-2 flex shrink-0 gap-2 border-t border-slate-200 pt-1.5">
+          <div className="min-w-0 flex-1">
+            <p className="text-[7px] text-slate-400">지역단/파트</p>
+            <p className="truncate border-b border-slate-300 pb-0.5 text-[10px] font-semibold text-slate-800">
+              {item.department}
+            </p>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[7px] text-slate-400">지역단장/파트장</p>
+            <p className="truncate border-b border-slate-300 pb-0.5 text-[10px] font-semibold text-slate-800">
+              {item.name}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

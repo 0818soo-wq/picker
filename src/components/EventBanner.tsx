@@ -55,7 +55,7 @@ export default function EventBanner({
   );
 }
 
-function CompassIcon({ className }: { className?: string }) {
+export function CompassIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="0.75" opacity="0.6" />
@@ -81,7 +81,7 @@ function CompassIcon({ className }: { className?: string }) {
   );
 }
 
-function MountainBackdrop() {
+export function MountainBackdrop() {
   return (
     <svg
       className="absolute inset-x-0 bottom-0 h-2/3 w-full text-[#7a95b8]"
@@ -100,7 +100,7 @@ function MountainBackdrop() {
   );
 }
 
-function LightBeam({ className }: { className?: string }) {
+export function LightBeam({ className }: { className?: string }) {
   return (
     <div
       className={className}
