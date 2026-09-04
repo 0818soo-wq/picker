@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { SailboatIcon } from "@/components/EventBanner";
+import EventBanner, { MountainBackdrop, SailboatIcon } from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
 import Confetti from "@/components/Confetti";
@@ -238,10 +238,12 @@ export default function DrawPage() {
         <motion.div
           key="cover"
           {...fadeUp}
-          className="flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-12 px-6 py-16 text-center"
+          className="relative flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-12 overflow-hidden px-6 py-16 text-center"
         >
-          <SailboatIcon className="h-10 w-10 text-slate-900 sm:h-12 sm:w-12" />
-          <h1 className="flex flex-col items-center gap-3 font-paperlogy">
+          <MountainBackdrop className="absolute inset-x-0 bottom-0 h-1/2 w-full text-slate-300/50" />
+
+          <SailboatIcon className="relative z-10 h-10 w-10 text-slate-900 sm:h-12 sm:w-12" />
+          <h1 className="relative z-10 flex flex-col items-center gap-3 font-paperlogy">
             <span className="text-base font-medium tracking-wide text-slate-500 sm:text-xl">
               &lsquo;26.하 CSM전략회의 이벤트
             </span>
@@ -250,7 +252,7 @@ export default function DrawPage() {
             </span>
           </h1>
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="relative z-10 flex flex-wrap items-center justify-center gap-3">
             <motion.button
               type="button"
               onClick={handleStartWithVideo}
@@ -314,11 +316,7 @@ export default function DrawPage() {
             phase === "spin" && isMultiDraw ? "max-w-6xl" : "max-w-3xl"
           }`}
         >
-          <div className="flex flex-col items-center gap-2 px-6 pt-10 text-center sm:px-10">
-            <SailboatIcon className="h-7 w-7 text-slate-900" />
-            <span className="text-xs font-medium text-slate-400">&lsquo;26.하 CSM전략회의 이벤트 Agent</span>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">축의 전환 추첨</h1>
-          </div>
+          <EventBanner />
 
           <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
             {phase === "ready" && (

@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { MountainBackdrop } from "@/components/EventBanner";
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -42,6 +43,7 @@ function AdminLoginForm() {
     <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#f5f5f7] px-6 py-24">
       <div className="pointer-events-none absolute -left-16 top-10 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-16 bottom-10 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
+      <MountainBackdrop className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 w-full text-slate-300/50" />
 
       <form
         onSubmit={handleSubmit}

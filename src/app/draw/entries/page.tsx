@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { MountainBackdrop } from "@/components/EventBanner";
 import { isSuspiciousEntry } from "@/lib/moderation";
 
 type Entry = {
@@ -65,6 +66,7 @@ export default function EntriesListPage() {
     <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/30 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-indigo-200/30 blur-3xl" />
+      <MountainBackdrop className="pointer-events-none absolute inset-x-0 top-0 h-40 w-full text-slate-300/40" />
       <div className="relative z-10 w-full max-w-5xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -141,21 +143,22 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
-      {suspicious && (
-        <span
-          title="장난 또는 잘못된 접수로 의심됩니다. 내용을 확인해 주세요."
-          className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-sm font-bold text-white shadow-md"
-        >
-          !
-        </span>
-      )}
-
       <div
         className="flex items-center justify-between px-4 py-3"
         style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 100%)" }}
       >
         <span className="truncate text-xs font-medium text-slate-600">{entry.department}</span>
-        <span className="truncate text-sm font-bold text-slate-900">{entry.name}</span>
+        <span className="flex min-w-0 items-center gap-1.5 truncate text-sm font-bold text-slate-900">
+          {suspicious && (
+            <span
+              title="장난 또는 잘못된 접수로 의심됩니다. 내용을 확인해 주세요."
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-300 text-xs font-bold text-white"
+            >
+              !
+            </span>
+          )}
+          {entry.name}
+        </span>
       </div>
 
       <p

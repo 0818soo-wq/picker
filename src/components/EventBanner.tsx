@@ -117,10 +117,10 @@ export function SailboatIcon({ className }: { className?: string }) {
   );
 }
 
-export function MountainBackdrop() {
+export function MountainBackdrop({ className }: { className?: string } = {}) {
   return (
     <svg
-      className="absolute inset-x-0 bottom-0 h-2/3 w-full text-[#7a95b8]"
+      className={className ?? "absolute inset-x-0 bottom-0 h-2/3 w-full text-[#7a95b8]"}
       viewBox="0 0 400 150"
       preserveAspectRatio="none"
       fill="none"

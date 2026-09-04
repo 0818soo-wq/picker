@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { MountainBackdrop } from "@/components/EventBanner";
 import { resolveWinnerDisplay } from "@/lib/format";
 
 type Entry = {
@@ -79,6 +80,7 @@ export default function MonitorPage() {
     <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/30 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-indigo-200/30 blur-3xl" />
+      <MountainBackdrop className="pointer-events-none absolute inset-x-0 top-0 h-40 w-full text-slate-300/40" />
       <div className="relative z-10 w-full max-w-3xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
           <div>
