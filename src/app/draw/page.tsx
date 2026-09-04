@@ -2,13 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Noto_Serif_KR } from "next/font/google";
 import { motion } from "framer-motion";
 import EventBanner, { CompassIcon, LightBeam, MountainBackdrop } from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
-
-const coverSerif = Noto_Serif_KR({ subsets: ["latin"], weight: ["500"] });
 
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "cover" | "landing" | "ready" | "spin" | "reveal";
@@ -67,7 +64,7 @@ export default function DrawPage() {
   const readyAnnounceRef = useRef<{ url: string; audio: HTMLAudioElement } | null>(null);
   const READY_ANNOUNCE_TEXT =
     "여러분이 아까 작성해준 '축의 전환' 내용을 랜덤으로 뽑아보겠습니다. 추첨을 시작할까요?";
-  const READY_ANNOUNCE_RATE = 1.1;
+  const READY_ANNOUNCE_RATE = 1;
 
   useEffect(() => {
     if (phase !== "landing") return;
@@ -210,12 +207,12 @@ export default function DrawPage() {
           <MountainBackdrop />
           <LightBeam className="absolute right-12 top-0 h-full w-1.5 opacity-80 sm:right-20" />
           <CompassIcon className="relative z-10 h-20 w-20 text-slate-700/60 sm:h-24 sm:w-24" />
-          <h1 className="relative z-10 flex flex-col items-center gap-2">
-            <span className={`${coverSerif.className} text-lg tracking-wide text-slate-700 sm:text-2xl`}>
+          <h1 className="relative z-10 flex flex-col items-center gap-2 font-paperlogy">
+            <span className="text-lg font-medium tracking-wide text-slate-700 sm:text-2xl">
               &lsquo;26.하 CSM전략회의 이벤트
             </span>
             <span className="text-3xl font-extrabold tracking-tight text-[#13294b] sm:text-5xl">
-              AI 당첨자 추천 <span className="text-blue-600">Agent</span>
+              AI 당첨자 추첨 <span className="text-blue-600">Agent</span>
             </span>
           </h1>
 
