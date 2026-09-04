@@ -65,7 +65,9 @@ export default function DrawPage() {
   // 사장님 영상 화면 → 메인화면으로 넘어갈 때만 나오는 안내 음성입니다.
   // 영상이 재생되는 동안 미리 받아둬서, 실제 전환 시점에는 지연 없이 바로 재생됩니다.
   const readyAnnounceRef = useRef<{ url: string; audio: HTMLAudioElement } | null>(null);
-  const READY_ANNOUNCE_TEXT = "여러분이 아까 작성해준 '축의 전환' 내용을 랜덤으로 뽑아보겠습니다.";
+  const READY_ANNOUNCE_TEXT =
+    "여러분이 아까 작성해준 '축의 전환' 내용을 랜덤으로 뽑아보겠습니다. 추첨을 시작할까요?";
+  const READY_ANNOUNCE_RATE = 1.1;
 
   useEffect(() => {
     if (phase !== "landing") return;
@@ -81,6 +83,7 @@ export default function DrawPage() {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         audio.preload = "auto";
+        audio.playbackRate = READY_ANNOUNCE_RATE;
         readyAnnounceRef.current = { url, audio };
       })
       .catch(() => {});
@@ -111,7 +114,9 @@ export default function DrawPage() {
       .then((res) => (res.ok ? res.blob() : null))
       .then((blob) => {
         if (!blob) return;
-        new Audio(URL.createObjectURL(blob)).play().catch(() => {});
+        const audio = new Audio(URL.createObjectURL(blob));
+        audio.playbackRate = READY_ANNOUNCE_RATE;
+        audio.play().catch(() => {});
       })
       .catch(() => {});
   }
