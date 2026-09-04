@@ -19,7 +19,7 @@ const SLOT_STEP = ITEM_WIDTH + ITEM_GAP;
 const LEAD_COUNT = 24;
 const TRAIL_COUNT = 6;
 
-const BADGE_TEXT = "CSM전략회의 소통의 장 1";
+const BADGE_TEXT = "'26.하 CSM전략회의 이벤트";
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -161,7 +161,7 @@ export function MultiSlotReel({
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="flex flex-wrap justify-center gap-3">
+      <div className="grid w-full gap-3" style={{ gridTemplateColumns: `repeat(${top.length}, minmax(0, 1fr))` }}>
         {top.map((winner, i) => (
           <CompactReelRow
             key={winner.id}
@@ -173,7 +173,10 @@ export function MultiSlotReel({
         ))}
       </div>
       {bottom.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-3">
+        <div
+          className="grid w-full gap-3"
+          style={{ gridTemplateColumns: `repeat(${bottom.length}, minmax(0, 1fr))` }}
+        >
           {bottom.map((winner, i) => (
             <CompactReelRow
               key={winner.id}
@@ -240,8 +243,8 @@ function CompactReelRow({
   return (
     <div
       ref={containerRef}
-      className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 py-3"
-      style={{ width: COMPACT_ITEM_WIDTH * 2 + COMPACT_ITEM_GAP }}
+      className="relative w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 py-3"
+      style={{ minWidth: COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP }}
     >
       <div
         className="pointer-events-none absolute inset-y-0 left-1/2 z-10 -translate-x-1/2 rounded-xl border-[3px] border-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.35)]"

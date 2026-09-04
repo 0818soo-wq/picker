@@ -43,11 +43,12 @@ export default function WinnerSheet({
 }
 
 // 여러 명을 한 번에 추첨했을 때, 내용 없이 이름 카드만 균형 있게(상단/하단) 보여주는 발표 화면입니다.
+// PC 화면 비율을 고려해 각 행의 카드 수만큼 그리드 열을 고정해 줄바꿈 없이 정확히 배치합니다.
 export function WinnerNameGrid({ winners }: { winners: ReelEntry[] }) {
   const { top, bottom } = splitBalancedRows(winners);
 
   return (
-    <div className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-xl">
+    <div className="w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-xl">
       <EventBanner
         badge="당첨자 발표"
         titleLine1={`🎉 ${winners.length}명의 당첨을 축하합니다!`}
@@ -59,13 +60,19 @@ export function WinnerNameGrid({ winners }: { winners: ReelEntry[] }) {
       />
 
       <div className="flex flex-col items-center gap-4 px-6 py-8 sm:px-10 sm:py-10">
-        <div className="flex flex-wrap justify-center gap-4">
+        <div
+          className="grid w-full gap-4"
+          style={{ gridTemplateColumns: `repeat(${top.length}, minmax(0, 1fr))` }}
+        >
           {top.map((w) => (
             <WinnerNameCard key={w.id} department={w.department} name={w.name} />
           ))}
         </div>
         {bottom.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-4">
+          <div
+            className="grid w-full gap-4"
+            style={{ gridTemplateColumns: `repeat(${bottom.length}, minmax(0, 1fr))` }}
+          >
             {bottom.map((w) => (
               <WinnerNameCard key={w.id} department={w.department} name={w.name} />
             ))}
@@ -80,7 +87,7 @@ function WinnerNameCard({ department, name }: { department: string; name: string
   const resolved = resolveWinnerDisplay(name, department);
 
   return (
-    <div className="flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md sm:w-40">
+    <div className="flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
       <div
         className="relative isolate flex flex-col items-center gap-1 overflow-hidden px-2 py-4"
         style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}

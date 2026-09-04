@@ -43,6 +43,7 @@ export default function DrawPage() {
   const staffGroup = entries.filter((e) => e.group_type === "no_draw");
   const remaining = drawGroup.filter((e) => !e.is_winner);
   const winners = drawGroup.filter((e) => e.is_winner);
+  const isMultiDraw = roundWinners.length > 1;
 
   function handleIntroClick() {
     const video = introRef.current;
@@ -167,7 +168,11 @@ export default function DrawPage() {
       )}
 
       {(phase === "ready" || phase === "spin") && (
-        <div className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-xl">
+        <div
+          className={`w-full overflow-hidden rounded-3xl bg-white shadow-xl ${
+            phase === "spin" && isMultiDraw ? "max-w-6xl" : "max-w-3xl"
+          }`}
+        >
           <EventBanner />
 
           <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
@@ -266,7 +271,7 @@ export default function DrawPage() {
       )}
 
       {phase === "reveal" && roundWinners.length > 0 && (
-        <div className="flex w-full max-w-2xl flex-col items-center gap-6">
+        <div className={`flex w-full flex-col items-center gap-6 ${isMultiDraw ? "max-w-5xl" : "max-w-2xl"}`}>
           <video
             ref={winRef}
             src="/videos/win.mp4"
