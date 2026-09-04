@@ -186,7 +186,7 @@ export default function DrawPage() {
   function handleSkipIntro() {
     const video = introRef.current;
     if (video) video.pause();
-    handleGoToMainFromVideo();
+    setPhase("ready");
   }
 
   useEffect(() => {
