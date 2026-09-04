@@ -23,6 +23,7 @@ export default function DrawPage() {
   const [starting, setStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [autoAdvancePaused, setAutoAdvancePaused] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const introRef = useRef<HTMLVideoElement>(null);
   const winRef = useRef<HTMLVideoElement>(null);
@@ -306,46 +307,56 @@ export default function DrawPage() {
           지역단장 접수 {drawGroup.length} · 추첨 대상 {remaining.length} · 당첨자 {winners.length} · 본사 파트장 접수{" "}
           {staffGroup.length}
         </span>
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-3 text-xs text-slate-300">
             <button type="button" onClick={handleBackToMain} className="hover:text-slate-500">
               메인화면가기
             </button>
             <span>·</span>
             <button type="button" onClick={handleShowIntro} className="text-slate-500 hover:text-slate-700">
-              사장님 추첨시작
+              사장님 추첨하기
             </button>
             <span>·</span>
             <button
               type="button"
-              onClick={() => setAutoAdvancePaused((v) => !v)}
+              onClick={() => setShowMoreMenu((v) => !v)}
               className="hover:text-slate-500"
             >
-              {autoAdvancePaused ? "자동진행 재개" : "자동진행중지"}
-            </button>
-            <span>·</span>
-            <button type="button" onClick={handleReset} className="hover:text-slate-500">
-              초기화
+              {showMoreMenu ? "접기" : "더보기"}
             </button>
           </div>
 
-          <div className="flex items-center gap-3 sm:ml-6">
-            <Link href="/draw/status" className="hover:text-slate-500">
-              참여자 현황
-            </Link>
-            <span>·</span>
-            <Link href="/draw/entries" className="hover:text-slate-500">
-              접수 목록 보기
-            </Link>
-            <span>·</span>
-            <Link href="/draw/monitor" className="hover:text-slate-500">
-              실시간 현황(무음)
-            </Link>
-            <span>·</span>
-            <button type="button" onClick={handleLogout} className="hover:text-slate-500">
-              로그아웃
-            </button>
-          </div>
+          {showMoreMenu && (
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
+              <button
+                type="button"
+                onClick={() => setAutoAdvancePaused((v) => !v)}
+                className="hover:text-slate-500"
+              >
+                {autoAdvancePaused ? "자동진행 재개" : "자동진행중지"}
+              </button>
+              <span>·</span>
+              <button type="button" onClick={handleReset} className="hover:text-slate-500">
+                초기화
+              </button>
+              <span>·</span>
+              <Link href="/draw/status" className="hover:text-slate-500">
+                참여자 현황
+              </Link>
+              <span>·</span>
+              <Link href="/draw/entries" className="hover:text-slate-500">
+                접수 목록 보기
+              </Link>
+              <span>·</span>
+              <Link href="/draw/monitor" className="hover:text-slate-500">
+                실시간 현황(무음)
+              </Link>
+              <span>·</span>
+              <button type="button" onClick={handleLogout} className="hover:text-slate-500">
+                로그아웃
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </main>

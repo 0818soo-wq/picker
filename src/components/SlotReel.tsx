@@ -19,7 +19,7 @@ const SLOT_STEP = ITEM_WIDTH + ITEM_GAP;
 const LEAD_COUNT = 24;
 const TRAIL_COUNT = 6;
 
-const BADGE_TEXT = "'26.하 CSM전략회의 이벤트";
+const BADGE_TEXT = "'26.하 CSM전략회의 이벤트 Agent";
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];

@@ -1,4 +1,4 @@
-const EVENT_BADGE = "'26.하 CSM전략회의 이벤트";
+const EVENT_BADGE = "'26.하 CSM전략회의 이벤트 Agent";
 const EVENT_TITLE_LINE1 = "우리 조직의 새로운 축,";
 const EVENT_TITLE_PREFIX = "어떠한 ";
 const EVENT_TITLE_HIGHLIGHT = "‘축의 전환’";
