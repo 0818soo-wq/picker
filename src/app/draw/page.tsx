@@ -1,18 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Noto_Serif_KR } from "next/font/google";
 import { motion } from "framer-motion";
 import EventBanner, { CompassIcon, LightBeam, MountainBackdrop } from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
 
+const coverSerif = Noto_Serif_KR({ subsets: ["latin"], weight: ["500"] });
+
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "cover" | "landing" | "ready" | "spin" | "reveal";
 
 export default function DrawPage() {
-  const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [phase, setPhase] = useState<Phase>("cover");
@@ -37,6 +38,11 @@ export default function DrawPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 최초 마운트 시 접수 목록을 불러옵니다.
     fetchEntries().finally(() => setEntriesLoading(false));
   }, [fetchEntries]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 다른 화면에서 #main으로 돌아오면 대문화면을 건너뜁니다.
+    if (window.location.hash === "#main") setPhase("ready");
+  }, []);
 
   const drawGroup = entries.filter((e) => e.group_type === "draw");
   const staffGroup = entries.filter((e) => e.group_type === "no_draw");
@@ -137,11 +143,6 @@ export default function DrawPage() {
     await fetchEntries();
   }
 
-  async function handleLogout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin-login");
-  }
-
   return (
     <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
       {phase === "cover" && (
@@ -152,8 +153,13 @@ export default function DrawPage() {
           <MountainBackdrop />
           <LightBeam className="absolute right-12 top-0 h-full w-1.5 opacity-80 sm:right-20" />
           <CompassIcon className="relative z-10 h-20 w-20 text-slate-700/60 sm:h-24 sm:w-24" />
-          <h1 className="relative z-10 text-2xl font-extrabold leading-snug text-slate-900 sm:text-4xl">
-            &lsquo;26.하 CSM전략회의 이벤트 Agent
+          <h1 className="relative z-10 flex flex-col items-center gap-2">
+            <span className={`${coverSerif.className} text-lg tracking-wide text-slate-700 sm:text-2xl`}>
+              &lsquo;26.하 CSM전략회의 이벤트
+            </span>
+            <span className="text-3xl font-extrabold tracking-tight text-[#13294b] sm:text-5xl">
+              AI 당첨자 추천 <span className="text-blue-600">Agent</span>
+            </span>
           </h1>
 
           <div className="relative z-10 flex flex-wrap items-center justify-center gap-4">
@@ -351,20 +357,16 @@ export default function DrawPage() {
           </button>
           <span>·</span>
           <Link href="/draw/status" className="hover:text-slate-500">
-            참여자 현황
+            작성자현황
           </Link>
           <span>·</span>
           <Link href="/draw/entries" className="hover:text-slate-500">
-            접수 목록 보기
+            작성카드보기
           </Link>
           <span>·</span>
           <Link href="/draw/monitor" className="hover:text-slate-500">
-            실시간 현황(무음)
+            당첨자현황
           </Link>
-          <span>·</span>
-          <button type="button" onClick={handleLogout} className="hover:text-slate-500">
-            로그아웃
-          </button>
         </div>
         {phase !== "ready" && (
           <button type="button" onClick={handleBackToMain} className="text-xs text-slate-300 hover:text-slate-500">

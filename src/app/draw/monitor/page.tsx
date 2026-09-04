@@ -54,7 +54,7 @@ export default function MonitorPage() {
       <div className="w-full max-w-3xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <Link href="/draw" className="text-sm text-slate-500 hover:text-slate-700">
+            <Link href="/draw#main" className="text-sm text-slate-500 hover:text-slate-700">
               ← 추첨 화면으로
             </Link>
             <h1 className="mt-1 text-2xl font-bold text-slate-900">실시간 추첨 현황 (관리용)</h1>

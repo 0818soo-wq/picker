@@ -52,7 +52,7 @@ export default function StatusPage() {
     <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
       <div className="w-full max-w-6xl">
         <div className="mb-6">
-          <Link href="/draw" className="text-sm text-slate-500 hover:text-slate-700">
+          <Link href="/draw#main" className="text-sm text-slate-500 hover:text-slate-700">
             ← 추첨 화면으로
           </Link>
           <h1 className="mt-1 text-2xl font-bold text-slate-900">참여자 현황</h1>
