@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import EventBanner from "@/components/EventBanner";
 import SlotReel, { type ReelEntry } from "@/components/SlotReel";
@@ -162,9 +163,12 @@ export default function DrawPage() {
           <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
             {phase === "ready" && (
               <div className="flex flex-col items-center gap-10">
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-5xl font-bold text-slate-900">{remaining.length}</span>
-                  <span className="text-sm text-slate-500">추첨 대상</span>
+                <div className="flex flex-col items-center gap-2 rounded-3xl border border-slate-200 bg-gradient-to-b from-blue-50 to-white px-10 py-7 shadow-sm">
+                  <span className="text-sm font-medium text-slate-500">총 제출된 &lsquo;축&rsquo;의 개수</span>
+                  <span className="flex items-baseline gap-1 text-5xl font-extrabold text-[#13294b]">
+                    {entries.length}
+                    <span className="text-xl font-semibold text-slate-400">개</span>
+                  </span>
                 </div>
 
                 {errorMessage && (
@@ -207,13 +211,21 @@ export default function DrawPage() {
                   </div>
                 )}
 
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-800"
-                >
-                  초기화
-                </button>
+                <div className="flex gap-3">
+                  <Link
+                    href="/draw/entries"
+                    className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-800"
+                  >
+                    접수 목록 보기
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="rounded-full border border-slate-300 px-5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-800"
+                  >
+                    초기화
+                  </button>
+                </div>
               </div>
             )}
 
