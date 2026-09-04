@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { isSuspiciousEntry } from "@/lib/moderation";
 
 type Entry = {
   id: string;
@@ -136,8 +137,19 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
 }
 
 function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) {
+  const suspicious = isSuspiciousEntry(entry.content);
+
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      {suspicious && (
+        <span
+          title="장난 또는 잘못된 접수로 의심됩니다. 내용을 확인해 주세요."
+          className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-sm font-bold text-white shadow-md"
+        >
+          !
+        </span>
+      )}
+
       <div
         className="flex items-center justify-between px-4 py-3"
         style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 100%)" }}
@@ -146,7 +158,11 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
         <span className="truncate text-sm font-bold text-slate-900">{entry.name}</span>
       </div>
 
-      <p className="min-h-24 flex-1 whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed text-slate-700">
+      <p
+        className={`min-h-24 flex-1 whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed ${
+          suspicious ? "bg-pink-50/60 text-slate-700" : "text-slate-700"
+        }`}
+      >
         {entry.content}
       </p>
 

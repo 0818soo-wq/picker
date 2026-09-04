@@ -50,7 +50,7 @@ export default function StatusPage() {
 
   return (
     <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-6xl">
         <div className="mb-6">
           <Link href="/draw" className="text-sm text-slate-500 hover:text-slate-700">
             ← 추첨 화면으로
@@ -70,7 +70,7 @@ export default function StatusPage() {
         {loading ? (
           <p className="text-sm text-slate-500">불러오는 중...</p>
         ) : (
-          <div className="flex flex-col gap-10">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <GroupSection
               title="지역단 (추첨 대상)"
               attendees={regionAttendees}
@@ -129,7 +129,7 @@ function GroupSection({
         <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
           미제출 명단 ({filteredPending.length}명)
         </div>
-        <ul className="divide-y divide-slate-100">
+        <ul className="max-h-[60vh] divide-y divide-slate-100 overflow-y-auto">
           {filteredPending.map((a, i) => (
             <li key={`${a.name}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm">
               <span className="text-slate-800">
