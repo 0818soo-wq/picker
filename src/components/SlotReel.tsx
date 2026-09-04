@@ -97,12 +97,28 @@ export default function SlotReel({
         {reelItems.map((item, index) => (
           <div
             key={`${item.id}-${index}`}
-            className="flex shrink-0 flex-col justify-center gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm"
+            className="flex shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white text-center shadow-sm"
             style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT }}
           >
-            <p className="truncate text-xs text-slate-500">{item.department}</p>
-            <p className="truncate text-lg font-bold text-slate-900">{item.name}</p>
-            <p className="mt-1 line-clamp-4 text-xs leading-relaxed text-slate-600">{item.content}</p>
+            <div
+              className="h-3 w-full shrink-0"
+              style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #9fb9d6 100%)" }}
+            />
+            <div className="flex flex-1 flex-col justify-between overflow-hidden px-3 py-2">
+              <p
+                className="line-clamp-4 flex-1 overflow-hidden text-left text-[11px] leading-6 text-slate-600"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(to bottom, transparent 0, transparent 1.4rem, #e5e9ef 1.4rem, #e5e9ef calc(1.4rem + 1px))",
+                }}
+              >
+                {item.content}
+              </p>
+              <div className="mt-2 shrink-0 border-t border-slate-200 pt-1.5">
+                <p className="truncate text-[10px] text-slate-500">{item.department}</p>
+                <p className="truncate text-sm font-bold text-slate-900">{item.name}</p>
+              </div>
+            </div>
           </div>
         ))}
       </motion.div>

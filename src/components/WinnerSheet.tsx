@@ -32,21 +32,7 @@ export default function WinnerSheet({
         >
           {content}
         </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <StaticField label="지역단/파트" value={department} />
-          <StaticField label="지역단장/파트장" value={name} />
-        </div>
       </div>
-    </div>
-  );
-}
-
-function StaticField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-      {label}
-      <div className="border-b-2 border-slate-300 px-1 py-2 text-base text-slate-900">{value}</div>
     </div>
   );
 }
