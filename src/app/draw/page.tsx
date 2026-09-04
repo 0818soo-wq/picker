@@ -209,11 +209,13 @@ export default function DrawPage() {
   return (
     <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       {phase !== "cover" && phase !== "landing" && (
-        <button
+        <motion.button
           type="button"
           onClick={handleReset}
           aria-label="초기화"
           title="초기화"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
           className="fixed right-4 top-4 z-40 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-slate-400 shadow-sm backdrop-blur-sm transition-colors hover:bg-white hover:text-slate-600"
         >
           <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2">
@@ -224,7 +226,7 @@ export default function DrawPage() {
               d="M4.5 9A8 8 0 1 1 4 13"
             />
           </svg>
-        </button>
+        </motion.button>
       )}
 
       <AnimatePresence mode="wait">
@@ -312,7 +314,7 @@ export default function DrawPage() {
           <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
             {phase === "ready" && (
               <div className="flex flex-col items-center gap-10">
-                <div className="flex flex-col items-center gap-2 rounded-3xl border border-slate-200 bg-gradient-to-b from-blue-50 to-white px-10 py-7 shadow-sm">
+                <div className="flex flex-col items-center gap-2 rounded-3xl bg-gradient-to-b from-blue-50 to-white px-10 py-7 shadow-sm">
                   <span className="text-sm font-medium text-slate-500">총 제출된 &lsquo;축&rsquo;의 개수</span>
                   <span className="flex items-baseline gap-1 text-5xl font-extrabold text-[#13294b]">
                     {entries.length}
@@ -328,19 +330,22 @@ export default function DrawPage() {
                   <p className="text-sm text-slate-500">한 번에 추첨할 인원</p>
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     {Array.from({ length: 8 }, (_, i) => i + 1).map((n) => (
-                      <button
+                      <motion.button
                         key={n}
                         type="button"
                         onClick={() => setDrawCount(n)}
                         disabled={starting}
-                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.92 }}
+                        transition={{ duration: 0.15, ease: APPLE_EASE }}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                           drawCount === n
                             ? "bg-[#13294b] text-white"
-                            : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                            : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
                         }`}
                       >
                         {n}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
 
@@ -350,8 +355,10 @@ export default function DrawPage() {
                     disabled={starting || entriesLoading || remaining.length === 0}
                     initial={{ opacity: 0, scale: 0.7 }}
                     animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="flex h-16 w-64 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white transition-colors hover:bg-[#1c3a68] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-16 w-64 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white shadow-sm transition-colors hover:bg-[#1c3a68] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {entriesLoading
                       ? "불러오는 중..."
@@ -370,7 +377,7 @@ export default function DrawPage() {
                       {winners.map((w) => (
                         <li
                           key={w.id}
-                          className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
+                          className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3"
                         >
                           <span className="text-sm text-slate-800">
                             {w.department} · {w.name}
@@ -433,13 +440,15 @@ export default function DrawPage() {
           ) : (
             <WinnerNameGrid winners={roundWinners} />
           )}
-          <button
+          <motion.button
             type="button"
             onClick={handleBackToMain}
-            className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white shadow-sm hover:bg-[#1c3a68]"
           >
             추첨화면으로
-          </button>
+          </motion.button>
         </motion.div>
       )}
       </AnimatePresence>

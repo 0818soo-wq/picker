@@ -178,7 +178,7 @@ function GroupSection({
 
 function DashboardStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl border border-slate-200 bg-white py-4 shadow-sm">
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-white py-4 shadow-sm">
       <span className="text-2xl font-bold text-slate-900">{value}</span>
       <span className="text-xs text-slate-500">{label}</span>
     </div>
