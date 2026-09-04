@@ -162,11 +162,9 @@ export default function DrawPage() {
           <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
             {phase === "ready" && (
               <div className="flex flex-col items-center gap-10">
-                <div className="flex flex-wrap justify-center gap-8 text-center">
-                  <Stat label="지역단장 접수" value={drawGroup.length} />
-                  <Stat label="추첨 대상" value={remaining.length} />
-                  <Stat label="당첨자" value={winners.length} />
-                  <Stat label="본사 파트장 접수" value={staffGroup.length} />
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-5xl font-bold text-slate-900">{remaining.length}</span>
+                  <span className="text-sm text-slate-500">추첨 대상</span>
                 </div>
 
                 {errorMessage && (
@@ -252,22 +250,19 @@ export default function DrawPage() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleLogout}
-        className="mt-10 text-sm text-slate-400 hover:text-slate-600"
-      >
-        로그아웃
-      </button>
+      <div className="mt-10 flex flex-col items-center gap-2">
+        <span className="text-[10px] tracking-wide text-slate-300">
+          지역단장 접수 {drawGroup.length} · 추첨 대상 {remaining.length} · 당첨자 {winners.length} · 본사 파트장 접수{" "}
+          {staffGroup.length}
+        </span>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="text-sm text-slate-400 hover:text-slate-600"
+        >
+          로그아웃
+        </button>
+      </div>
     </main>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <span className="text-3xl font-bold text-slate-900">{value}</span>
-      <span className="text-xs text-slate-500">{label}</span>
-    </div>
   );
 }
