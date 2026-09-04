@@ -65,8 +65,8 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-slate-100 px-6 py-24 text-center">
         <div className="text-5xl">✅</div>
-        <h1 className="text-2xl font-bold text-slate-900">접수가 완료되었습니다!</h1>
-        <p className="text-slate-600">소중한 의견 감사합니다.</p>
+        <h1 className="text-2xl font-bold text-slate-900">접수가 잘 되었습니다.</h1>
+        <p className="text-slate-600">CSM을 위한 축의 전환을 이뤄내시길 기원합니다!</p>
       </main>
     );
   }

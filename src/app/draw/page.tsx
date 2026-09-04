@@ -59,10 +59,62 @@ export default function DrawPage() {
   useEffect(() => {
     if (phase !== "landing") return;
     const video = introRef.current;
-    if (!video) return;
-    video.currentTime = 0;
-    video.play().catch(() => {});
+    if (video) video.currentTime = 0;
   }, [phase]);
+
+  // 사장님 영상 화면 → 메인화면으로 넘어갈 때만 나오는 안내 음성입니다.
+  // 영상이 재생되는 동안 미리 받아둬서, 실제 전환 시점에는 지연 없이 바로 재생됩니다.
+  const readyAnnounceRef = useRef<{ url: string; audio: HTMLAudioElement } | null>(null);
+  const READY_ANNOUNCE_TEXT = "여러분이 아까 작성해준 '축의 전환' 내용을 랜덤으로 뽑아보겠습니다.";
+
+  useEffect(() => {
+    if (phase !== "landing") return;
+    let cancelled = false;
+    fetch("/api/admin/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: READY_ANNOUNCE_TEXT }),
+    })
+      .then((res) => (res.ok ? res.blob() : null))
+      .then((blob) => {
+        if (cancelled || !blob) return;
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.preload = "auto";
+        readyAnnounceRef.current = { url, audio };
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      if (readyAnnounceRef.current) {
+        URL.revokeObjectURL(readyAnnounceRef.current.url);
+        readyAnnounceRef.current = null;
+      }
+    };
+  }, [phase]);
+
+  function handleGoToMainFromVideo() {
+    setPhase("ready");
+    const prepared = readyAnnounceRef.current;
+    if (prepared) {
+      prepared.audio.currentTime = 0;
+      prepared.audio.play().catch(() => {});
+      return;
+    }
+    // 폴백: 아직 준비되지 않았다면 그 자리에서 요청해 재생합니다.
+    fetch("/api/admin/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: READY_ANNOUNCE_TEXT }),
+    })
+      .then((res) => (res.ok ? res.blob() : null))
+      .then((blob) => {
+        if (!blob) return;
+        new Audio(URL.createObjectURL(blob)).play().catch(() => {});
+      })
+      .catch(() => {});
+  }
 
   async function handleStart() {
     if (starting || remaining.length === 0) return;
@@ -123,7 +175,7 @@ export default function DrawPage() {
   function handleSkipIntro() {
     const video = introRef.current;
     if (video) video.pause();
-    setPhase("ready");
+    handleGoToMainFromVideo();
   }
 
   useEffect(() => {
@@ -191,7 +243,7 @@ export default function DrawPage() {
             src="/videos/intro.mp4"
             className="h-full w-full object-cover"
             playsInline
-            onEnded={() => setPhase("ready")}
+            onEnded={handleGoToMainFromVideo}
             onError={() => setPhase("ready")}
           />
           <button
