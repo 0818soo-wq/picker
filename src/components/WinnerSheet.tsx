@@ -16,7 +16,7 @@ export default function WinnerSheet({
         titleLine1="🎉 당첨을 축하합니다!"
         titlePrefix={`${department} `}
         titleHighlight={name}
-        titleSuffix=" 님"
+        titleSuffix=" 단장님"
         subtitleLine1="소중한 의견을 나눠주셔서 감사합니다."
         subtitleLine2=""
       />
