@@ -33,10 +33,16 @@ cp .env.example .env.local
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase secret(service_role) 키 (서버에서만 사용, 절대 클라이언트에 노출되지 않음) |
 | `ADMIN_PASSCODE` | `/draw` 페이지 접근 비밀번호 |
 | `ADMIN_SESSION_SECRET` | 관리자 로그인 세션 서명용 임의의 긴 문자열 (예: `openssl rand -hex 32`) |
+| `TYPECAST_API_KEY` | [typecast.ai](https://typecast.ai) API 키 (당첨자 이름을 실시간 음성으로 읽어주는 데 사용) |
+| `TYPECAST_VOICE_ID` | 당첨 발표에 사용할 목소리(예: 사장님 캐릭터)의 voice_id |
+
+`TYPECAST_VOICE_ID`를 모르면, 두 환경변수를 등록하고 배포한 뒤 관리자 로그인 상태로 `/api/admin/typecast-voices`에 접속하면 사용 가능한 목소리 목록(이름/ID)을 확인할 수 있습니다.
 
 ## 3. 영상 자산
 
 `public/videos/intro.mp4`, `public/videos/win.mp4` 두 파일을 준비해 넣으면 추첨 화면에서 자동 재생됩니다. 자세한 내용은 [`public/videos/README.md`](./public/videos/README.md) 참고. 파일이 없어도 앱은 정상 동작하며 해당 단계를 건너뜁니다.
+
+당첨 화면에서는 영상과 별개로, 타입캐스트 API로 "축하합니다 {소속} {이름}단장입니다"를 실시간 생성해 재생합니다. `TYPECAST_API_KEY`/`TYPECAST_VOICE_ID`가 설정되지 않았거나 API 호출이 실패해도 화면 표시와 영상 재생 자체는 정상 동작합니다.
 
 ## 4. 로컬 실행
 
@@ -52,7 +58,7 @@ npm run dev
 ## 5. Vercel 배포
 
 1. 이 저장소를 [Vercel](https://vercel.com/new)에서 Import 합니다.
-2. Project Settings > Environment Variables에 위 4개 환경변수를 등록합니다.
+2. Project Settings > Environment Variables에 위 환경변수들을 등록합니다.
 3. Deploy 하면 아래 두 링크를 각 대상에게 공유할 수 있습니다.
    - `https://<프로젝트명>.vercel.app/entry/leader`
    - `https://<프로젝트명>.vercel.app/entry/staff`

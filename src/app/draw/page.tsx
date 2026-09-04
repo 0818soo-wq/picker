@@ -96,7 +96,7 @@ export default function DrawPage() {
   }
 
   useEffect(() => {
-    if (phase !== "reveal") return;
+    if (phase !== "reveal" || !winner) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 당첨 확정 후 최신 통계를 다시 불러옵니다.
     fetchEntries();
     const video = winRef.current;
@@ -104,7 +104,26 @@ export default function DrawPage() {
       video.currentTime = 0;
       video.play().catch(() => {});
     }
-  }, [phase, fetchEntries]);
+
+    const text = `축하합니다 ${winner.department} ${winner.name}단장입니다`;
+    let audioUrl: string | null = null;
+    fetch("/api/admin/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    })
+      .then((res) => (res.ok ? res.blob() : null))
+      .then((blob) => {
+        if (!blob) return;
+        audioUrl = URL.createObjectURL(blob);
+        new Audio(audioUrl).play().catch(() => {});
+      })
+      .catch(() => {});
+
+    return () => {
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+    };
+  }, [phase, winner, fetchEntries]);
 
   function handleNextRound() {
     setPhase("ready");
@@ -217,6 +236,7 @@ export default function DrawPage() {
             src="/videos/win.mp4"
             className="max-h-[40vh] w-full max-w-md rounded-2xl border border-slate-200 bg-white"
             playsInline
+            muted
             onError={(e) => {
               (e.currentTarget as HTMLVideoElement).style.display = "none";
             }}
