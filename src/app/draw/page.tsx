@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import EventBanner from "@/components/EventBanner";
 import SlotReel, { type ReelEntry } from "@/components/SlotReel";
+import WinnerSheet from "@/components/WinnerSheet";
 
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
 type Phase = "idle" | "intro" | "spin" | "reveal";
@@ -137,6 +138,7 @@ export default function DrawPage() {
         </button>
       </div>
 
+      {phase !== "reveal" && (
       <div className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-xl">
         <EventBanner />
 
@@ -210,37 +212,31 @@ export default function DrawPage() {
             </div>
           )}
 
-          {phase === "reveal" && winner && (
-            <div className="flex flex-col items-center gap-6">
-              <video
-                ref={winRef}
-                src="/videos/win.mp4"
-                className="max-h-[40vh] w-full max-w-md rounded-2xl border border-slate-200 bg-slate-100"
-                playsInline
-                onError={(e) => {
-                  (e.currentTarget as HTMLVideoElement).style.display = "none";
-                }}
-              />
-              <div className="flex w-full max-w-lg flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
-                <p className="text-xl font-semibold text-blue-600">🎉 당첨을 축하합니다 🎉</p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {winner.department} · {winner.name}
-                </p>
-                <p className="max-h-40 w-full overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-4 text-left text-sm leading-relaxed text-slate-700">
-                  {winner.content}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleNextRound}
-                className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
-              >
-                다음 추첨
-              </button>
-            </div>
-          )}
         </div>
       </div>
+      )}
+
+      {phase === "reveal" && winner && (
+        <div className="flex w-full max-w-2xl flex-col items-center gap-6">
+          <video
+            ref={winRef}
+            src="/videos/win.mp4"
+            className="max-h-[40vh] w-full max-w-md rounded-2xl border border-slate-200 bg-white"
+            playsInline
+            onError={(e) => {
+              (e.currentTarget as HTMLVideoElement).style.display = "none";
+            }}
+          />
+          <WinnerSheet department={winner.department} name={winner.name} content={winner.content} />
+          <button
+            type="button"
+            onClick={handleNextRound}
+            className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
+          >
+            다음 추첨
+          </button>
+        </div>
+      )}
     </main>
   );
 }

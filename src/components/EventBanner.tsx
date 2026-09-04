@@ -6,7 +6,23 @@ const EVENT_TITLE_SUFFIX = "이 필요할까요?";
 const EVENT_SUBTITLE_LINE1 = "변화하는 환경 속에서 우리 조직이 나아가야 할 방향을";
 const EVENT_SUBTITLE_LINE2 = "함께 고민해주세요.";
 
-export default function EventBanner() {
+export default function EventBanner({
+  badge = EVENT_BADGE,
+  titleLine1 = EVENT_TITLE_LINE1,
+  titlePrefix = EVENT_TITLE_PREFIX,
+  titleHighlight = EVENT_TITLE_HIGHLIGHT,
+  titleSuffix = EVENT_TITLE_SUFFIX,
+  subtitleLine1 = EVENT_SUBTITLE_LINE1,
+  subtitleLine2 = EVENT_SUBTITLE_LINE2,
+}: {
+  badge?: string;
+  titleLine1?: string;
+  titlePrefix?: string;
+  titleHighlight?: string;
+  titleSuffix?: string;
+  subtitleLine1?: string;
+  subtitleLine2?: string;
+}) {
   return (
     <div
       className="relative isolate overflow-hidden px-6 py-10 sm:px-10 sm:py-12"
@@ -18,20 +34,22 @@ export default function EventBanner() {
 
       <div className="relative z-10 flex flex-col gap-3 sm:ml-28">
         <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-4 py-1.5 text-xs font-bold text-white sm:text-sm">
-          {EVENT_BADGE}
+          {badge}
         </span>
         <h1 className="text-2xl font-extrabold leading-snug text-slate-900 sm:text-3xl">
-          {EVENT_TITLE_LINE1}
+          {titleLine1}
           <br />
-          {EVENT_TITLE_PREFIX}
-          <span className="text-blue-600">{EVENT_TITLE_HIGHLIGHT}</span>
-          {EVENT_TITLE_SUFFIX}
+          {titlePrefix}
+          <span className="text-blue-600">{titleHighlight}</span>
+          {titleSuffix}
         </h1>
-        <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
-          {EVENT_SUBTITLE_LINE1}
-          <br />
-          {EVENT_SUBTITLE_LINE2}
-        </p>
+        {(subtitleLine1 || subtitleLine2) && (
+          <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
+            {subtitleLine1}
+            {subtitleLine1 && subtitleLine2 && <br />}
+            {subtitleLine2}
+          </p>
+        )}
       </div>
     </div>
   );
