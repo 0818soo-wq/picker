@@ -73,14 +73,14 @@ export default function SlotReel({
   return (
     <div
       ref={containerRef}
-      className="relative w-full overflow-hidden rounded-2xl bg-zinc-900 py-6"
+      className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 py-6"
     >
       <div
-        className="pointer-events-none absolute inset-y-0 left-1/2 z-10 -translate-x-1/2 rounded-2xl border-4 border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.6)]"
+        className="pointer-events-none absolute inset-y-0 left-1/2 z-10 -translate-x-1/2 rounded-2xl border-4 border-blue-600 shadow-[0_0_30px_rgba(37,99,235,0.35)]"
         style={{ width: ITEM_WIDTH }}
       />
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-zinc-900 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-zinc-900 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-slate-50 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-slate-50 to-transparent" />
 
       <motion.div
         className="flex items-stretch"
@@ -97,12 +97,12 @@ export default function SlotReel({
         {reelItems.map((item, index) => (
           <div
             key={`${item.id}-${index}`}
-            className="flex shrink-0 flex-col justify-center gap-2 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-800 p-4 text-center"
+            className="flex shrink-0 flex-col justify-center gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm"
             style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT }}
           >
-            <p className="truncate text-xs text-zinc-400">{item.department}</p>
-            <p className="truncate text-lg font-bold text-white">{item.name}</p>
-            <p className="mt-1 line-clamp-4 text-xs leading-relaxed text-zinc-300">{item.content}</p>
+            <p className="truncate text-xs text-slate-500">{item.department}</p>
+            <p className="truncate text-lg font-bold text-slate-900">{item.name}</p>
+            <p className="mt-1 line-clamp-4 text-xs leading-relaxed text-slate-600">{item.content}</p>
           </div>
         ))}
       </motion.div>

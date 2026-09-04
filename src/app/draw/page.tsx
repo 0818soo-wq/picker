@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import EventBanner from "@/components/EventBanner";
 import SlotReel, { type ReelEntry } from "@/components/SlotReel";
 
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
@@ -121,124 +122,124 @@ export default function DrawPage() {
 
   if (loading) {
     return (
-      <main className="flex flex-1 items-center justify-center bg-black text-zinc-400">
+      <main className="flex flex-1 items-center justify-center bg-slate-100 text-slate-500">
         불러오는 중...
       </main>
     );
   }
 
   return (
-    <main className="flex flex-1 flex-col bg-black px-6 py-10 text-white">
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8">
-        <header className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">조직 전환 추첨 이벤트</h1>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="text-sm text-zinc-400 hover:text-zinc-200"
-          >
-            로그아웃
-          </button>
-        </header>
+    <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mb-4 flex w-full max-w-3xl items-center justify-between px-2 text-sm text-slate-500">
+        <span>관리자 추첨 화면</span>
+        <button type="button" onClick={handleLogout} className="hover:text-slate-800">
+          로그아웃
+        </button>
+      </div>
 
-        {phase === "idle" && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-10">
-            <div className="flex flex-wrap justify-center gap-8 text-center">
-              <Stat label="지역단장 접수" value={drawGroup.length} />
-              <Stat label="추첨 대상" value={remaining.length} />
-              <Stat label="당첨자" value={winners.length} />
-              <Stat label="본사 파트장 접수" value={staffGroup.length} />
-            </div>
+      <div className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-xl">
+        <EventBanner />
 
-            {errorMessage && (
-              <p className="rounded-lg bg-red-950 px-4 py-2 text-sm text-red-300">{errorMessage}</p>
-            )}
-
-            <button
-              type="button"
-              onClick={handleStart}
-              disabled={starting || remaining.length === 0}
-              className="flex h-16 w-64 items-center justify-center rounded-full bg-yellow-400 text-lg font-bold text-black transition-colors hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {remaining.length === 0 ? "추첨 대상 없음" : starting ? "준비 중..." : "추첨 시작"}
-            </button>
-
-            {winners.length > 0 && (
-              <div className="w-full max-w-xl">
-                <h2 className="mb-3 text-sm font-medium text-zinc-400">당첨자 목록</h2>
-                <ul className="flex flex-col gap-2">
-                  {winners.map((w) => (
-                    <li
-                      key={w.id}
-                      className="flex items-center gap-3 rounded-lg bg-zinc-900 px-4 py-3"
-                    >
-                      <span className="text-sm">
-                        {w.department} · {w.name}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+        <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
+          {phase === "idle" && (
+            <div className="flex flex-col items-center gap-10">
+              <div className="flex flex-wrap justify-center gap-8 text-center">
+                <Stat label="지역단장 접수" value={drawGroup.length} />
+                <Stat label="추첨 대상" value={remaining.length} />
+                <Stat label="당첨자" value={winners.length} />
+                <Stat label="본사 파트장 접수" value={staffGroup.length} />
               </div>
-            )}
 
-            <button
-              type="button"
-              onClick={handleReset}
-              className="text-xs text-zinc-600 hover:text-zinc-400"
-            >
-              당첨 기록 초기화 (리허설용)
-            </button>
-          </div>
-        )}
+              {errorMessage && (
+                <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{errorMessage}</p>
+              )}
 
-        {phase === "intro" && (
-          <div className="flex flex-1 items-center justify-center">
-            <video
-              ref={introRef}
-              src="/videos/intro.mp4"
-              className="max-h-[70vh] w-full max-w-2xl rounded-2xl bg-zinc-900"
-              playsInline
-              onError={() => setPhase("spin")}
-            />
-          </div>
-        )}
+              <button
+                type="button"
+                onClick={handleStart}
+                disabled={starting || remaining.length === 0}
+                className="flex h-16 w-64 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white transition-colors hover:bg-[#1c3a68] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {remaining.length === 0 ? "추첨 대상 없음" : starting ? "준비 중..." : "추첨 시작"}
+              </button>
 
-        {phase === "spin" && winner && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            <p className="text-lg font-medium text-yellow-400">추첨 중...</p>
-            <SlotReel key={drawRound} pool={pool} winner={winner} onSettle={() => setPhase("reveal")} />
-          </div>
-        )}
+              {winners.length > 0 && (
+                <div className="w-full max-w-xl">
+                  <h2 className="mb-3 text-sm font-medium text-slate-500">당첨자 목록</h2>
+                  <ul className="flex flex-col gap-2">
+                    {winners.map((w) => (
+                      <li
+                        key={w.id}
+                        className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
+                      >
+                        <span className="text-sm text-slate-800">
+                          {w.department} · {w.name}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-        {phase === "reveal" && winner && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-6">
-            <video
-              ref={winRef}
-              src="/videos/win.mp4"
-              className="max-h-[40vh] w-full max-w-md rounded-2xl bg-zinc-900"
-              playsInline
-              onError={(e) => {
-                (e.currentTarget as HTMLVideoElement).style.display = "none";
-              }}
-            />
-            <div className="flex w-full max-w-lg flex-col items-center gap-3 text-center">
-              <p className="text-xl font-semibold text-yellow-400">🎉 당첨을 축하합니다 🎉</p>
-              <p className="text-2xl font-bold">
-                {winner.department} · {winner.name}
-              </p>
-              <p className="max-h-40 w-full overflow-y-auto whitespace-pre-wrap rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm leading-relaxed text-zinc-200">
-                {winner.content}
-              </p>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="text-xs text-slate-400 hover:text-slate-600"
+              >
+                당첨 기록 초기화 (리허설용)
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleNextRound}
-              className="flex h-14 w-56 items-center justify-center rounded-full bg-white text-base font-semibold text-black hover:bg-zinc-200"
-            >
-              다음 추첨
-            </button>
-          </div>
-        )}
+          )}
+
+          {phase === "intro" && (
+            <div className="flex items-center justify-center py-4">
+              <video
+                ref={introRef}
+                src="/videos/intro.mp4"
+                className="max-h-[70vh] w-full max-w-2xl rounded-2xl border border-slate-200 bg-slate-100"
+                playsInline
+                onError={() => setPhase("spin")}
+              />
+            </div>
+          )}
+
+          {phase === "spin" && winner && (
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-lg font-medium text-blue-600">추첨 중...</p>
+              <SlotReel key={drawRound} pool={pool} winner={winner} onSettle={() => setPhase("reveal")} />
+            </div>
+          )}
+
+          {phase === "reveal" && winner && (
+            <div className="flex flex-col items-center gap-6">
+              <video
+                ref={winRef}
+                src="/videos/win.mp4"
+                className="max-h-[40vh] w-full max-w-md rounded-2xl border border-slate-200 bg-slate-100"
+                playsInline
+                onError={(e) => {
+                  (e.currentTarget as HTMLVideoElement).style.display = "none";
+                }}
+              />
+              <div className="flex w-full max-w-lg flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
+                <p className="text-xl font-semibold text-blue-600">🎉 당첨을 축하합니다 🎉</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {winner.department} · {winner.name}
+                </p>
+                <p className="max-h-40 w-full overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-4 text-left text-sm leading-relaxed text-slate-700">
+                  {winner.content}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleNextRound}
+                className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
+              >
+                다음 추첨
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
@@ -247,8 +248,8 @@ export default function DrawPage() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className="text-3xl font-bold">{value}</span>
-      <span className="text-xs text-zinc-500">{label}</span>
+      <span className="text-3xl font-bold text-slate-900">{value}</span>
+      <span className="text-xs text-slate-500">{label}</span>
     </div>
   );
 }
