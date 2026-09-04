@@ -26,6 +26,7 @@ export default function WinnerSheet({
           className="w-full whitespace-pre-wrap text-slate-900"
           style={{
             lineHeight: "2.5rem",
+            minHeight: "22.5rem",
             backgroundImage:
               "repeating-linear-gradient(to bottom, transparent 0, transparent 2.4rem, #d9dee6 2.4rem, #d9dee6 calc(2.4rem + 1px))",
           }}

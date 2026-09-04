@@ -188,12 +188,6 @@ export default function DrawPage() {
             onEnded={() => setPhase("ready")}
             onError={() => setPhase("ready")}
           />
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/30 text-white">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur">
-              <div className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-white" />
-            </div>
-            <p className="text-sm font-medium">화면을 클릭하면 시작합니다</p>
-          </div>
         </div>
       )}
 
@@ -293,10 +287,10 @@ export default function DrawPage() {
           <button
             type="button"
             onClick={handleNextRound}
-            aria-label="다음 추첨"
-            title="다음 추첨"
-            className="h-3 w-3 rounded-full bg-blue-600 transition-transform hover:scale-125"
-          />
+            className="flex h-14 w-56 items-center justify-center rounded-full bg-[#13294b] text-base font-semibold text-white hover:bg-[#1c3a68]"
+          >
+            다음 추첨
+          </button>
         </div>
       )}
 
@@ -332,19 +326,32 @@ export default function DrawPage() {
   );
 }
 
+// finger.png(1056x1489) 기준 손끝 좌표는 이미지 내 (37%, 2%) 지점 — 180도 회전 후에는
+// 박스 내 (63%, 98%) 지점이 되며, 이 지점이 버튼 중앙에 닿도록 위치를 계산했습니다.
+const FINGER_BOX_WIDTH = 135;
+const FINGER_BOX_HEIGHT = 190;
+const FINGER_BOX_LEFT = 43;
+const FINGER_BOX_TOP = -154;
+
 function FingerTap({ onComplete }: { onComplete: () => void }) {
   return (
-    <motion.img
-      src="/images/finger.png"
-      alt=""
-      className="pointer-events-none absolute -right-6 -top-28 h-40 w-40 origin-bottom-right select-none drop-shadow-xl"
-      initial={{ opacity: 0, y: -40, rotate: -6 }}
-      animate={{ opacity: [0, 1, 1, 1], y: [-40, -40, 4, -16], rotate: [-6, -6, -2, -6] }}
-      transition={{ duration: 1, times: [0, 0.25, 0.55, 1], ease: "easeOut" }}
+    <motion.div
+      className="pointer-events-none absolute select-none"
+      style={{ left: FINGER_BOX_LEFT, top: FINGER_BOX_TOP, width: FINGER_BOX_WIDTH, height: FINGER_BOX_HEIGHT }}
+      initial={{ opacity: 0, y: -50 }}
+      animate={{ opacity: [0, 1, 1, 1], y: [-50, -50, 0, -20] }}
+      transition={{ duration: 1, times: [0, 0.25, 0.6, 1], ease: "easeOut" }}
       onAnimationComplete={onComplete}
-      onError={(e) => {
-        (e.currentTarget as HTMLImageElement).style.display = "none";
-      }}
-    />
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/finger.png"
+        alt=""
+        className="h-full w-full rotate-180 drop-shadow-xl"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.display = "none";
+        }}
+      />
+    </motion.div>
   );
 }
