@@ -4,18 +4,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import EventBanner from "@/components/EventBanner";
+import EventBanner, { CompassIcon, LightBeam, MountainBackdrop } from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
 
 type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
-type Phase = "landing" | "ready" | "spin" | "reveal";
+type Phase = "cover" | "landing" | "ready" | "spin" | "reveal";
 
 export default function DrawPage() {
   const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
-  const [phase, setPhase] = useState<Phase>("ready");
+  const [phase, setPhase] = useState<Phase>("cover");
   const [roundWinners, setRoundWinners] = useState<ReelEntry[]>([]);
   const [pool, setPool] = useState<ReelEntry[]>([]);
   const [drawRound, setDrawRound] = useState(0);
@@ -106,7 +106,11 @@ export default function DrawPage() {
     setRoundWinners([]);
   }
 
-  function handleShowIntro() {
+  function handleShowCover() {
+    setPhase("cover");
+  }
+
+  function handleStartWithVideo() {
     setPhase("landing");
   }
 
@@ -140,6 +144,37 @@ export default function DrawPage() {
 
   return (
     <main className="flex flex-1 flex-col items-center bg-slate-100 px-4 py-8 sm:px-6 sm:py-12">
+      {phase === "cover" && (
+        <div
+          className="relative isolate flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-10 overflow-hidden rounded-3xl px-6 py-16 text-center shadow-xl"
+          style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
+        >
+          <MountainBackdrop />
+          <LightBeam className="absolute right-12 top-0 h-full w-1.5 opacity-80 sm:right-20" />
+          <CompassIcon className="relative z-10 h-20 w-20 text-slate-700/60 sm:h-24 sm:w-24" />
+          <h1 className="relative z-10 text-2xl font-extrabold leading-snug text-slate-900 sm:text-4xl">
+            &lsquo;26.하 CSM전략회의 이벤트 Agent
+          </h1>
+
+          <div className="relative z-10 flex flex-wrap items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={handleStartWithVideo}
+              className="flex h-14 w-44 items-center justify-center rounded-full bg-[#13294b] text-base font-bold text-white transition-colors hover:bg-[#1c3a68]"
+            >
+              추첨하기
+            </button>
+            <button
+              type="button"
+              onClick={handleBackToMain}
+              className="flex h-14 w-44 items-center justify-center rounded-full border border-[#13294b] bg-white/80 text-base font-bold text-[#13294b] transition-colors hover:bg-white"
+            >
+              관리하기
+            </button>
+          </div>
+        </div>
+      )}
+
       {phase === "landing" && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black"
@@ -300,13 +335,14 @@ export default function DrawPage() {
         </div>
       )}
 
+      {phase !== "cover" && phase !== "landing" && (
       <div className="mt-10 flex flex-col items-center gap-2">
         <span className="text-[10px] tracking-wide text-slate-300">
           지역단장 접수 {drawGroup.length} · 추첨 대상 {remaining.length} · 당첨자 {winners.length} · 본사 파트장 접수{" "}
           {staffGroup.length}
         </span>
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
-          <button type="button" onClick={handleShowIntro} className="hover:text-slate-500">
+          <button type="button" onClick={handleShowCover} className="hover:text-slate-500">
             대문화면가기
           </button>
           <span>·</span>
@@ -334,6 +370,7 @@ export default function DrawPage() {
           메인화면가기
         </button>
       </div>
+      )}
     </main>
   );
 }
