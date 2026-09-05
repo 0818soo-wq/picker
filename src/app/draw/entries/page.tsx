@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { MountainBackdrop } from "@/components/EventBanner";
 import { getSuspiciousReason, SUSPICIOUS_REASON_LABELS } from "@/lib/moderation";
@@ -141,6 +141,26 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
 function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) {
   const suspiciousReason = getSuspiciousReason(entry.content);
   const [showReason, setShowReason] = useState(false);
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    };
+  }, []);
+
+  function handleMouseEnter() {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+    setShowReason(true);
+  }
+
+  // 마우스를 떼도 바로 사라지지 않고 1초간 유지했다가 사라집니다.
+  function handleMouseLeave() {
+    hideTimeoutRef.current = setTimeout(() => setShowReason(false), 1000);
+  }
 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
@@ -151,7 +171,11 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
         <span className="truncate text-xs font-medium text-slate-600">{entry.department}</span>
         <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-900">
           {suspiciousReason && (
-            <span className="relative shrink-0">
+            <span
+              className="relative shrink-0"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
               <button
                 type="button"
                 onClick={(e) => {
