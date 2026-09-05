@@ -40,7 +40,7 @@ export default function EventBanner({
       {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이
           프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. */}
       <img
-        src={isDefault ? "/images/event-banner-v2-compass.jpg" : "/images/event-banner-v2-plain.jpg"}
+        src={isDefault ? "/images/event-visual-compass.jpg" : "/images/event-visual-plain.jpg"}
         alt=""
         aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover"
