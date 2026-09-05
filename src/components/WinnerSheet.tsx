@@ -15,7 +15,7 @@ export default function WinnerSheet({
   content: string;
 }) {
   const resolved = resolveWinnerDisplay(name, department);
-  const announceText = `${resolved.name}${resolved.titleSuffix} 축하합니다!`;
+  const announceText = `${resolved.department} ${resolved.name} 축하합니다!`;
 
   return (
     <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-xl">
@@ -27,8 +27,8 @@ export default function WinnerSheet({
           </SpeakerButton>
         }
         titleLine1="당첨을 축하합니다!"
-        titlePrefix={`${resolved.department} `}
-        titleHighlight={resolved.name}
+        titlePrefix=""
+        titleHighlight={`${resolved.department} ${resolved.name}`}
         titleSuffix={` ${resolved.titleSuffix}`}
         subtitleLine1="소중한 의견을 나눠주셔서 감사합니다."
         subtitleLine2=""
