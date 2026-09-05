@@ -3,8 +3,9 @@
 import { useEffect, useRef } from "react";
 
 const COLORS = ["#13294b", "#3b82f6", "#93c5fd", "#f4b400", "#ffffff"];
-const PARTICLE_COUNT = 140;
-const DURATION_MS = 2600;
+const PARTICLE_COUNT = 70;
+const DURATION_MS = 2200;
+const MAX_DPR = 2;
 
 type Particle = {
   x: number;
@@ -28,7 +29,7 @@ export default function Confetti() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
     const resize = () => {
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
@@ -62,25 +63,26 @@ export default function Confetti() {
       const fadeStart = DURATION_MS * 0.7;
       const opacity = elapsed < fadeStart ? 1 : Math.max(0, 1 - (elapsed - fadeStart) / (DURATION_MS - fadeStart));
 
+      ctx!.globalAlpha = opacity;
+
       for (const p of particles) {
         p.vy += gravity;
         p.x += p.vx;
         p.y += p.vy;
         p.rotation += p.rotationSpeed;
 
-        ctx!.save();
-        ctx!.globalAlpha = opacity;
-        ctx!.translate(p.x, p.y);
-        ctx!.rotate((p.rotation * Math.PI) / 180);
         ctx!.fillStyle = p.color;
         if (p.shape === "rect") {
+          ctx!.save();
+          ctx!.translate(p.x, p.y);
+          ctx!.rotate((p.rotation * Math.PI) / 180);
           ctx!.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+          ctx!.restore();
         } else {
           ctx!.beginPath();
-          ctx!.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx!.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
           ctx!.fill();
         }
-        ctx!.restore();
       }
 
       if (elapsed < DURATION_MS) {
