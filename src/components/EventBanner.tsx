@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { ReactNode } from "react";
 
 const EVENT_BADGE = "'26.하 CSM전략회의 이벤트 Agent";
@@ -28,19 +27,23 @@ export default function EventBanner({
   subtitleLine1?: string;
   subtitleLine2?: string;
 }) {
+  // 커스텀 문구 없이 기본 문구 그대로 쓰는 경우(대기/추첨 화면, 접수 화면)는
+  // 나침반이 있는 원본 배경을, 당첨자 발표처럼 문구가 매번 바뀌는 화면은
+  // 나침반과 문구가 겹치지 않도록 나침반 없는 배경을 사용합니다.
+  const isDefault = badge === EVENT_BADGE && titleLine1 === EVENT_TITLE_LINE1;
+
   return (
     <div className="relative isolate overflow-hidden px-6 py-10 sm:px-10 sm:py-12">
-      <Image
-        src="/images/event-banner-clean.jpg"
+      {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이
+          프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. */}
+      <img
+        src={isDefault ? "/images/event-banner-clean.jpg" : "/images/event-banner-nocompass.jpg"}
         alt=""
         aria-hidden="true"
-        fill
-        priority
-        unoptimized
-        className="object-cover"
+        className="absolute inset-0 h-full w-full object-cover"
       />
 
-      <div className="relative z-10 ml-16 flex flex-col gap-3 sm:ml-28">
+      <div className={`relative z-10 flex flex-col gap-3 ${isDefault ? "ml-16 sm:ml-28" : ""}`}>
         <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-4 py-1.5 text-xs font-bold text-white sm:text-sm">
           {badge}
         </span>
