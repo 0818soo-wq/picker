@@ -13,6 +13,8 @@ type Entry = {
   group_type: "draw" | "no_draw";
   is_winner: boolean;
   created_at: string;
+  ai_off_topic?: boolean;
+  ai_reason?: string | null;
 };
 
 type Filter = "all" | "draw" | "no_draw";
@@ -139,7 +141,11 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
 }
 
 function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) {
-  const suspiciousReason = getSuspiciousReason(entry.content);
+  const heuristicReason = getSuspiciousReason(entry.content);
+  const isSuspicious = heuristicReason !== null || entry.ai_off_topic === true;
+  const reasonLabel = heuristicReason
+    ? SUSPICIOUS_REASON_LABELS[heuristicReason]
+    : entry.ai_reason ?? "주제와 관련 없는 내용으로 보여요.";
   const [showReason, setShowReason] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -170,7 +176,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
       >
         <span className="truncate text-xs font-medium text-slate-600">{entry.department}</span>
         <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-900">
-          {suspiciousReason && (
+          {isSuspicious && (
             <span
               className="relative shrink-0"
               onMouseEnter={handleMouseEnter}
@@ -189,7 +195,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
               </button>
               {showReason && (
                 <div className="absolute left-1/2 top-full z-20 mt-1.5 w-48 -translate-x-1/2 rounded-lg bg-slate-900 px-3 py-2 text-left text-[11px] font-normal leading-relaxed text-white shadow-lg">
-                  {SUSPICIOUS_REASON_LABELS[suspiciousReason]}
+                  {reasonLabel}
                 </div>
               )}
             </span>
@@ -200,7 +206,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
 
       <p
         className={`min-h-24 flex-1 whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed ${
-          suspiciousReason ? "bg-pink-50/60 text-slate-700" : "text-slate-700"
+          isSuspicious ? "bg-pink-50/60 text-slate-700" : "text-slate-700"
         }`}
       >
         {entry.content}
