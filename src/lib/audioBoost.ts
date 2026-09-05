@@ -15,7 +15,7 @@ function getAudioContext(): AudioContext {
 // 최대 1(원본 크기)까지만 가능해 이 용도로는 부족합니다.
 // 주의: 오디오 엘리먼트 하나당 한 번만 연결할 수 있으므로, 새로 만든
 // Audio 객체에 한 번만 호출해야 합니다.
-export function boostAudioVolume(audio: HTMLAudioElement, gain = 1.6): void {
+export function boostAudioVolume(audio: HTMLAudioElement, gain = 2): void {
   try {
     const ctx = getAudioContext();
     const source = ctx.createMediaElementSource(audio);
