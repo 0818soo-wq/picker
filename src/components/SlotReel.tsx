@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CompassIcon, LightBeam, MountainBackdrop } from "@/components/EventBanner";
 
 export type ReelEntry = {
   id: string;
@@ -279,12 +278,14 @@ function CompactPaperCard({ item }: { item: ReelEntry }) {
       className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
       style={{ width: COMPACT_ITEM_WIDTH, height: COMPACT_ITEM_HEIGHT }}
     >
-      <div
-        className="relative isolate flex flex-1 items-center justify-center overflow-hidden px-2 py-2"
-        style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
-      >
-        <MountainBackdrop />
-        <CompassIcon className="relative z-10 h-6 w-6 text-slate-700/60" />
+      <div className="relative isolate flex flex-1 items-center justify-center overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element -- 작은 릴 카드 배경용 실사 사진 */}
+        <img
+          src="/images/event-banner-v2-compass.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       </div>
       <div className="flex shrink-0 flex-col items-center gap-0.5 px-2 py-2 text-center">
         <p className="truncate text-[8px] text-slate-400">{item.department}</p>
@@ -300,13 +301,14 @@ function MiniPaperCard({ item }: { item: ReelEntry }) {
       className="flex shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
       style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT }}
     >
-      <div
-        className="relative isolate shrink-0 overflow-hidden px-3 py-3"
-        style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
-      >
-        <MountainBackdrop />
-        <LightBeam className="absolute right-4 top-0 h-full w-1 opacity-80" />
-        <CompassIcon className="absolute left-1 top-1/2 h-9 w-9 -translate-y-1/2 text-slate-700/60" />
+      <div className="relative isolate shrink-0 overflow-hidden px-3 py-3">
+        {/* eslint-disable-next-line @next/next/no-img-element -- 작은 릴 카드 배경용 실사 사진 */}
+        <img
+          src="/images/event-banner-v2-compass.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
 
         <div className="relative z-10 ml-9 flex flex-col gap-1">
           <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-2 py-0.5 text-[7px] font-bold text-white">
