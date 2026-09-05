@@ -1,6 +1,6 @@
 "use client";
 
-import EventBanner, { CompassIcon, LightBeam, MountainBackdrop } from "@/components/EventBanner";
+import EventBanner from "@/components/EventBanner";
 import { splitBalancedRows, type ReelEntry } from "@/components/SlotReel";
 import { resolveWinnerDisplay } from "@/lib/format";
 import SpeakerButton from "@/components/SpeakerButton";
@@ -110,16 +110,17 @@ function WinnerNameCard({ department, name }: { department: string; name: string
 
   return (
     <div className="flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
-      <div
-        className="relative isolate flex flex-col items-center gap-1 overflow-hidden px-2 py-4"
-        style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
-      >
-        <MountainBackdrop />
-        <LightBeam className="absolute right-3 top-0 h-full w-1 opacity-80" />
+      <div className="relative isolate flex flex-col items-center gap-1 overflow-hidden px-2 py-4">
+        {/* eslint-disable-next-line @next/next/no-img-element -- 작은 카드 배경용 실사 사진 */}
+        <img
+          src="/images/event-visual-plain.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
         <span className="relative z-10 inline-flex items-center rounded-full bg-[#13294b] px-2 py-0.5 text-[10px] font-bold text-white">
           당첨
         </span>
-        <CompassIcon className="relative z-10 h-8 w-8 text-slate-700/60" />
       </div>
       <div className="flex flex-col items-center gap-0.5 px-3 py-3 text-center">
         <p className="truncate text-xs font-medium text-slate-500">{resolved.department}</p>
