@@ -43,7 +43,7 @@ export default function EventBanner({
         src={isDefault ? "/images/event-visual-compass.jpg" : "/images/event-visual-plain.jpg"}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover"
+        className={`absolute inset-0 h-full w-full object-cover ${isDefault ? "object-left" : "object-center"}`}
         onError={(e) => {
           console.error("[EventBanner] 배경 이미지 로드 실패:", e.currentTarget.src);
           e.currentTarget.style.display = "none";

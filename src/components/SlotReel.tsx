@@ -284,7 +284,7 @@ function CompactPaperCard({ item }: { item: ReelEntry }) {
           src="/images/event-visual-compass.jpg"
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover object-left"
         />
       </div>
       <div className="flex shrink-0 flex-col items-center gap-0.5 px-2 py-2 text-center">
@@ -307,17 +307,19 @@ function MiniPaperCard({ item }: { item: ReelEntry }) {
           src="/images/event-visual-compass.jpg"
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover object-[left_bottom]"
         />
 
         <div className="relative z-10 ml-9 flex flex-col gap-1">
           <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-2 py-0.5 text-[7px] font-bold text-white">
             {BADGE_TEXT}
           </span>
-          <p className="text-[10px] font-extrabold leading-tight text-slate-900">
+          <p className="text-[8px] font-extrabold leading-tight text-slate-900">
             우리 조직의 새로운 축,
             <br />
             어떠한 <span className="text-blue-600">‘축의 전환’</span>이
+            <br />
+            필요할까요?
           </p>
         </div>
       </div>
