@@ -58,7 +58,7 @@ export default function EventBanner({
         width={1086}
         height={169}
         unoptimized
-        className="absolute inset-x-0 bottom-0 h-2/5 w-full object-cover opacity-90"
+        className="absolute inset-x-0 bottom-0 h-[100px] w-full object-cover opacity-90 sm:h-[140px]"
       />
       <LightBeam className="absolute right-10 top-0 h-full w-1.5 sm:right-16" />
       <CompassIcon className="absolute left-2 top-1/2 hidden h-24 w-24 -translate-y-1/2 text-slate-700/60 sm:left-4 sm:block sm:h-28 sm:w-28" />

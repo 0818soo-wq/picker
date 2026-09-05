@@ -15,7 +15,7 @@ export default function WinnerSheet({
   content: string;
 }) {
   const resolved = resolveWinnerDisplay(name, department);
-  const announceText = `축하합니다 ${resolved.department} ${resolved.name}${resolved.titleSuffix}!`;
+  const announceText = `${resolved.name}${resolved.titleSuffix} 축하합니다!`;
 
   return (
     <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-xl">
