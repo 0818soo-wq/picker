@@ -28,42 +28,19 @@ export default function EventBanner({
   subtitleLine1?: string;
   subtitleLine2?: string;
 }) {
-  // 커스텀 문구 없이 기본 문구 그대로 쓰는 경우(대기/추첨 화면, 접수 화면)는
-  // 원본 디자인 사진을 그대로 사용해 원본과 동일하게 보여줍니다.
-  const isDefault = badge === EVENT_BADGE && titleLine1 === EVENT_TITLE_LINE1;
-
-  if (isDefault) {
-    return (
-      <Image
-        src="/images/event-banner.jpg"
-        alt=""
-        width={1086}
-        height={599}
-        priority
-        unoptimized
-        className="block h-auto w-full"
-      />
-    );
-  }
-
   return (
-    <div
-      className="relative isolate overflow-hidden px-6 py-10 sm:px-10 sm:py-12"
-      style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
-    >
+    <div className="relative isolate overflow-hidden px-6 py-10 sm:px-10 sm:py-12">
       <Image
-        src="/images/event-banner-mountain.jpg"
+        src="/images/event-banner-clean.jpg"
         alt=""
         aria-hidden="true"
-        width={1086}
-        height={169}
+        fill
+        priority
         unoptimized
-        className="absolute inset-x-0 bottom-0 h-[100px] w-full object-cover opacity-90 sm:h-[140px]"
+        className="object-cover"
       />
-      <LightBeam className="absolute right-10 top-0 h-full w-1.5 sm:right-16" />
-      <CompassIcon className="absolute left-2 top-1/2 hidden h-24 w-24 -translate-y-1/2 text-slate-700/60 sm:left-4 sm:block sm:h-28 sm:w-28" />
 
-      <div className="relative z-10 flex flex-col gap-3 sm:ml-28">
+      <div className="relative z-10 ml-16 flex flex-col gap-3 sm:ml-28">
         <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-4 py-1.5 text-xs font-bold text-white sm:text-sm">
           {badge}
         </span>
@@ -81,8 +58,8 @@ export default function EventBanner({
         </h1>
         {(subtitleLine1 || subtitleLine2) && (
           <p
-            className="text-sm leading-relaxed text-white sm:text-base"
-            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}
+            className="text-sm leading-relaxed text-slate-700 sm:text-base"
+            style={{ textShadow: "0 1px 4px rgba(255,255,255,0.6)" }}
           >
             {subtitleLine1}
             {subtitleLine1 && subtitleLine2 && <br />}
