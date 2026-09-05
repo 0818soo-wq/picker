@@ -281,7 +281,7 @@ function CompactPaperCard({ item }: { item: ReelEntry }) {
       <div className="relative isolate flex flex-1 items-center justify-center overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element -- 작은 릴 카드 배경용 실사 사진 */}
         <img
-          src="/images/event-banner-v2-compass.jpg"
+          src="/images/event-visual-compass.jpg"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"
@@ -304,7 +304,7 @@ function MiniPaperCard({ item }: { item: ReelEntry }) {
       <div className="relative isolate shrink-0 overflow-hidden px-3 py-3">
         {/* eslint-disable-next-line @next/next/no-img-element -- 작은 릴 카드 배경용 실사 사진 */}
         <img
-          src="/images/event-banner-v2-compass.jpg"
+          src="/images/event-visual-compass.jpg"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 h-full w-full object-cover"
