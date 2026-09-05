@@ -31,10 +31,22 @@ export type SuspiciousReason =
 export const SUSPICIOUS_REASON_LABELS: Record<SuspiciousReason, string> = {
   empty: "내용이 비어 있어요.",
   too_short: "내용이 너무 짧아요 (공백 제외 5자 이하).",
-  repeated_char: "같은 글자만 반복해서 적었어요.",
+  repeated_char: "같은 글자나 짧은 패턴만 반복해서 적었어요.",
   laugh_cry_only: "'ㅋㅋㅋ', 'ㅠㅠㅠ' 같은 표현만 적었어요.",
   placeholder_word: "'테스트', '없음' 같이 의미 없는 단어만 적었어요.",
 };
+
+// "샘플샘플샘플..."처럼 1~6글자짜리 짧은 패턴이 문자열 전체를 채울 만큼
+// 반복되는지 확인합니다. 단순 반복 문자("ㅋㅋㅋㅋ")도 패턴 길이 1로 잡힙니다.
+function hasRepeatingPattern(compact: string): boolean {
+  const maxPatternLen = Math.min(6, Math.floor(compact.length / 3));
+  for (let len = 1; len <= maxPatternLen; len++) {
+    const pattern = compact.slice(0, len);
+    const repeatCount = Math.ceil(compact.length / len);
+    if (pattern.repeat(repeatCount).slice(0, compact.length) === compact) return true;
+  }
+  return false;
+}
 
 // 의심되는 이유가 있으면 그 이유를, 없으면 null을 반환합니다.
 export function getSuspiciousReason(content: string): SuspiciousReason | null {
@@ -43,7 +55,7 @@ export function getSuspiciousReason(content: string): SuspiciousReason | null {
 
   const compact = trimmed.replace(/\s+/g, "");
   if (compact.length <= 5) return "too_short";
-  if (/^(.)\1{3,}$/u.test(compact)) return "repeated_char";
+  if (hasRepeatingPattern(compact)) return "repeated_char";
   if (LAUGH_CRY_ONLY_PATTERN.test(trimmed)) return "laugh_cry_only";
   if (PLACEHOLDER_WORDS.has(compact.toLowerCase())) return "placeholder_word";
 
