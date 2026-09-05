@@ -19,13 +19,14 @@ export default function WinnerSheet({
 
   return (
     <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-xl">
-      <SpeakerButton
-        text={announceText}
-        className="absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/30 text-white/80 backdrop-blur-sm transition-colors hover:bg-white/50 hover:text-white"
-      />
       <EventBanner
         badge="당첨자 발표"
-        titleLine1="🎉 당첨을 축하합니다!"
+        titleIcon={
+          <SpeakerButton text={announceText} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
+            🎉
+          </SpeakerButton>
+        }
+        titleLine1="당첨을 축하합니다!"
         titlePrefix={`${resolved.department} `}
         titleHighlight={resolved.name}
         titleSuffix={` ${resolved.titleSuffix}`}
@@ -61,13 +62,14 @@ export function WinnerNameGrid({ winners }: { winners: ReelEntry[] }) {
 
   return (
     <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-xl">
-      <SpeakerButton
-        text={announceText}
-        className="absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/30 text-white/80 backdrop-blur-sm transition-colors hover:bg-white/50 hover:text-white"
-      />
       <EventBanner
         badge="당첨자 발표"
-        titleLine1={`🎉 ${winners.length}명의 당첨을 축하합니다!`}
+        titleIcon={
+          <SpeakerButton text={announceText} className="cursor-pointer transition-transform hover:scale-110 active:scale-95">
+            🎉
+          </SpeakerButton>
+        }
+        titleLine1={`${winners.length}명의 당첨을 축하합니다!`}
         titlePrefix=""
         titleHighlight=""
         titleSuffix=""

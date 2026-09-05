@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 
 const EVENT_BADGE = "'26.하 CSM전략회의 이벤트 Agent";
 const EVENT_TITLE_LINE1 = "우리 조직의 새로운 축,";
@@ -10,6 +11,7 @@ const EVENT_SUBTITLE_LINE2 = "함께 고민해주세요.";
 
 export default function EventBanner({
   badge = EVENT_BADGE,
+  titleIcon,
   titleLine1 = EVENT_TITLE_LINE1,
   titlePrefix = EVENT_TITLE_PREFIX,
   titleHighlight = EVENT_TITLE_HIGHLIGHT,
@@ -18,6 +20,7 @@ export default function EventBanner({
   subtitleLine2 = EVENT_SUBTITLE_LINE2,
 }: {
   badge?: string;
+  titleIcon?: ReactNode;
   titleLine1?: string;
   titlePrefix?: string;
   titleHighlight?: string;
@@ -65,6 +68,7 @@ export default function EventBanner({
           {badge}
         </span>
         <h1 className="text-2xl font-extrabold leading-snug text-slate-900 sm:text-3xl">
+          {titleIcon && <>{titleIcon} </>}
           {titleLine1}
           {(titlePrefix || titleHighlight || titleSuffix) && (
             <>

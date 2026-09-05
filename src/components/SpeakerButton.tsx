@@ -1,10 +1,20 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 
-// 눌렀을 때 사장님 목소리로 지정된 문구를 읽어주는 작은 스피커 버튼입니다.
+// 눌렀을 때 사장님 목소리로 지정된 문구를 읽어주는 버튼입니다. children을 주면
+// 기본 스피커 아이콘 대신 그 내용(예: 🎉 이모지)을 그대로 버튼으로 씁니다.
 // 마운트되는 즉시 음성을 미리 받아둬서, 클릭 시 지연 없이 바로 재생됩니다.
-export default function SpeakerButton({ text, className }: { text: string; className?: string }) {
+export default function SpeakerButton({
+  text,
+  className,
+  children,
+}: {
+  text: string;
+  className?: string;
+  children?: ReactNode;
+}) {
   const preparedRef = useRef<{ url: string; audio: HTMLAudioElement } | null>(null);
 
   useEffect(() => {
@@ -79,24 +89,26 @@ export default function SpeakerButton({ text, className }: { text: string; class
       title="사장님 목소리로 축하 인사 듣기"
       className={className}
     >
-      <svg viewBox="0 0 24 24" className="h-full w-full p-1" fill="currentColor">
-        <path d="M4 9v6h4l5 5V4L8 9H4z" />
-        <path
-          d="M16.5 8.5a5 5 0 0 1 0 7"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M18.8 6.2a8.5 8.5 0 0 1 0 11.6"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          fill="none"
-          opacity="0.6"
-        />
-      </svg>
+      {children ?? (
+        <svg viewBox="0 0 24 24" className="h-full w-full p-1" fill="currentColor">
+          <path d="M4 9v6h4l5 5V4L8 9H4z" />
+          <path
+            d="M16.5 8.5a5 5 0 0 1 0 7"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            d="M18.8 6.2a8.5 8.5 0 0 1 0 11.6"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.6"
+          />
+        </svg>
+      )}
     </button>
   );
 }
