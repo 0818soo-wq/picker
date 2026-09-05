@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import { boostAudioVolume } from "@/lib/audioBoost";
 
 // 눌렀을 때 사장님 목소리로 지정된 문구를 읽어주는 버튼입니다. children을 주면
 // 기본 스피커 아이콘 대신 그 내용(예: 🎉 이모지)을 그대로 버튼으로 씁니다.
@@ -30,6 +31,7 @@ export default function SpeakerButton({
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         audio.preload = "auto";
+        boostAudioVolume(audio);
         preparedRef.current = { url, audio };
       })
       .catch((err) => console.error("[speaker] 음성 준비 실패", err));
@@ -70,7 +72,9 @@ export default function SpeakerButton({
       })
       .then((blob) => {
         if (!blob) return;
-        new Audio(URL.createObjectURL(blob)).play().catch((err) => {
+        const audio = new Audio(URL.createObjectURL(blob));
+        boostAudioVolume(audio);
+        audio.play().catch((err) => {
           console.error("[speaker] 음성 재생 실패", err);
           window.alert("음성 재생에 실패했습니다. 다시 눌러 주세요.");
         });

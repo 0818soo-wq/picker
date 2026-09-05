@@ -55,13 +55,14 @@ export default function WinnerSheet({
 // PC 화면 비율을 고려해 각 행의 카드 수만큼 그리드 열을 고정해 줄바꿈 없이 정확히 배치합니다.
 export function WinnerNameGrid({ winners }: { winners: ReelEntry[] }) {
   const { top, bottom } = splitBalancedRows(winners);
-  // 여러 명을 한 번에 뽑았을 때는 소속 없이 "이름+직책"만 이어서 읽어줍니다.
-  const announceText = `축하합니다 ${winners
+  // 여러 명을 한 번에 뽑았을 때는 소속 없이 "이름+직책"을 먼저 쭉 부른 뒤
+  // 마지막에 "축하합니다!"로 마무리합니다.
+  const announceText = `${winners
     .map((w) => {
       const resolved = resolveWinnerDisplay(w.name, w.department);
       return `${resolved.name}${resolved.titleSuffix}`;
     })
-    .join(" ")}!`;
+    .join(" ")} 축하합니다!`;
 
   return (
     <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-xl">

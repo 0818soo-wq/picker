@@ -7,6 +7,7 @@ import EventBanner, { MountainBackdrop, SailboatIcon } from "@/components/EventB
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
 import Confetti from "@/components/Confetti";
+import { boostAudioVolume } from "@/lib/audioBoost";
 
 // 애플 느낌의 부드러운 전환에 쓰는 이징/트랜지션 프리셋입니다.
 const APPLE_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -90,6 +91,7 @@ export default function DrawPage() {
         const audio = new Audio(url);
         audio.preload = "auto";
         audio.playbackRate = READY_ANNOUNCE_RATE;
+        boostAudioVolume(audio);
         readyAnnounceRef.current = { url, audio };
       })
       .catch(() => {});
@@ -122,6 +124,7 @@ export default function DrawPage() {
         if (!blob) return;
         const audio = new Audio(URL.createObjectURL(blob));
         audio.playbackRate = READY_ANNOUNCE_RATE;
+        boostAudioVolume(audio);
         audio.play().catch(() => {});
       })
       .catch(() => {});
