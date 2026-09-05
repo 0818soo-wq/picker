@@ -180,20 +180,21 @@ export default function MonitorPage() {
 
             <div className="overflow-hidden rounded-2xl bg-white/60 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
               <div className="px-4 py-2 text-sm font-medium text-slate-500">
-                당첨자 목록 ({winners.length}명) · 이름을 누르면 사장님 목소리로 축하 인사를 들려드려요
+                당첨자 목록 ({winners.length}명) · 스피커 버튼을 누르면 사장님 목소리로 축하 인사를 들려드려요
               </div>
               <ul className="divide-y divide-slate-100">
                 {winners.map((w, i) => {
                   const resolved = resolveWinnerDisplay(w.name, w.department);
                   return (
                     <li key={w.id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedWinner(w);
-                          handleAnnounceWinner(w);
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setSelectedWinner(w)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") setSelectedWinner(w);
                         }}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-slate-50"
+                        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm hover:bg-slate-50"
                       >
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
                           {i + 1}
@@ -202,12 +203,41 @@ export default function MonitorPage() {
                           {resolved.department} {resolved.name}
                           {resolved.titleSuffix}
                         </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAnnounceWinner(w);
+                          }}
+                          aria-label="사장님 목소리로 축하 인사 듣기"
+                          title="사장님 목소리로 축하 인사 듣기"
+                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/40 text-slate-400/70 backdrop-blur-sm transition-colors hover:bg-white/70 hover:text-slate-500"
+                        >
+                          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor">
+                            <path d="M4 9v6h4l5 5V4L8 9H4z" />
+                            <path
+                              d="M16.5 8.5a5 5 0 0 1 0 7"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              fill="none"
+                            />
+                            <path
+                              d="M18.8 6.2a8.5 8.5 0 0 1 0 11.6"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              fill="none"
+                              opacity="0.6"
+                            />
+                          </svg>
+                        </button>
                         {w.won_at && (
                           <span className="ml-auto whitespace-nowrap text-xs text-slate-400">
                             {new Date(w.won_at).toLocaleTimeString("ko-KR")} ({roundSizeByWonAt.get(w.won_at) ?? 1}명)
                           </span>
                         )}
-                      </button>
+                      </div>
                     </li>
                   );
                 })}

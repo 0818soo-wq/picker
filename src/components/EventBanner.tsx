@@ -74,7 +74,10 @@ export default function EventBanner({
           )}
         </h1>
         {(subtitleLine1 || subtitleLine2) && (
-          <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p
+            className="text-sm leading-relaxed text-white sm:text-base"
+            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}
+          >
             {subtitleLine1}
             {subtitleLine1 && subtitleLine2 && <br />}
             {subtitleLine2}
