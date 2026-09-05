@@ -6,8 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import EventBanner, { MountainBackdrop, SailboatIcon } from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
-import Confetti from "@/components/Confetti";
-import { boostAudioVolume } from "@/lib/audioBoost";
+import { boostAudioVolume, resumeAudioForPlayback } from "@/lib/audioBoost";
 
 // 애플 느낌의 부드러운 전환에 쓰는 이징/트랜지션 프리셋입니다.
 const APPLE_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -107,6 +106,7 @@ export default function DrawPage() {
 
   function handleGoToMainFromVideo() {
     setPhase("ready");
+    resumeAudioForPlayback();
     const prepared = readyAnnounceRef.current;
     if (prepared) {
       prepared.audio.currentTime = 0;
@@ -430,7 +430,6 @@ export default function DrawPage() {
           {...fadeUp}
           className={`flex w-full flex-col items-center gap-6 ${isMultiDraw ? "max-w-5xl" : "max-w-2xl"}`}
         >
-          <Confetti />
           <video
             ref={winRef}
             src="/videos/win.mp4"

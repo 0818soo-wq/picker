@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import { boostAudioVolume } from "@/lib/audioBoost";
+import { boostAudioVolume, resumeAudioForPlayback } from "@/lib/audioBoost";
 
 // 눌렀을 때 사장님 목소리로 지정된 문구를 읽어주는 버튼입니다. children을 주면
 // 기본 스피커 아이콘 대신 그 내용(예: 🎉 이모지)을 그대로 버튼으로 씁니다.
@@ -47,6 +47,7 @@ export default function SpeakerButton({
 
   function handleClick(e: React.MouseEvent) {
     e.stopPropagation();
+    resumeAudioForPlayback();
     const prepared = preparedRef.current;
     if (prepared) {
       prepared.audio.currentTime = 0;
