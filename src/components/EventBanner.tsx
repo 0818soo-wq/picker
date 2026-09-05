@@ -37,6 +37,7 @@ export default function EventBanner({
         width={1086}
         height={599}
         priority
+        unoptimized
         className="block h-auto w-full"
       />
     );
@@ -53,6 +54,7 @@ export default function EventBanner({
         aria-hidden="true"
         width={1086}
         height={169}
+        unoptimized
         className="absolute inset-x-0 bottom-0 h-2/3 w-full object-cover opacity-90"
       />
       <LightBeam className="absolute right-10 top-0 h-full w-1.5 sm:right-16" />

@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MountainBackdrop } from "@/components/EventBanner";
+import SpeakerButton from "@/components/SpeakerButton";
 import { resolveWinnerDisplay } from "@/lib/format";
 
 type Entry = {
@@ -60,87 +61,10 @@ export default function MonitorPage() {
     return counts;
   }, [winners]);
 
-  // 당첨자별 축하 음성을 미리 받아둡니다. 클릭 시점에 바로 fetch부터 하면
-  // 재생이 사용자 클릭과 비동기로 분리되어 일부 브라우저(사파리 등)의
-  // 자동재생 정책에 막힐 수 있어, 당첨자가 뜨는 즉시 미리 준비해둡니다.
-  const announceCacheRef = useRef<Map<string, { url: string; audio: HTMLAudioElement }>>(new Map());
-
   const announceTextFor = useCallback((w: Entry) => {
     const resolved = resolveWinnerDisplay(w.name, w.department);
     return `축하합니다 ${resolved.department} ${resolved.name}${resolved.titleSuffix}!`;
   }, []);
-
-  useEffect(() => {
-    const cache = announceCacheRef.current;
-    for (const w of winners) {
-      if (cache.has(w.id)) continue;
-      fetch("/api/admin/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: announceTextFor(w) }),
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            console.error("[monitor] 음성 준비 실패", res.status, await res.text().catch(() => ""));
-            return null;
-          }
-          return res.blob();
-        })
-        .then((blob) => {
-          if (!blob || cache.has(w.id)) return;
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          audio.preload = "auto";
-          cache.set(w.id, { url, audio });
-        })
-        .catch((err) => console.error("[monitor] 음성 준비 중 오류", err));
-    }
-  }, [winners, announceTextFor]);
-
-  useEffect(() => {
-    const cache = announceCacheRef.current;
-    return () => {
-      cache.forEach(({ url }) => URL.revokeObjectURL(url));
-      cache.clear();
-    };
-  }, []);
-
-  function handleAnnounceWinner(w: Entry) {
-    const prepared = announceCacheRef.current.get(w.id);
-    if (prepared) {
-      prepared.audio.currentTime = 0;
-      prepared.audio.play().catch((err) => {
-        console.error("[monitor] 음성 재생 실패", err);
-        window.alert("음성 재생에 실패했습니다. 다시 눌러 주세요.");
-      });
-      return;
-    }
-    // 폴백: 아직 준비되지 않았다면 그 자리에서 요청해 재생합니다.
-    fetch("/api/admin/speak", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: announceTextFor(w) }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          console.error("[monitor] 음성 생성 실패", res.status, await res.text().catch(() => ""));
-          window.alert("음성 생성에 실패했습니다.");
-          return null;
-        }
-        return res.blob();
-      })
-      .then((blob) => {
-        if (!blob) return;
-        new Audio(URL.createObjectURL(blob)).play().catch((err) => {
-          console.error("[monitor] 음성 재생 실패", err);
-          window.alert("음성 재생에 실패했습니다. 다시 눌러 주세요.");
-        });
-      })
-      .catch((err) => {
-        console.error("[monitor] 음성 요청 중 오류", err);
-        window.alert("네트워크 오류로 음성을 재생할 수 없습니다.");
-      });
-  }
 
   return (
     <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
@@ -203,35 +127,10 @@ export default function MonitorPage() {
                           {resolved.department} {resolved.name}
                           {resolved.titleSuffix}
                         </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAnnounceWinner(w);
-                          }}
-                          aria-label="사장님 목소리로 축하 인사 듣기"
-                          title="사장님 목소리로 축하 인사 듣기"
+                        <SpeakerButton
+                          text={announceTextFor(w)}
                           className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/40 text-slate-400/70 backdrop-blur-sm transition-colors hover:bg-white/70 hover:text-slate-500"
-                        >
-                          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor">
-                            <path d="M4 9v6h4l5 5V4L8 9H4z" />
-                            <path
-                              d="M16.5 8.5a5 5 0 0 1 0 7"
-                              stroke="currentColor"
-                              strokeWidth="1.6"
-                              strokeLinecap="round"
-                              fill="none"
-                            />
-                            <path
-                              d="M18.8 6.2a8.5 8.5 0 0 1 0 11.6"
-                              stroke="currentColor"
-                              strokeWidth="1.6"
-                              strokeLinecap="round"
-                              fill="none"
-                              opacity="0.6"
-                            />
-                          </svg>
-                        </button>
+                        />
                         {w.won_at && (
                           <span className="ml-auto whitespace-nowrap text-xs text-slate-400">
                             {new Date(w.won_at).toLocaleTimeString("ko-KR")} ({roundSizeByWonAt.get(w.won_at) ?? 1}명)
