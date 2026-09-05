@@ -54,9 +54,17 @@ export default function WinnerSheet({
 // PC 화면 비율을 고려해 각 행의 카드 수만큼 그리드 열을 고정해 줄바꿈 없이 정확히 배치합니다.
 export function WinnerNameGrid({ winners }: { winners: ReelEntry[] }) {
   const { top, bottom } = splitBalancedRows(winners);
+  // 여러 명을 한 번에 뽑았을 때는 소속/직책 없이 이름만 이어서 읽어줍니다.
+  const announceText = `축하합니다 ${winners
+    .map((w) => resolveWinnerDisplay(w.name, w.department).name)
+    .join(" ")}!`;
 
   return (
-    <div className="w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-xl">
+    <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-xl">
+      <SpeakerButton
+        text={announceText}
+        className="absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/30 text-white/80 backdrop-blur-sm transition-colors hover:bg-white/50 hover:text-white"
+      />
       <EventBanner
         badge="당첨자 발표"
         titleLine1={`🎉 ${winners.length}명의 당첨을 축하합니다!`}
@@ -93,7 +101,6 @@ export function WinnerNameGrid({ winners }: { winners: ReelEntry[] }) {
 
 function WinnerNameCard({ department, name }: { department: string; name: string }) {
   const resolved = resolveWinnerDisplay(name, department);
-  const announceText = `축하합니다 ${resolved.department} ${resolved.name}${resolved.titleSuffix}!`;
 
   return (
     <div className="flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
@@ -103,10 +110,6 @@ function WinnerNameCard({ department, name }: { department: string; name: string
       >
         <MountainBackdrop />
         <LightBeam className="absolute right-3 top-0 h-full w-1 opacity-80" />
-        <SpeakerButton
-          text={announceText}
-          className="absolute right-1.5 top-1.5 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-white/40 text-slate-700/70 backdrop-blur-sm transition-colors hover:bg-white/70"
-        />
         <span className="relative z-10 inline-flex items-center rounded-full bg-[#13294b] px-2 py-0.5 text-[10px] font-bold text-white">
           당첨
         </span>
