@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MountainBackdrop } from "@/components/EventBanner";
-import { isSuspiciousEntry } from "@/lib/moderation";
+import { getSuspiciousReason, SUSPICIOUS_REASON_LABELS } from "@/lib/moderation";
 
 type Entry = {
   id: string;
@@ -139,7 +139,8 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
 }
 
 function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) {
-  const suspicious = isSuspiciousEntry(entry.content);
+  const suspiciousReason = getSuspiciousReason(entry.content);
+  const [showReason, setShowReason] = useState(false);
 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
@@ -148,22 +149,34 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
         style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 100%)" }}
       >
         <span className="truncate text-xs font-medium text-slate-600">{entry.department}</span>
-        <span className="flex min-w-0 items-center gap-1.5 truncate text-sm font-bold text-slate-900">
-          {suspicious && (
-            <span
-              title="장난 또는 잘못된 접수로 의심됩니다. 내용을 확인해 주세요."
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-300 text-xs font-bold text-white"
-            >
-              !
+        <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-900">
+          {suspiciousReason && (
+            <span className="relative shrink-0">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowReason((v) => !v);
+                }}
+                aria-label="의심 사유 보기"
+                className="flex h-5 w-5 items-center justify-center rounded-full bg-pink-300 text-xs font-bold text-white"
+              >
+                !
+              </button>
+              {showReason && (
+                <div className="absolute left-1/2 top-full z-20 mt-1.5 w-48 -translate-x-1/2 rounded-lg bg-slate-900 px-3 py-2 text-left text-[11px] font-normal leading-relaxed text-white shadow-lg">
+                  {SUSPICIOUS_REASON_LABELS[suspiciousReason]}
+                </div>
+              )}
             </span>
           )}
-          {entry.name}
+          <span className="truncate">{entry.name}</span>
         </span>
       </div>
 
       <p
         className={`min-h-24 flex-1 whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed ${
-          suspicious ? "bg-pink-50/60 text-slate-700" : "text-slate-700"
+          suspiciousReason ? "bg-pink-50/60 text-slate-700" : "text-slate-700"
         }`}
       >
         {entry.content}
