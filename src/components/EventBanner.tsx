@@ -33,14 +33,21 @@ export default function EventBanner({
   const isDefault = badge === EVENT_BADGE && titleLine1 === EVENT_TITLE_LINE1;
 
   return (
-    <div className="relative isolate overflow-hidden px-6 py-10 sm:px-10 sm:py-12">
+    <div
+      className="relative isolate overflow-hidden px-6 py-10 sm:px-10 sm:py-12"
+      style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이
           프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. */}
       <img
-        src={isDefault ? "/images/event-banner-clean.jpg" : "/images/event-banner-nocompass.jpg"}
+        src={isDefault ? "/images/event-banner-v2-compass.jpg" : "/images/event-banner-v2-plain.jpg"}
         alt=""
         aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover"
+        onError={(e) => {
+          console.error("[EventBanner] 배경 이미지 로드 실패:", e.currentTarget.src);
+          e.currentTarget.style.display = "none";
+        }}
       />
 
       <div className={`relative z-10 flex flex-col gap-3 ${isDefault ? "ml-16 sm:ml-28" : ""}`}>
