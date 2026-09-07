@@ -16,12 +16,18 @@ export async function POST(req: Request) {
 
   const name = findNameByEmployeeId(employeeId);
   if (!name) {
-    return NextResponse.json({ error: "일치하는 사번을 찾을 수 없습니다." }, { status: 404 });
+    return NextResponse.json(
+      { error: "참석 대상자가 아닙니다. 사번을 다시 확인해주세요." },
+      { status: 404 }
+    );
   }
 
   const attendee = findAttendeeByName(name);
   if (!attendee || !attendee.attending) {
-    return NextResponse.json({ error: "참석 대상자 명단에서 확인되지 않습니다." }, { status: 404 });
+    return NextResponse.json(
+      { error: "참석 대상자가 아닙니다. 사번을 다시 확인해주세요." },
+      { status: 404 }
+    );
   }
 
   return NextResponse.json({ department: attendee.department, name: attendee.name });
