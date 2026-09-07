@@ -253,13 +253,6 @@ export default function DrawPage() {
             onEnded={handleIntroEnded}
             onError={() => setPhase("ready")}
           />
-          {introEnded && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-10 z-10 flex justify-center">
-              <span className="animate-pulse rounded-full bg-white/10 px-5 py-2 text-sm font-medium text-white/70 backdrop-blur-sm">
-                화면을 눌러서 계속하기
-              </span>
-            </div>
-          )}
           <button
             type="button"
             onClick={(e) => {
