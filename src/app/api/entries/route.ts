@@ -17,6 +17,7 @@ export async function POST(req: Request) {
   const employeeId = String((body as Record<string, unknown>).employeeId ?? "").trim();
   const content = String((body as Record<string, unknown>).content ?? "").trim();
   const groupType = String((body as Record<string, unknown>).groupType ?? "");
+  const replaceExisting = Boolean((body as Record<string, unknown>).replaceExisting);
 
   if (!GROUP_TYPES.has(groupType)) {
     return NextResponse.json({ error: "잘못된 접수 유형입니다." }, { status: 400 });
@@ -49,6 +50,34 @@ export async function POST(req: Request) {
   }
 
   const supabase = createServiceRoleClient();
+
+  // 같은 사람이 이미 접수한 적이 있는지 확인합니다. (사번은 저장하지 않으므로
+  // 서버가 조회한 소속/이름/접수 유형으로 동일인 여부를 판단합니다.)
+  const { data: existing, error: existingError } = await supabase
+    .from("entries")
+    .select("id")
+    .eq("department", attendee.department)
+    .eq("name", attendee.name)
+    .eq("group_type", groupType)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("check existing entry failed", existingError);
+    return NextResponse.json({ error: "접수 확인 중 오류가 발생했습니다." }, { status: 500 });
+  }
+
+  if (existing && !replaceExisting) {
+    return NextResponse.json({ duplicate: true }, { status: 409 });
+  }
+
+  if (existing && replaceExisting) {
+    const { error: deleteError } = await supabase.from("entries").delete().eq("id", existing.id);
+    if (deleteError) {
+      console.error("delete existing entry failed", deleteError);
+      return NextResponse.json({ error: "기존 접수를 삭제하지 못했습니다." }, { status: 500 });
+    }
+  }
+
   const { error } = await supabase.from("entries").insert({
     department: attendee.department,
     name: attendee.name,

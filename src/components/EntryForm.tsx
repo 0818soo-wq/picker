@@ -83,15 +83,22 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
     setErrorMessage(null);
 
     try {
-      const res = await fetch("/api/entries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          employeeId: employeeId.trim(),
-          content: content.trim(),
-          groupType,
-        }),
-      });
+      let res = await submitEntry(false);
+
+      if (res.status === 409) {
+        const dupData = await res.json().catch(() => ({}));
+        if (dupData?.duplicate) {
+          const wantsReplace = window.confirm(
+            "같은 분이 이미 접수한 내역이 있습니다. 이전 접수를 삭제하고 재등록하시겠습니까?\n\n확인: 재등록 (기존 접수 삭제)\n취소: 기존 접수 유지"
+          );
+          if (!wantsReplace) {
+            setStatus("success");
+            return;
+          }
+          res = await submitEntry(true);
+        }
+      }
+
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -105,6 +112,19 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
       setStatus("error");
       setErrorMessage("네트워크 오류가 발생했습니다. 다시 시도해 주세요.");
     }
+  }
+
+  function submitEntry(replaceExisting: boolean) {
+    return fetch("/api/entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employeeId: employeeId.trim(),
+        content: content.trim(),
+        groupType,
+        replaceExisting,
+      }),
+    });
   }
 
   if (status === "success") {
