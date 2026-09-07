@@ -1,7 +1,7 @@
 "use client";
 
 import EventBanner from "@/components/EventBanner";
-import { splitBalancedRows, type ReelEntry } from "@/components/SlotReel";
+import type { ReelEntry } from "@/components/SlotReel";
 import { resolveWinnerDisplay } from "@/lib/format";
 import SpeakerButton from "@/components/SpeakerButton";
 
@@ -54,7 +54,10 @@ export default function WinnerSheet({
 // 여러 명을 한 번에 추첨했을 때, 내용 없이 이름 카드만 균형 있게(상단/하단) 보여주는 발표 화면입니다.
 // PC 화면 비율을 고려해 각 행의 카드 수만큼 그리드 열을 고정해 줄바꿈 없이 정확히 배치합니다.
 export function WinnerNameGrid({ winners }: { winners: ReelEntry[] }) {
-  const { top, bottom } = splitBalancedRows(winners);
+  // 한 행의 최대 칸 수를 고정해 하나의 그리드로 흘려보냅니다. 마지막 행 인원이
+  // 모자라도(홀수 인원 등) 카드가 남은 칸만큼 넓게 늘어나지 않고 다른 카드와
+  // 같은 너비를 유지한 채 왼쪽부터 채워집니다.
+  const columns = Math.max(1, Math.ceil(winners.length / 2));
   // 여러 명을 한 번에 뽑았을 때는 소속 없이 "이름+직책"을 먼저 쭉 부른 뒤
   // 마지막에 "축하합니다!"로 마무리합니다.
   const announceText = `${winners
@@ -84,22 +87,12 @@ export function WinnerNameGrid({ winners }: { winners: ReelEntry[] }) {
       <div className="flex flex-col items-center gap-4 px-6 py-8 sm:px-10 sm:py-10">
         <div
           className="grid w-full gap-4"
-          style={{ gridTemplateColumns: `repeat(${top.length}, minmax(0, 1fr))` }}
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
         >
-          {top.map((w) => (
+          {winners.map((w) => (
             <WinnerNameCard key={w.id} department={w.department} name={w.name} />
           ))}
         </div>
-        {bottom.length > 0 && (
-          <div
-            className="grid w-full gap-4"
-            style={{ gridTemplateColumns: `repeat(${bottom.length}, minmax(0, 1fr))` }}
-          >
-            {bottom.map((w) => (
-              <WinnerNameCard key={w.id} department={w.department} name={w.name} />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

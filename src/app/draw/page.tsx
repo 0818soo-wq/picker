@@ -339,7 +339,7 @@ export default function DrawPage() {
                 <div className="flex flex-col items-center gap-3">
                   <p className="text-sm text-slate-500">한 번에 추첨할 인원</p>
                   <div className="flex flex-wrap items-center justify-center gap-2">
-                    {Array.from({ length: 8 }, (_, i) => i + 1).map((n) => (
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                       <motion.button
                         key={n}
                         type="button"
