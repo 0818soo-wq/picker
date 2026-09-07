@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MountainBackdrop } from "@/components/EventBanner";
-import SpeakerButton from "@/components/SpeakerButton";
+import AdminSubNav from "@/components/AdminSubNav";
+import RefreshButton from "@/components/RefreshButton";
 import { resolveWinnerDisplay } from "@/lib/format";
 
 type Entry = {
@@ -22,6 +23,7 @@ const REFRESH_INTERVAL_MS = 5000;
 export default function MonitorPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [selectedWinner, setSelectedWinner] = useState<Entry | null>(null);
 
@@ -39,6 +41,15 @@ export default function MonitorPage() {
     const timer = setInterval(fetchEntries, REFRESH_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [fetchEntries]);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      await fetchEntries();
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   const drawGroup = entries.filter((e) => e.group_type === "draw");
   const staffGroup = entries.filter((e) => e.group_type === "no_draw");
@@ -61,11 +72,6 @@ export default function MonitorPage() {
     return counts;
   }, [winners]);
 
-  const announceTextFor = useCallback((w: Entry) => {
-    const resolved = resolveWinnerDisplay(w.name, w.department);
-    return `축하합니다 ${resolved.department} ${resolved.name}${resolved.titleSuffix}!`;
-  }, []);
-
   return (
     <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/30 blur-3xl" />
@@ -77,9 +83,10 @@ export default function MonitorPage() {
             <Link href="/draw#main" className="text-sm text-slate-500 hover:text-slate-700">
               ← 추첨 화면으로
             </Link>
-            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-              실시간 추첨 현황 (관리용)
-            </h1>
+            <div className="mt-1 flex items-center gap-2">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">당첨자현황</h1>
+              <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+            </div>
             <p className="mt-1 text-sm text-slate-500">
               소리와 영상 없이 진행 상황만 확인하는 화면입니다. {REFRESH_INTERVAL_MS / 1000}초마다 자동 갱신됩니다.
             </p>
@@ -103,9 +110,7 @@ export default function MonitorPage() {
             </div>
 
             <div className="overflow-hidden rounded-2xl bg-white/60 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
-              <div className="px-4 py-2 text-sm font-medium text-slate-500">
-                당첨자 목록 ({winners.length}명) · 스피커 버튼을 누르면 사장님 목소리로 축하 인사를 들려드려요
-              </div>
+              <div className="px-4 py-2 text-sm font-medium text-slate-500">당첨자 목록 ({winners.length}명)</div>
               <ul className="divide-y divide-slate-100">
                 {winners.map((w, i) => {
                   const resolved = resolveWinnerDisplay(w.name, w.department);
@@ -127,10 +132,6 @@ export default function MonitorPage() {
                           {resolved.department} {resolved.name}
                           {resolved.titleSuffix}
                         </span>
-                        <SpeakerButton
-                          text={announceTextFor(w)}
-                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/40 text-slate-400/70 backdrop-blur-sm transition-colors hover:bg-white/70 hover:text-slate-500"
-                        />
                         {w.won_at && (
                           <span className="ml-auto whitespace-nowrap text-xs text-slate-400">
                             {new Date(w.won_at).toLocaleTimeString("ko-KR")} ({roundSizeByWonAt.get(w.won_at) ?? 1}명)
@@ -149,6 +150,8 @@ export default function MonitorPage() {
             </div>
           </>
         )}
+
+        <AdminSubNav />
       </div>
 
       {selectedWinner && (

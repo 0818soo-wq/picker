@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MountainBackdrop } from "@/components/EventBanner";
+import AdminSubNav from "@/components/AdminSubNav";
+import RefreshButton from "@/components/RefreshButton";
 import { ATTENDEES, classifyAttendeeGroup, type Attendee } from "@/lib/attendees";
 import { stripLeaderTitle } from "@/lib/format";
 
@@ -18,6 +20,7 @@ const REFRESH_INTERVAL_MS = 15000;
 export default function StatusPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState("");
 
   const fetchEntries = useCallback(async () => {
@@ -33,6 +36,15 @@ export default function StatusPage() {
     const timer = setInterval(fetchEntries, REFRESH_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [fetchEntries]);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      await fetchEntries();
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   const submittedNames = useMemo(
     () => new Set(entries.map((e) => stripLeaderTitle(e.name))),
@@ -59,7 +71,10 @@ export default function StatusPage() {
           <Link href="/draw#main" className="text-sm text-slate-500 hover:text-slate-700">
             ← 추첨 화면으로
           </Link>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">참여자 현황</h1>
+          <div className="mt-1 flex items-center gap-2">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">작성자현황</h1>
+            <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+          </div>
           <p className="mt-1 text-sm text-slate-500">{REFRESH_INTERVAL_MS / 1000}초마다 자동으로 갱신됩니다.</p>
         </div>
 
@@ -89,6 +104,8 @@ export default function StatusPage() {
             />
           </div>
         )}
+
+        <AdminSubNav />
       </div>
     </main>
   );

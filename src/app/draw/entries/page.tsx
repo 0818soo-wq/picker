@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { MountainBackdrop } from "@/components/EventBanner";
+import AdminSubNav from "@/components/AdminSubNav";
+import RefreshButton from "@/components/RefreshButton";
 import { getSuspiciousReason, SUSPICIOUS_REASON_LABELS } from "@/lib/moderation";
+import { stripDepartmentSuffix, stripLeaderTitle } from "@/lib/format";
 
 type Entry = {
   id: string;
@@ -22,6 +25,7 @@ type Filter = "all" | "draw" | "no_draw";
 export default function EntriesListPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -39,6 +43,17 @@ export default function EntriesListPage() {
       cancelled = true;
     };
   }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/entries", { cache: "no-store" });
+      const data = res.ok ? await res.json() : { entries: [] };
+      setEntries(data.entries ?? []);
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   async function handleDelete(entry: Entry) {
     const ok = window.confirm(`"${entry.department} ${entry.name}" 접수를 삭제할까요? 삭제하면 추첨 대상에서도 제외됩니다.`);
@@ -75,7 +90,10 @@ export default function EntriesListPage() {
             <Link href="/draw#main" className="text-sm text-slate-500 hover:text-slate-700">
               ← 추첨 화면으로
             </Link>
-            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">접수 목록</h1>
+            <div className="mt-1 flex items-center gap-2">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">작성카드보기</h1>
+              <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+            </div>
           </div>
 
           <input
@@ -112,6 +130,8 @@ export default function EntriesListPage() {
             ))}
           </div>
         )}
+
+        <AdminSubNav />
       </div>
     </main>
   );
@@ -174,7 +194,9 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
         className="flex items-center justify-between px-4 py-3"
         style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 100%)" }}
       >
-        <span className="truncate text-xs font-medium text-slate-600">{entry.department}</span>
+        <span className="truncate text-xs font-medium text-slate-600">
+          {stripDepartmentSuffix(entry.department)}
+        </span>
         <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-900">
           {isSuspicious && (
             <span
@@ -200,7 +222,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
               )}
             </span>
           )}
-          <span className="truncate">{entry.name}</span>
+          <span className="truncate">{stripLeaderTitle(entry.name)}</span>
         </span>
       </div>
 

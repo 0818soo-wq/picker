@@ -14,6 +14,21 @@ function hasDepartmentSuffix(department: string): boolean {
   return DEPARTMENT_SUFFIXES.some((suffix) => department.endsWith(suffix));
 }
 
+// "FP센터"가 "센터"보다 먼저 와야 "FP센터"를 통째로 떼어냅니다.
+const DEPARTMENT_SUFFIXES_TO_STRIP = ["FP센터", "지역단", "영업단", "사업단", "센터", "파트", "P"];
+
+// 접수 목록에 부서명만 간단히 보여주기 위해, "동대문지역단"처럼 소속 접미사가
+// 함께 입력된 경우 "동대문"만 남기고 접미사를 제거합니다. 접미사가 없으면 그대로 둡니다.
+export function stripDepartmentSuffix(department: string): string {
+  const trimmed = department.trim();
+  for (const suffix of DEPARTMENT_SUFFIXES_TO_STRIP) {
+    if (trimmed.length > suffix.length && trimmed.endsWith(suffix)) {
+      return trimmed.slice(0, -suffix.length);
+    }
+  }
+  return trimmed;
+}
+
 export type ResolvedWinner = {
   department: string;
   name: string;

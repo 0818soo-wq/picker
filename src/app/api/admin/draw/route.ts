@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { getSuspiciousReason } from "@/lib/moderation";
+import { classifyOffTopic } from "@/lib/aiModeration";
 
 export const runtime = "nodejs";
 
@@ -33,7 +35,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "추첨할 대상이 없습니다." }, { status: 400 });
   }
 
-  const picked = shuffle(eligible).slice(0, Math.min(count, eligible.length));
+  // 관리자 화면에서 "!" 의심 표시가 뜨는 접수(휴리스틱 또는 AI 판별)는
+  // 확인이 끝나기 전까지 추첨 대상에서 제외합니다.
+  const heuristicClean = eligible.filter((e) => getSuspiciousReason(e.content, e.name) === null);
+  const aiChecked = await Promise.all(
+    heuristicClean.map(async (e) => ({ entry: e, offTopic: (await classifyOffTopic(e.id, e.content)).offTopic }))
+  );
+  const clean = aiChecked.filter((c) => !c.offTopic).map((c) => c.entry);
+
+  if (clean.length === 0) {
+    return NextResponse.json(
+      { error: "추첨 가능한 대상이 없습니다. 의심 표시(!)된 접수만 남아 있어 확인이 필요합니다." },
+      { status: 400 }
+    );
+  }
+
+  const picked = shuffle(clean).slice(0, Math.min(count, clean.length));
   const ids = picked.map((p) => p.id);
 
   const { data: updated, error: updateError } = await supabase
