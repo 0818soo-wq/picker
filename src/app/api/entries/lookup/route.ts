@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveAttendeeByEmployeeId } from "@/lib/employeeDirectory";
+import { titleSuffixFor } from "@/lib/attendees";
 
 export const runtime = "nodejs";
 
@@ -14,12 +15,19 @@ export async function POST(req: Request) {
   }
 
   const attendee = resolveAttendeeByEmployeeId(employeeId);
-  if (!attendee || !attendee.attending) {
+  if (!attendee) {
     return NextResponse.json(
       { error: "참석 대상자가 아닙니다. 사번을 다시 확인해주세요." },
       { status: 404 }
     );
   }
 
-  return NextResponse.json({ department: attendee.department, name: attendee.name });
+  // 명단에는 있지만 참석 예정이 아닌 분도 의견 제출은 받되, 추첨 대상에서는
+  // 제외됩니다. (실제 제외 처리는 접수 저장 시 서버에서 다시 판단합니다.)
+  return NextResponse.json({
+    department: attendee.department,
+    name: attendee.name,
+    titleSuffix: titleSuffixFor(attendee.title),
+    eligible: attendee.attending,
+  });
 }

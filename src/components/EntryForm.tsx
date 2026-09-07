@@ -20,7 +20,12 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
   const [lookupState, setLookupState] = useState<LookupState>("idle");
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [confirmedFor, setConfirmedFor] = useState<string | null>(null);
-  const [resolved, setResolved] = useState<{ department: string; name: string } | null>(null);
+  const [resolved, setResolved] = useState<{
+    department: string;
+    name: string;
+    titleSuffix: string;
+    eligible: boolean;
+  } | null>(null);
 
   const isConfirmed = lookupState === "found" && confirmedFor === employeeId.trim();
 
@@ -56,7 +61,12 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
         return;
       }
 
-      setResolved({ department: data.department, name: data.name });
+      setResolved({
+        department: data.department,
+        name: data.name,
+        titleSuffix: data.titleSuffix,
+        eligible: data.eligible !== false,
+      });
       setConfirmedFor(id);
       setLookupState("found");
     } catch {
@@ -167,9 +177,17 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
               </div>
             </label>
 
-            {isConfirmed && resolved && (
-              <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">
-                {resolved.department} / {resolved.name}님, 아래 내용을 작성 후 제출해 주세요.
+            {isConfirmed && resolved && resolved.eligible && (
+              <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm leading-relaxed text-blue-700">
+                {resolved.department} {resolved.name}
+                {resolved.titleSuffix}
+                <br />
+                아래 내용을 작성 후 제출버튼을 눌러주세요.
+              </p>
+            )}
+            {isConfirmed && resolved && !resolved.eligible && (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm leading-relaxed text-amber-700">
+                이벤트 대상자가 아닙니다. 추첨대상에선 제외되지만, 의견 제출은 가능합니다.
               </p>
             )}
             {lookupState === "not_found" && (

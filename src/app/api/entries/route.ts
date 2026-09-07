@@ -34,12 +34,16 @@ export async function POST(req: Request) {
   // 소속/이름은 클라이언트가 보낸 값을 쓰지 않고, 사번으로 서버에서 다시
   // 조회한 값만 사용합니다. 사번 자체는 접수 데이터에 저장하지 않습니다.
   const attendee = resolveAttendeeByEmployeeId(employeeId);
-  if (!attendee || !attendee.attending) {
+  if (!attendee) {
     return NextResponse.json(
       { error: "참석 대상자가 아닙니다. 사번을 다시 확인해주세요." },
       { status: 404 }
     );
   }
+
+  // 명단에는 있지만 참석 예정이 아닌 분은 의견 제출은 받되, 폼과 상관없이
+  // 추첨 대상에서는 제외(no_draw)되도록 저장합니다.
+  const effectiveGroupType = attendee.attending ? groupType : "no_draw";
 
   const supabase = createServiceRoleClient();
 
@@ -50,7 +54,7 @@ export async function POST(req: Request) {
     .select("id")
     .eq("department", attendee.department)
     .eq("name", attendee.name)
-    .eq("group_type", groupType)
+    .eq("group_type", effectiveGroupType)
     .maybeSingle();
 
   if (existingError) {
@@ -74,7 +78,7 @@ export async function POST(req: Request) {
     department: attendee.department,
     name: attendee.name,
     content,
-    group_type: groupType,
+    group_type: effectiveGroupType,
   });
 
   if (error) {
