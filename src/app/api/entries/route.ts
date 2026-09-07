@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
-import { findNameByEmployeeId } from "@/lib/employeeDirectory";
-import { findAttendeeByName } from "@/lib/attendees";
+import { resolveAttendeeByEmployeeId } from "@/lib/employeeDirectory";
 
 export const runtime = "nodejs";
 
@@ -34,14 +33,7 @@ export async function POST(req: Request) {
 
   // 소속/이름은 클라이언트가 보낸 값을 쓰지 않고, 사번으로 서버에서 다시
   // 조회한 값만 사용합니다. 사번 자체는 접수 데이터에 저장하지 않습니다.
-  const name = findNameByEmployeeId(employeeId);
-  if (!name) {
-    return NextResponse.json(
-      { error: "참석 대상자가 아닙니다. 사번을 다시 확인해주세요." },
-      { status: 404 }
-    );
-  }
-  const attendee = findAttendeeByName(name);
+  const attendee = resolveAttendeeByEmployeeId(employeeId);
   if (!attendee || !attendee.attending) {
     return NextResponse.json(
       { error: "참석 대상자가 아닙니다. 사번을 다시 확인해주세요." },

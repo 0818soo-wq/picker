@@ -311,6 +311,15 @@ export function findAttendeeByName(name: string): Attendee | undefined {
   return candidates.find((a) => isDrawEligibleTitle(a.title)) ?? candidates[0];
 }
 
+// 이름만으로는 동명이인을 구분할 수 없을 때, 부서명까지 함께 확인해 정확한
+// 한 명을 찾습니다. (employeeDirectory.ts에서 사번에 부서명이 함께 기록된
+// 경우 사용)
+export function findAttendeeByNameAndDepartment(name: string, department: string): Attendee | undefined {
+  const cleanedName = name.trim();
+  const cleanedDept = department.trim();
+  return ATTENDEES.find((a) => a.name === cleanedName && a.department === cleanedDept);
+}
+
 export function titleSuffixFor(title: string): "단장님" | "파트장님" {
   return PART_LEADER_TITLES.has(title) ? "파트장님" : "단장님";
 }

@@ -3,6 +3,8 @@
 // (attendees.ts는 화면 표시용으로 클라이언트에서도 쓰이지만, 이 파일은 조회
 // 전용으로만 쓰고 값을 그대로 응답하지 않습니다.)
 
+import { findAttendeeByName, findAttendeeByNameAndDepartment, type Attendee } from "@/lib/attendees";
+
 // 사번\t이름 형식으로 한 줄에 한 명씩 채워주세요.
 const RAW = `
 14717\t홍원학
@@ -25,7 +27,7 @@ const RAW = `
 24741\t박훈민
 25125\t김규현
 23018\t하걸희
-10167\t김진호
+10167\t김진호\t
 23981\t김지은
 23996\t김봉재
 19784\t오상택
@@ -72,7 +74,7 @@ const RAW = `
 25467\t오종철
 25452\t문준영
 22966\t김태엽
-23744\t김형준
+23744\t김형준\t해운대연수소지원P
 24066\t이기열
 21232\t차원철
 26246\t유인선
@@ -108,7 +110,7 @@ const RAW = `
 25156\t서대익
 25656\t박성우
 30121\t김양진
-24332\t김동욱
+24332\t김동욱\t서울FP센터
 24653\t이원철
 22310\t강종우
 25590\t조영덕
@@ -152,7 +154,7 @@ const RAW = `
 24238\t장홍석
 26077\t신명훈
 20795\t신미진
-24612\t김동욱
+24612\t김동욱\t충주지역단
 24609\t권혁진
 24385\t이태희
 24389\t장웅수
@@ -167,7 +169,7 @@ const RAW = `
 22593\t김도영
 25660\t박채원
 25177\t이경민
-23744\t김형준
+26237\t김형준\tCSM지원P
 26290\t천규철
 25185\t이영우
 24983\t유진수
@@ -281,15 +283,38 @@ const RAW = `
 25577\t한현진
 `;
 
-const EMPLOYEE_ID_TO_NAME = new Map<string, string>(
+// 동명이인이 있는 경우(예: 이름이 같은 파트장 2명)에는 사번\t이름\t부서명 형식으로
+// 세 번째 칸에 부서명을 적어서, 어느 부서 소속인지까지 구분해둡니다.
+export type EmployeeRecord = { name: string; department?: string };
+
+const EMPLOYEE_ID_TO_RECORD = new Map<string, EmployeeRecord>(
   RAW.trim()
     .split("\n")
     .filter(Boolean)
     .map((line) => line.split("\t").map((s) => s.trim()))
     .filter(([id, name]) => id && name)
-    .map(([id, name]) => [id, name])
+    .map(([id, name, department]) => [id, { name, department }])
 );
 
+export function findEmployeeRecordByEmployeeId(employeeId: string): EmployeeRecord | undefined {
+  return EMPLOYEE_ID_TO_RECORD.get(employeeId.trim());
+}
+
 export function findNameByEmployeeId(employeeId: string): string | undefined {
-  return EMPLOYEE_ID_TO_NAME.get(employeeId.trim());
+  return EMPLOYEE_ID_TO_RECORD.get(employeeId.trim())?.name;
+}
+
+// 사번으로 참석자 명단(attendees.ts)에서 정확히 한 명을 찾습니다. 이름이
+// 같은 사람이 여러 명이어도, 사번에 부서명이 함께 적혀 있으면 그 부서로
+// 정확히 구분하고, 없으면(동명이인이 없는 경우) 이름만으로 찾습니다.
+export function resolveAttendeeByEmployeeId(employeeId: string): Attendee | undefined {
+  const record = EMPLOYEE_ID_TO_RECORD.get(employeeId.trim());
+  if (!record) return undefined;
+
+  // department가 빈 문자열이어도(부서가 없는 대표이사 등) "명시적으로 지정됨"으로
+  // 취급해야 하므로 undefined 여부로만 판단합니다.
+  if (record.department !== undefined) {
+    return findAttendeeByNameAndDepartment(record.name, record.department);
+  }
+  return findAttendeeByName(record.name);
 }

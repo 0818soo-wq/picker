@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { findNameByEmployeeId } from "@/lib/employeeDirectory";
-import { findAttendeeByName } from "@/lib/attendees";
+import { resolveAttendeeByEmployeeId } from "@/lib/employeeDirectory";
 
 export const runtime = "nodejs";
 
@@ -14,15 +13,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "사번을 입력해 주세요." }, { status: 400 });
   }
 
-  const name = findNameByEmployeeId(employeeId);
-  if (!name) {
-    return NextResponse.json(
-      { error: "참석 대상자가 아닙니다. 사번을 다시 확인해주세요." },
-      { status: 404 }
-    );
-  }
-
-  const attendee = findAttendeeByName(name);
+  const attendee = resolveAttendeeByEmployeeId(employeeId);
   if (!attendee || !attendee.attending) {
     return NextResponse.json(
       { error: "참석 대상자가 아닙니다. 사번을 다시 확인해주세요." },

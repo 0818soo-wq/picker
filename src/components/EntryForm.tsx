@@ -169,7 +169,7 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
 
             {isConfirmed && resolved && (
               <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">
-                {resolved.department} {resolved.name}님, 맞으신가요? 맞다면 아래 내용을 작성해 주세요.
+                {resolved.department} / {resolved.name}님, 아래 내용을 작성 후 제출해 주세요.
               </p>
             )}
             {lookupState === "not_found" && (
