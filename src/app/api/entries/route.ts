@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { findNameByEmployeeId } from "@/lib/employeeDirectory";
+import { findAttendeeByName } from "@/lib/attendees";
 
 export const runtime = "nodejs";
 
 const GROUP_TYPES = new Set(["draw", "no_draw"]);
-const MAX_FIELD_LENGTH = 100;
 const MAX_CONTENT_LENGTH = 2000;
 
 export async function POST(req: Request) {
@@ -13,19 +14,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "잘못된 요청 형식입니다." }, { status: 400 });
   }
 
-  const department = String((body as Record<string, unknown>).department ?? "").trim();
-  const name = String((body as Record<string, unknown>).name ?? "").trim();
+  const employeeId = String((body as Record<string, unknown>).employeeId ?? "").trim();
   const content = String((body as Record<string, unknown>).content ?? "").trim();
   const groupType = String((body as Record<string, unknown>).groupType ?? "");
 
   if (!GROUP_TYPES.has(groupType)) {
     return NextResponse.json({ error: "잘못된 접수 유형입니다." }, { status: 400 });
   }
-  if (!department || !name || !content) {
+  if (!employeeId || !content) {
     return NextResponse.json({ error: "모든 항목을 입력해 주세요." }, { status: 400 });
-  }
-  if (department.length > MAX_FIELD_LENGTH || name.length > MAX_FIELD_LENGTH) {
-    return NextResponse.json({ error: "입력값이 너무 깁니다." }, { status: 400 });
   }
   if (content.length > MAX_CONTENT_LENGTH) {
     return NextResponse.json(
@@ -34,10 +31,21 @@ export async function POST(req: Request) {
     );
   }
 
+  // 소속/이름은 클라이언트가 보낸 값을 쓰지 않고, 사번으로 서버에서 다시
+  // 조회한 값만 사용합니다. 사번 자체는 접수 데이터에 저장하지 않습니다.
+  const name = findNameByEmployeeId(employeeId);
+  if (!name) {
+    return NextResponse.json({ error: "일치하는 사번을 찾을 수 없습니다." }, { status: 404 });
+  }
+  const attendee = findAttendeeByName(name);
+  if (!attendee || !attendee.attending) {
+    return NextResponse.json({ error: "참석 대상자 명단에서 확인되지 않습니다." }, { status: 404 });
+  }
+
   const supabase = createServiceRoleClient();
   const { error } = await supabase.from("entries").insert({
-    department,
-    name,
+    department: attendee.department,
+    name: attendee.name,
     content,
     group_type: groupType,
   });
