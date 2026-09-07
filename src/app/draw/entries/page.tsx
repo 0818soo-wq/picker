@@ -71,7 +71,9 @@ export default function EntriesListPage() {
     const q = query.trim();
     return entries
       .filter((e) => filter === "all" || e.group_type === filter)
-      .filter((e) => !q || e.department.includes(q) || e.name.includes(q));
+      .filter((e) => !q || e.department.includes(q) || e.name.includes(q))
+      // 당첨자 카드를 맨 위로 올립니다.
+      .sort((a, b) => Number(b.is_winner) - Number(a.is_winner));
   }, [entries, filter, query]);
 
   const drawCount = entries.filter((e) => e.group_type === "draw").length;

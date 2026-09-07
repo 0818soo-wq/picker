@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MountainBackdrop } from "@/components/EventBanner";
 import AdminSubNav from "@/components/AdminSubNav";
 import RefreshButton from "@/components/RefreshButton";
+import WrittenCardModal from "@/components/WrittenCardModal";
 import { resolveWinnerDisplay } from "@/lib/format";
 
 type Entry = {
@@ -151,34 +152,19 @@ export default function MonitorPage() {
         <AdminSubNav />
       </div>
 
-      {selectedWinner && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          onClick={() => setSelectedWinner(null)}
-        >
-          <div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium text-slate-500">{selectedWinner.department}</p>
-                <p className="text-lg font-bold text-slate-900">{selectedWinner.name}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedWinner(null)}
-                className="rounded-full px-2 py-1 text-sm text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-              >
-                닫기
-              </button>
-            </div>
-            <p className="max-h-[50vh] overflow-y-auto whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
-              {selectedWinner.content}
-            </p>
-          </div>
-        </div>
-      )}
+      {selectedWinner && (() => {
+        const resolved = resolveWinnerDisplay(selectedWinner.name, selectedWinner.department);
+        return (
+          <WrittenCardModal
+            department={resolved.department}
+            name={`${resolved.name}${resolved.titleSuffix}`}
+            content={selectedWinner.content}
+            groupLabel="지역단장"
+            isWinner
+            onClose={() => setSelectedWinner(null)}
+          />
+        );
+      })()}
     </main>
   );
 }

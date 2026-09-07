@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MountainBackdrop } from "@/components/EventBanner";
 import AdminSubNav from "@/components/AdminSubNav";
 import RefreshButton from "@/components/RefreshButton";
+import WrittenCardModal from "@/components/WrittenCardModal";
 import { ATTENDEES, classifyAttendeeGroup, type Attendee } from "@/lib/attendees";
 import { stripLeaderTitle } from "@/lib/format";
 
@@ -12,7 +13,9 @@ type Entry = {
   id: string;
   name: string;
   department: string;
+  content: string;
   group_type: "draw" | "no_draw";
+  is_winner: boolean;
 };
 
 const REFRESH_INTERVAL_MS = 15000;
@@ -22,6 +25,7 @@ export default function StatusPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState("");
+  const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch("/api/admin/entries", { cache: "no-store" });
@@ -48,6 +52,11 @@ export default function StatusPage() {
 
   const submittedNames = useMemo(
     () => new Set(entries.map((e) => stripLeaderTitle(e.name))),
+    [entries]
+  );
+  // 이름을 눌렀을 때 작성한 카드를 바로 찾아 보여주기 위한 매핑입니다.
+  const entryByName = useMemo(
+    () => new Map(entries.map((e) => [stripLeaderTitle(e.name), e])),
     [entries]
   );
 
@@ -94,12 +103,16 @@ export default function StatusPage() {
               title="지역단 (추첨 대상)"
               attendees={regionAttendees}
               submittedNames={submittedNames}
+              entryByName={entryByName}
+              onSelectEntry={setSelectedEntry}
               query={query}
             />
             <GroupSection
               title="본사 스텝"
               attendees={hqAttendees}
               submittedNames={submittedNames}
+              entryByName={entryByName}
+              onSelectEntry={setSelectedEntry}
               query={query}
             />
           </div>
@@ -107,6 +120,17 @@ export default function StatusPage() {
 
         <AdminSubNav />
       </div>
+
+      {selectedEntry && (
+        <WrittenCardModal
+          department={selectedEntry.department}
+          name={stripLeaderTitle(selectedEntry.name)}
+          content={selectedEntry.content}
+          groupLabel={selectedEntry.group_type === "draw" ? "지역단장" : "파트장"}
+          isWinner={selectedEntry.is_winner}
+          onClose={() => setSelectedEntry(null)}
+        />
+      )}
     </main>
   );
 }
@@ -115,11 +139,15 @@ function GroupSection({
   title,
   attendees,
   submittedNames,
+  entryByName,
+  onSelectEntry,
   query,
 }: {
   title: string;
   attendees: Attendee[];
   submittedNames: Set<string>;
+  entryByName: Map<string, Entry>;
+  onSelectEntry: (entry: Entry) => void;
   query: string;
 }) {
   const total = attendees.length;
@@ -153,16 +181,26 @@ function GroupSection({
           제출 명단 ({filteredSubmitted.length}명)
         </div>
         <ul className="max-h-[40vh] divide-y divide-slate-100 overflow-y-auto">
-          {filteredSubmitted.map((a, i) => (
-            <li key={`${a.name}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm">
-              <span className="text-slate-800">
-                {a.department} {a.title} {a.name}
-              </span>
-              <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-600">
-                제출
-              </span>
-            </li>
-          ))}
+          {filteredSubmitted.map((a, i) => {
+            const entry = entryByName.get(a.name);
+            return (
+              <li key={`${a.name}-${i}`}>
+                <button
+                  type="button"
+                  onClick={() => entry && onSelectEntry(entry)}
+                  disabled={!entry}
+                  className="flex w-full items-center justify-between px-4 py-2 text-left text-sm hover:bg-slate-50 disabled:cursor-default disabled:hover:bg-transparent"
+                >
+                  <span className="text-slate-800">
+                    {a.department} {a.title} {a.name}
+                  </span>
+                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-600">
+                    제출
+                  </span>
+                </button>
+              </li>
+            );
+          })}
           {filteredSubmitted.length === 0 && (
             <li className="px-4 py-6 text-center text-sm text-slate-400">
               검색 결과가 없거나 아직 제출한 인원이 없습니다.
