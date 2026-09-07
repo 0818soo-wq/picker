@@ -335,23 +335,16 @@ export default function DrawPage() {
                   </motion.button>
                 </div>
 
-                {winners.length > 0 && (
-                  <div className="w-full max-w-xl">
-                    <h2 className="mb-3 text-sm font-medium text-slate-500">당첨자 목록</h2>
-                    <ul className="flex flex-col gap-2">
-                      {winners.map((w) => (
-                        <li
-                          key={w.id}
-                          className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3"
-                        >
-                          <span className="text-sm text-slate-800">
-                            {w.department} · {w.name}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                <div className="flex gap-3">
+                  <div className="flex flex-col items-center gap-0.5 rounded-2xl bg-white/40 px-5 py-2.5 ring-1 ring-white/60">
+                    <span className="text-base font-bold text-slate-900">{entries.length}</span>
+                    <span className="text-[11px] text-slate-500">총 접수인원</span>
                   </div>
-                )}
+                  <div className="flex flex-col items-center gap-0.5 rounded-2xl bg-white/40 px-5 py-2.5 ring-1 ring-white/60">
+                    <span className="text-base font-bold text-slate-900">{winners.length}</span>
+                    <span className="text-[11px] text-slate-500">추첨인원</span>
+                  </div>
+                </div>
               </div>
             )}
 

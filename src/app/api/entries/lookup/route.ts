@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const attendee = resolveAttendeeByEmployeeId(employeeId);
   if (!attendee) {
     return NextResponse.json(
-      { error: "참석 대상자가 아닙니다. 사번을 다시 확인해주세요." },
+      { error: "사번을 다시 확인해주세요. 오타 여부를 확인 후 재입력해주세요." },
       { status: 404 }
     );
   }

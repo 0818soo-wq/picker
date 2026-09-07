@@ -19,6 +19,7 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
 
   const [lookupState, setLookupState] = useState<LookupState>("idle");
   const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupFailCount, setLookupFailCount] = useState(0);
   const [confirmedFor, setConfirmedFor] = useState<string | null>(null);
   const [resolved, setResolved] = useState<{
     department: string;
@@ -55,12 +56,26 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        const failCount = lookupFailCount + 1;
+        setLookupFailCount(failCount);
+
+        if (failCount >= 2) {
+          // 재입력했는데도 명단에서 못 찾은 경우, 참석 대상은 아니지만
+          // 의견 제출은 계속할 수 있게 해줍니다.
+          setResolved({ department: "", name: "", titleSuffix: "", eligible: false });
+          setConfirmedFor(id);
+          setLookupState("found");
+          setLookupError(null);
+          return;
+        }
+
         setLookupState("not_found");
-        setLookupError(data?.error ?? "사번을 확인할 수 없습니다.");
+        setLookupError(data?.error ?? "사번을 다시 확인해주세요. 오타 여부를 확인 후 재입력해주세요.");
         setResolved(null);
         return;
       }
 
+      setLookupFailCount(0);
       setResolved({
         department: data.department,
         name: data.name,
