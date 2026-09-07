@@ -191,7 +191,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
       <div
-        className="relative flex items-center justify-between px-4 py-3"
+        className="flex items-center justify-between px-4 py-3"
         style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 100%)" }}
       >
         <span className="truncate text-xs font-medium text-slate-600">
@@ -200,7 +200,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
         <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-900">
           {isSuspicious && (
             <span
-              className="shrink-0"
+              className="relative shrink-0"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
@@ -216,7 +216,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
                 !
               </button>
               {showReason && (
-                <div className="absolute inset-x-4 top-full z-20 mt-1.5 rounded-lg bg-slate-900 px-3 py-2 text-left text-[11px] font-normal leading-relaxed text-white shadow-lg">
+                <div className="absolute right-0 top-full z-20 mt-1.5 w-max max-w-[200px] rounded-lg bg-slate-900 px-3 py-2 text-left text-[11px] font-normal leading-relaxed text-white shadow-lg">
                   {reasonLabel}
                 </div>
               )}
