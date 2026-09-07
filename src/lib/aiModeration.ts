@@ -11,6 +11,8 @@ type AiModerationResult = {
 
 const cache = new Map<string, AiModerationResult>();
 
+const MAX_REASON_LENGTH = 20;
+
 const PROMPT_TEMPLATE = (content: string) => `다음은 사내 행사에서 "우리 조직의 새로운 축, 어떠한 '축의 전환'이 필요할까요?" 라는 질문에 대해 참석자가 작성한 응답입니다.
 
 응답: "${content}"
@@ -18,7 +20,12 @@ const PROMPT_TEMPLATE = (content: string) => `다음은 사내 행사에서 "우
 이 응답이 조직의 변화나 발전 방향에 대한 진지한 의견(짧아도 괜찮음)인지, 아니면 질문과 전혀 관련 없는 장난스럽거나 무의미한 내용인지 판단해 주세요.
 다른 설명 없이 아래 형식으로만 답하세요:
 RELEVANT 또는 OFF_TOPIC
-그다음 줄에 이유를 한 문장으로 적어주세요.`;
+그다음 줄에 이유를 ${MAX_REASON_LENGTH}자 이내의 아주 짧은 구절로만 적어주세요. 완전한 문장이나 마침표 없이, 라벨처럼 짧게 (예: "주제와 무관한 잡담", "진지함이 없는 내용").`;
+
+function truncateReason(reason: string): string {
+  if (reason.length <= MAX_REASON_LENGTH) return reason;
+  return `${reason.slice(0, MAX_REASON_LENGTH - 1)}…`;
+}
 
 export async function classifyOffTopic(id: string, content: string): Promise<AiModerationResult> {
   const cached = cache.get(id);
@@ -39,7 +46,7 @@ export async function classifyOffTopic(id: string, content: string): Promise<AiM
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 100,
+        max_tokens: 60,
         messages: [{ role: "user", content: PROMPT_TEMPLATE(content) }],
       }),
     });
@@ -52,7 +59,8 @@ export async function classifyOffTopic(id: string, content: string): Promise<AiM
     const json = await res.json();
     const text = String(json?.content?.[0]?.text ?? "").trim();
     const offTopic = text.toUpperCase().startsWith("OFF_TOPIC");
-    const reason = text.split("\n").slice(1).join(" ").trim() || null;
+    const rawReason = text.split("\n").slice(1).join(" ").trim();
+    const reason = rawReason ? truncateReason(rawReason) : null;
 
     const result: AiModerationResult = { offTopic, reason };
     cache.set(id, result);

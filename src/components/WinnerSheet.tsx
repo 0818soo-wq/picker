@@ -102,22 +102,30 @@ function WinnerNameCard({ department, name }: { department: string; name: string
   const resolved = resolveWinnerDisplay(name, department);
 
   return (
-    <div className="flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
-      <div className="relative isolate flex flex-col items-center gap-1 overflow-hidden px-2 py-4">
-        {/* eslint-disable-next-line @next/next/no-img-element -- 작은 카드 배경용 실사 사진 */}
-        <img
-          src="/images/event-visual-plain.jpg"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <span className="relative z-10 inline-flex items-center rounded-full bg-[#13294b] px-2 py-0.5 text-[10px] font-bold text-white">
-          당첨
-        </span>
-      </div>
-      <div className="flex flex-col items-center gap-0.5 px-3 py-3 text-center">
-        <p className="truncate text-xs font-medium text-slate-500">{resolved.department}</p>
-        <p className="text-sm font-extrabold text-slate-900">
+    <div className="relative isolate flex aspect-[4/5] w-full flex-col overflow-hidden rounded-xl shadow-md">
+      {/* eslint-disable-next-line @next/next/no-img-element -- 카드 전체를 채우는 실사 배경 사진 */}
+      <img
+        src="/images/event-visual-plain.jpg"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      {/* 사진 위에 얹는 흰 글씨가 잘 읽히도록 아래쪽을 어둡게 깔아줍니다. */}
+      <div
+        className="absolute inset-0"
+        style={{ background: "linear-gradient(180deg, rgba(10,20,40,0.1) 0%, rgba(10,20,40,0) 35%, rgba(10,20,40,0.8) 100%)" }}
+      />
+      <span className="relative z-10 m-2.5 inline-flex w-fit items-center rounded-full bg-[#13294b] px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+        당첨
+      </span>
+      <div className="relative z-10 mt-auto flex flex-col items-center gap-0.5 px-3 pb-3 text-center">
+        <p
+          className="truncate text-sm font-medium text-white/85"
+          style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
+        >
+          {resolved.department}
+        </p>
+        <p className="text-xl font-extrabold text-white" style={{ textShadow: "0 1px 5px rgba(0,0,0,0.7)" }}>
           {resolved.name}
           {resolved.titleSuffix}
         </p>
