@@ -87,9 +87,6 @@ export default function MonitorPage() {
               <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">당첨자현황</h1>
               <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
             </div>
-            <p className="mt-1 text-sm text-slate-500">
-              소리와 영상 없이 진행 상황만 확인하는 화면입니다. {REFRESH_INTERVAL_MS / 1000}초마다 자동 갱신됩니다.
-            </p>
           </div>
           {lastUpdated && (
             <span className="text-xs text-slate-400">

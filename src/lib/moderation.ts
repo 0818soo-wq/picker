@@ -63,13 +63,13 @@ export type SuspiciousReason =
   | "not_attendee";
 
 export const SUSPICIOUS_REASON_LABELS: Record<SuspiciousReason, string> = {
-  empty: "내용이 비어 있어요.",
-  too_short: "내용이 너무 짧아요 (공백 제외 5자 이하).",
-  repeated_char: "같은 글자나 짧은 패턴만 반복해서 적었어요.",
-  laugh_cry_only: "'ㅋㅋㅋ', 'ㅠㅠㅠ' 같은 표현만 적었어요.",
-  placeholder_word: "'테스트', '없음' 같이 의미 없는 단어만 적었어요.",
-  off_topic: "주제와 상관없는 장난성 문구예요.",
-  not_attendee: "참석자 명단에서 확인되지 않는 이름이에요.",
+  empty: "내용 없음",
+  too_short: "내용이 너무 짧음",
+  repeated_char: "같은 글자만 반복",
+  laugh_cry_only: "'ㅋㅋㅋ' 같은 표현만 입력",
+  placeholder_word: "의미 없는 단어만 입력",
+  off_topic: "주제와 무관한 문구",
+  not_attendee: "명단에 없는 이름",
 };
 
 // 참석자 명단에 있고 참석 예정으로 표시된 사람인지 확인합니다.
