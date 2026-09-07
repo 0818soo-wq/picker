@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import EventBanner, { MountainBackdrop, SailboatIcon } from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
 import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
-import { boostAudioVolume, resumeAudioForPlayback } from "@/lib/audioBoost";
+import { resumeAudioForPlayback } from "@/lib/audioBoost";
 
 // 애플 느낌의 부드러운 전환에 쓰는 이징/트랜지션 프리셋입니다.
 const APPLE_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -33,6 +33,7 @@ export default function DrawPage() {
 
   const introRef = useRef<HTMLVideoElement>(null);
   const winRef = useRef<HTMLVideoElement>(null);
+  const [introEnded, setIntroEnded] = useState(false);
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch("/api/admin/entries", { cache: "no-store" });
@@ -58,6 +59,10 @@ export default function DrawPage() {
 
   function handleIntroClick() {
     const video = introRef.current;
+    if (introEnded) {
+      handleGoToMainFromVideo();
+      return;
+    }
     if (!video || !video.paused) return;
     video.play().catch(() => {});
   }
@@ -66,68 +71,18 @@ export default function DrawPage() {
     if (phase !== "landing") return;
     const video = introRef.current;
     if (video) video.currentTime = 0;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 영상 화면에 새로 들어올 때마다 종료 상태를 초기화합니다.
+    setIntroEnded(false);
   }, [phase]);
 
-  // 사장님 영상 화면 → 메인화면으로 넘어갈 때만 나오는 안내 음성입니다.
-  // 영상이 재생되는 동안 미리 받아둬서, 실제 전환 시점에는 지연 없이 바로 재생됩니다.
-  const readyAnnounceRef = useRef<{ url: string; audio: HTMLAudioElement } | null>(null);
-  const READY_ANNOUNCE_TEXT =
-    "여러분이 아까 작성해준 '축의 전환' 내용을 랜덤으로 뽑아보겠습니다. 추첨을 시작할까요?";
-  const READY_ANNOUNCE_RATE = 1;
-
-  useEffect(() => {
-    if (phase !== "landing") return;
-    let cancelled = false;
-    fetch("/api/admin/speak", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: READY_ANNOUNCE_TEXT }),
-    })
-      .then((res) => (res.ok ? res.blob() : null))
-      .then((blob) => {
-        if (cancelled || !blob) return;
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.preload = "auto";
-        audio.playbackRate = READY_ANNOUNCE_RATE;
-        boostAudioVolume(audio);
-        readyAnnounceRef.current = { url, audio };
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-      if (readyAnnounceRef.current) {
-        URL.revokeObjectURL(readyAnnounceRef.current.url);
-        readyAnnounceRef.current = null;
-      }
-    };
-  }, [phase]);
+  function handleIntroEnded() {
+    // 영상이 끝나도 자동으로 넘어가지 않고, 영상을 한 번 더 눌러야 메인화면으로 넘어갑니다.
+    setIntroEnded(true);
+  }
 
   function handleGoToMainFromVideo() {
     setPhase("ready");
     resumeAudioForPlayback();
-    const prepared = readyAnnounceRef.current;
-    if (prepared) {
-      prepared.audio.currentTime = 0;
-      prepared.audio.play().catch(() => {});
-      return;
-    }
-    // 폴백: 아직 준비되지 않았다면 그 자리에서 요청해 재생합니다.
-    fetch("/api/admin/speak", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: READY_ANNOUNCE_TEXT }),
-    })
-      .then((res) => (res.ok ? res.blob() : null))
-      .then((blob) => {
-        if (!blob) return;
-        const audio = new Audio(URL.createObjectURL(blob));
-        audio.playbackRate = READY_ANNOUNCE_RATE;
-        boostAudioVolume(audio);
-        audio.play().catch(() => {});
-      })
-      .catch(() => {});
   }
 
   async function handleStart() {
@@ -295,9 +250,16 @@ export default function DrawPage() {
             src="/videos/intro.mp4"
             className="h-full w-full object-cover"
             playsInline
-            onEnded={handleGoToMainFromVideo}
+            onEnded={handleIntroEnded}
             onError={() => setPhase("ready")}
           />
+          {introEnded && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-10 z-10 flex justify-center">
+              <span className="animate-pulse rounded-full bg-white/10 px-5 py-2 text-sm font-medium text-white/70 backdrop-blur-sm">
+                화면을 눌러서 계속하기
+              </span>
+            </div>
+          )}
           <button
             type="button"
             onClick={(e) => {
