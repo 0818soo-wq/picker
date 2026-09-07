@@ -1,6 +1,9 @@
 // 장난 또는 잘못 접수된 것으로 의심되는 내용을 걸러내기 위한 간단한 휴리스틱입니다.
 // 완벽한 판별은 불가능하므로 관리자가 눈으로 다시 확인할 수 있도록 표시만 해줍니다.
 
+import { findAttendeeByName } from "@/lib/attendees";
+import { stripLeaderTitle } from "@/lib/format";
+
 const LAUGH_CRY_ONLY_PATTERN = /^[ㅋㅎㅠㅜㄷㅗ!?.,~\s]+$/u;
 
 const PLACEHOLDER_WORDS = new Set([
@@ -56,7 +59,8 @@ export type SuspiciousReason =
   | "repeated_char"
   | "laugh_cry_only"
   | "placeholder_word"
-  | "off_topic";
+  | "off_topic"
+  | "not_attendee";
 
 export const SUSPICIOUS_REASON_LABELS: Record<SuspiciousReason, string> = {
   empty: "내용이 비어 있어요.",
@@ -65,7 +69,16 @@ export const SUSPICIOUS_REASON_LABELS: Record<SuspiciousReason, string> = {
   laugh_cry_only: "'ㅋㅋㅋ', 'ㅠㅠㅠ' 같은 표현만 적었어요.",
   placeholder_word: "'테스트', '없음' 같이 의미 없는 단어만 적었어요.",
   off_topic: "주제와 상관없는 장난성 문구예요.",
+  not_attendee: "참석자 명단에서 확인되지 않는 이름이에요.",
 };
+
+// 참석자 명단에 있고 참석 예정으로 표시된 사람인지 확인합니다.
+function isKnownAttendee(name: string): boolean {
+  const cleaned = stripLeaderTitle(name);
+  if (!cleaned) return false;
+  const record = findAttendeeByName(cleaned);
+  return !!record && record.attending;
+}
 
 // "샘플샘플샘플..."처럼 1~6글자짜리 짧은 패턴이 문자열 전체를 채울 만큼
 // 반복되는지 확인합니다. 단순 반복 문자("ㅋㅋㅋㅋ")도 패턴 길이 1로 잡힙니다.
@@ -80,7 +93,8 @@ function hasRepeatingPattern(compact: string): boolean {
 }
 
 // 의심되는 이유가 있으면 그 이유를, 없으면 null을 반환합니다.
-export function getSuspiciousReason(content: string): SuspiciousReason | null {
+// name을 함께 넘기면 참석자 명단에 없는 이름인지도 확인합니다.
+export function getSuspiciousReason(content: string, name?: string): SuspiciousReason | null {
   const trimmed = content.trim();
   if (!trimmed) return "empty";
 
@@ -90,10 +104,11 @@ export function getSuspiciousReason(content: string): SuspiciousReason | null {
   if (LAUGH_CRY_ONLY_PATTERN.test(trimmed)) return "laugh_cry_only";
   if (PLACEHOLDER_WORDS.has(compact.toLowerCase())) return "placeholder_word";
   if (OFF_TOPIC_PHRASES.has(compact.toLowerCase())) return "off_topic";
+  if (name && !isKnownAttendee(name)) return "not_attendee";
 
   return null;
 }
 
-export function isSuspiciousEntry(content: string): boolean {
-  return getSuspiciousReason(content) !== null;
+export function isSuspiciousEntry(content: string, name?: string): boolean {
+  return getSuspiciousReason(content, name) !== null;
 }

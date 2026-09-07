@@ -141,7 +141,7 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
 }
 
 function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) {
-  const heuristicReason = getSuspiciousReason(entry.content);
+  const heuristicReason = getSuspiciousReason(entry.content, entry.name);
   const isSuspicious = heuristicReason !== null || entry.ai_off_topic === true;
   const reasonLabel = heuristicReason
     ? SUSPICIOUS_REASON_LABELS[heuristicReason]
