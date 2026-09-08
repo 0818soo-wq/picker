@@ -31,6 +31,18 @@ export async function POST(req: Request) {
     );
   }
 
+  const supabase = createServiceRoleClient();
+
+  const { data: settings } = await supabase
+    .from("app_settings")
+    .select("entries_open")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (settings?.entries_open === false) {
+    return NextResponse.json({ error: "접수가 마감되었습니다. 감사합니다." }, { status: 403 });
+  }
+
   // 소속/이름은 클라이언트가 보낸 값을 쓰지 않고, 사번으로 서버에서 다시
   // 조회한 값만 사용합니다. 사번 자체는 접수 데이터에 저장하지 않습니다.
   const attendee = resolveAttendeeByEmployeeId(employeeId);
@@ -44,8 +56,6 @@ export async function POST(req: Request) {
   // 상관없이 추첨 대상에서는 제외(no_draw)되도록 저장합니다.
   const effectiveGroupType = attendee?.attending ? groupType : "no_draw";
   const skipDuplicateCheck = !attendee;
-
-  const supabase = createServiceRoleClient();
 
   let existingId: string | null = null;
 

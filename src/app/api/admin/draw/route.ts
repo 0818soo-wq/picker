@@ -68,6 +68,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "당첨 처리에 실패했습니다. 다시 시도해 주세요." }, { status: 500 });
   }
 
+  // 리셋(초기화) 버튼을 눌러도 사라지지 않는 누적 당첨 기록을 별도로 남깁니다.
+  // 이 기록 자체가 추첨 결과에 영향을 주지는 않으므로 실패해도 무시합니다.
+  if (rank !== null) {
+    const { error: historyError } = await supabase.from("winner_history").insert(
+      updated.map((w) => ({ department: w.department, name: w.name, prize_rank: rank }))
+    );
+    if (historyError) {
+      console.error("insert winner_history failed", historyError);
+    }
+  }
+
   // 뽑힌 순서(피커 화면에서 보여줄 순서)를 유지합니다.
   const order = new Map(ids.map((id, i) => [id, i]));
   const winners = [...updated].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));

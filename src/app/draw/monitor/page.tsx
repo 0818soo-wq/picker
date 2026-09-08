@@ -80,6 +80,12 @@ export default function MonitorPage() {
               <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">당첨자현황</h1>
               <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
             </div>
+            <Link
+              href="/draw/monitor/history"
+              className="mt-1 inline-block text-xs font-medium text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
+            >
+              과거당첨기록보기 →
+            </Link>
           </div>
           {lastUpdated && (
             <span className="text-xs text-slate-400">

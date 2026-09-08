@@ -81,13 +81,26 @@ function isKnownAttendee(name: string): boolean {
 }
 
 // "샘플샘플샘플..."처럼 1~6글자짜리 짧은 패턴이 문자열 전체를 채울 만큼
-// 반복되는지 확인합니다. 단순 반복 문자("ㅋㅋㅋㅋ")도 패턴 길이 1로 잡힙니다.
+// 반복되는지 확인합니다. 단순 반복 문자("ㅋㅋㅋㅋ")도 패턴 길이 1로 잡히고,
+// "테스트테스트"처럼 짧은 단어가 정확히 2번만 반복된 경우도 잡습니다.
 function hasRepeatingPattern(compact: string): boolean {
-  const maxPatternLen = Math.min(6, Math.floor(compact.length / 3));
+  const maxPatternLen = Math.min(6, Math.floor(compact.length / 2));
   for (let len = 1; len <= maxPatternLen; len++) {
     const pattern = compact.slice(0, len);
     const repeatCount = Math.ceil(compact.length / len);
     if (pattern.repeat(repeatCount).slice(0, compact.length) === compact) return true;
+  }
+  return false;
+}
+
+// PLACEHOLDER_WORDS에 있는 단어가 내용 전체가 아니라 일부로 2번 이상 붙어
+// 나오는 경우도 잡습니다. 예: "거제통영 김홍배 테스트테스트"처럼 다른 글자와
+// 섞여 있어 hasRepeatingPattern으로는 못 잡는 경우를 보완합니다.
+function containsRepeatedPlaceholder(compact: string): boolean {
+  const lower = compact.toLowerCase();
+  for (const word of PLACEHOLDER_WORDS) {
+    if (word.length < 2) continue;
+    if (lower.includes(word.repeat(2))) return true;
   }
   return false;
 }
@@ -101,6 +114,7 @@ export function getSuspiciousReason(content: string, name?: string): SuspiciousR
   const compact = trimmed.replace(/\s+/g, "");
   if (compact.length <= 5) return "too_short";
   if (hasRepeatingPattern(compact)) return "repeated_char";
+  if (containsRepeatedPlaceholder(compact)) return "placeholder_word";
   if (LAUGH_CRY_ONLY_PATTERN.test(trimmed)) return "laugh_cry_only";
   if (PLACEHOLDER_WORDS.has(compact.toLowerCase())) return "placeholder_word";
   if (OFF_TOPIC_PHRASES.has(compact.toLowerCase())) return "off_topic";

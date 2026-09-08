@@ -1,17 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EventBanner from "@/components/EventBanner";
 
 type Status = "idle" | "submitting" | "success" | "error";
 type GroupType = "draw" | "no_draw";
 type LookupState = "idle" | "checking" | "found" | "not_found";
+type EntriesOpenState = "checking" | "open" | "closed";
 
 const CONTENT_ROWS = 9;
 const MAX_CONTENT_LENGTH = 2000;
 const MAX_EMPLOYEE_ID_LENGTH = 20;
 
 export default function EntryForm({ groupType }: { groupType: GroupType }) {
+  const [entriesOpen, setEntriesOpen] = useState<EntriesOpenState>("checking");
   const [editIntent, setEditIntent] = useState(false);
   const [employeeId, setEmployeeId] = useState("");
   const [content, setContent] = useState("");
@@ -35,6 +37,21 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
   } | null>(null);
 
   const isConfirmed = lookupState === "found" && confirmedFor === employeeId.trim();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/entries/status", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setEntriesOpen(data?.open === false ? "closed" : "open");
+      })
+      .catch(() => {
+        if (!cancelled) setEntriesOpen("open");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function handleToggleEditIntent() {
     setEditIntent((prev) => !prev);
@@ -206,12 +223,29 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
     });
   }
 
+  if (entriesOpen === "closed") {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#f5f5f7] px-6 py-24 text-center">
+        <div className="text-5xl">🙏</div>
+        <h1 className="text-2xl font-bold text-slate-900">접수가 마감되었습니다. 감사합니다.</h1>
+      </main>
+    );
+  }
+
   if (status === "success") {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#f5f5f7] px-6 py-24 text-center">
         <div className="text-5xl">✅</div>
         <h1 className="text-2xl font-bold text-slate-900">접수가 잘 되었습니다.</h1>
         <p className="text-slate-600">{successMessage}</p>
+      </main>
+    );
+  }
+
+  if (entriesOpen === "checking") {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#f5f5f7] px-6 py-24 text-center">
+        <p className="text-sm text-slate-400">불러오는 중...</p>
       </main>
     );
   }

@@ -26,15 +26,24 @@ export default function PrizeReveal({
 
   return (
     <div className="flex w-full max-w-5xl flex-col items-center gap-6">
-      <div className="relative flex aspect-video w-full flex-col overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl">
-        <div className="flex flex-col items-center gap-1 pt-6 text-center">
+      <div className="relative flex aspect-video w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60">
+        {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이 프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. */}
+        <img
+          src="/images/event-visual-draw.webp"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-white/55 backdrop-blur-md" />
+
+        <div className="relative z-10 flex flex-col items-center gap-1 pt-6 text-center">
           <span className="text-sm font-medium text-slate-500">&lsquo;26.하 CSM전략회의 이벤트</span>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">축하합니다!</h1>
         </div>
 
-        <div className="grid flex-1 grid-cols-[minmax(0,220px)_1fr] items-center gap-6 overflow-hidden px-8 py-4 sm:gap-10 sm:px-14">
+        <div className="relative z-10 grid flex-1 grid-cols-[minmax(0,220px)_1fr] items-center gap-6 overflow-hidden px-8 py-4 sm:gap-10 sm:px-14">
           <div className="flex flex-col items-center gap-3">
-            <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-3 py-1 text-xs font-bold text-white">
+            <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-6 py-2 text-2xl font-black text-white sm:px-8 sm:py-2.5 sm:text-3xl">
               {round.label}
             </span>
             <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gradient-to-b from-[#eaf2fb] to-[#9fb9d6] shadow-inner sm:h-32 sm:w-32">

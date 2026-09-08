@@ -39,6 +39,7 @@ export default function DrawPage() {
   const [starting, setStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
+  const [entriesOpen, setEntriesOpen] = useState<boolean | null>(null);
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch("/api/admin/entries", { cache: "no-store" });
@@ -47,10 +48,28 @@ export default function DrawPage() {
     setEntries(data.entries ?? []);
   }, []);
 
+  const fetchEntriesOpen = useCallback(async () => {
+    const res = await fetch("/api/admin/entries-status", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json().catch(() => ({}));
+    setEntriesOpen(data?.open !== false);
+  }, []);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 최초 마운트 시 접수 목록을 불러옵니다.
     fetchEntries().finally(() => setEntriesLoading(false));
-  }, [fetchEntries]);
+    fetchEntriesOpen();
+  }, [fetchEntries, fetchEntriesOpen]);
+
+  async function handleToggleEntriesOpen() {
+    const next = !entriesOpen;
+    setEntriesOpen(next);
+    await fetch("/api/admin/entries-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ open: next }),
+    });
+  }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 다른 화면에서 #main으로 돌아오면 관리하기 화면을 보여줍니다.
@@ -250,6 +269,8 @@ export default function DrawPage() {
               onSelectWinner={openEntryModal}
               onStartDraw={handleStartWithVideo}
               onSelectRound={handleSelectRound}
+              entriesOpen={entriesOpen}
+              onToggleEntriesOpen={handleToggleEntriesOpen}
             />
             <button type="button" onClick={handleShowCover} className="text-xs text-slate-300 hover:text-slate-500">
               대문화면가기

@@ -16,11 +16,15 @@ export default function PrizeLobby({
   onSelectWinner,
   onStartDraw,
   onSelectRound,
+  entriesOpen,
+  onToggleEntriesOpen,
 }: {
   winners: WinnerEntry[];
   onSelectWinner: (winner: WinnerEntry) => void;
   onStartDraw: () => void;
   onSelectRound: (rank: number) => void;
+  entriesOpen: boolean | null;
+  onToggleEntriesOpen: () => void;
 }) {
   const hasRemainingRound = PRIZE_ROUNDS.some(
     (round) => winners.filter((w) => w.prize_rank === round.rank).length < round.count
@@ -130,6 +134,23 @@ export default function PrizeLobby({
           >
             추첨하러가기
           </button>
+        )}
+
+        {entriesOpen !== null && (
+          <div className="mx-auto flex items-center gap-2">
+            <span
+              className={`h-2.5 w-2.5 rounded-full ${entriesOpen ? "bg-blue-500" : "bg-red-500"}`}
+              aria-hidden="true"
+            />
+            <span className="text-xs text-slate-500">{entriesOpen ? "접수중" : "접수중단"}</span>
+            <button
+              type="button"
+              onClick={onToggleEntriesOpen}
+              className="ml-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-200"
+            >
+              {entriesOpen ? "접수중단하기" : "접수재개하기"}
+            </button>
+          </div>
         )}
 
         <AdminSubNav />
