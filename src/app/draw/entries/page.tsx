@@ -28,13 +28,24 @@ export default function EntriesListPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     fetch("/api/admin/entries", { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : { entries: [] }))
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.detail ?? data?.error ?? `요청 실패 (${res.status})`);
+        return data;
+      })
       .then((data) => {
-        if (!cancelled) setEntries(data.entries ?? []);
+        if (!cancelled) {
+          setEntries(data.entries ?? []);
+          setLoadError(null);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) setLoadError(err instanceof Error ? err.message : String(err));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -121,6 +132,11 @@ export default function EntriesListPage() {
           <FilterTab label="파트장" active={filter === "no_draw"} onClick={() => setFilter("no_draw")} />
         </div>
 
+        {loadError && (
+          <p className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+            불러오기 실패: {loadError}
+          </p>
+        )}
         {loading ? (
           <p className="text-sm text-slate-500">불러오는 중...</p>
         ) : filtered.length === 0 ? (

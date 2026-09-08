@@ -14,7 +14,11 @@ export async function GET() {
 
   if (error) {
     console.error("list entries failed", error);
-    return NextResponse.json({ error: "목록을 불러오지 못했습니다." }, { status: 500 });
+    // TODO: 원인 파악이 끝나면 error.message 노출은 다시 제거합니다.
+    return NextResponse.json(
+      { error: "목록을 불러오지 못했습니다.", detail: error.message, hint: error.hint ?? null, code: error.code ?? null },
+      { status: 500 }
+    );
   }
 
   // AI로 주제 관련성을 판별해 각 접수에 덧붙입니다. 이미 판별한 접수는
