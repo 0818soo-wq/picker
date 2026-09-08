@@ -195,6 +195,29 @@ export default function DrawPage() {
     await fetchEntries();
   }
 
+  // PC/프로젝터에서 마우스 없이 스페이스바(또는 엔터, →)만 눌러도 화면별
+  // "다음" 버튼을 누른 것과 동일하게 진행할 수 있게 해줍니다. 무선 프리젠터
+  // 클리커도 보통 이 키들을 보내므로 클리커로도 조작할 수 있습니다.
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.code !== "Space" && e.key !== "Enter" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+
+      if (phase === "cover") {
+        handleStartWithVideo();
+      } else if (phase === "prizeIntro") {
+        if (!starting && !entriesLoading && remaining.length > 0) handleStartDraw();
+      } else if (phase === "reveal") {
+        handleNextRound();
+      } else if (phase === "lobby") {
+        if (findNextRoundIndex() !== -1) handleStartWithVideo();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
+
   return (
     <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
