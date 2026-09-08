@@ -22,11 +22,9 @@ export default function PrizeReveal({
   onNext: () => void;
   onSelectWinner: (winner: ReelEntry) => void;
 }) {
-  const columns = winners.length <= 1 ? 1 : winners.length <= 4 ? 2 : winners.length <= 9 ? 3 : 4;
-
   return (
     <div className="flex w-full max-w-5xl flex-col items-center gap-6">
-      <div className="relative flex aspect-video w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60">
+      <div className="relative flex w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 sm:aspect-video">
         {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이 프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. */}
         <img
           src="/images/event-visual-draw.webp"
@@ -41,7 +39,7 @@ export default function PrizeReveal({
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">축하합니다!</h1>
         </div>
 
-        <div className="relative z-10 grid flex-1 grid-cols-[minmax(0,220px)_1fr] items-center gap-6 overflow-hidden px-8 py-4 sm:gap-10 sm:px-14">
+        <div className="relative z-10 grid flex-1 grid-cols-1 items-center gap-6 px-6 py-6 sm:grid-cols-[minmax(0,220px)_1fr] sm:gap-10 sm:overflow-hidden sm:px-14 sm:py-4">
           <div className="flex flex-col items-center gap-3">
             <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-6 py-2 text-2xl font-black text-white sm:px-8 sm:py-2.5 sm:text-3xl">
               {round.label}
@@ -60,11 +58,11 @@ export default function PrizeReveal({
             <p className="whitespace-pre-line text-center text-sm font-semibold leading-snug text-slate-700">{round.prizeName}</p>
           </div>
 
-          <div className="flex h-full flex-col justify-center gap-2 overflow-y-auto">
+          <div className="flex flex-col justify-center gap-2 sm:h-full sm:overflow-y-auto">
             <span className="text-xs font-medium text-slate-400">{round.label} 당첨자</span>
             <div
               className="grid content-start items-start justify-items-stretch gap-3"
-              style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 220px))` }}
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 220px))" }}
             >
               {winners.map((w) => {
                 const resolved = resolveWinnerDisplay(w.name, w.department);

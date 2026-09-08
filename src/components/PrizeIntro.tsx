@@ -18,7 +18,7 @@ export default function PrizeIntro({
 }) {
   return (
     <div className="flex w-full max-w-5xl flex-col items-center gap-6">
-      <div className="relative flex aspect-video w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60">
+      <div className="relative flex w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 sm:aspect-video">
         {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이 프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. */}
         <img
           src="/images/event-visual-draw.webp"
@@ -28,11 +28,11 @@ export default function PrizeIntro({
         />
         <div className="absolute inset-0 bg-white/55 backdrop-blur-md" />
 
-        <div className="relative z-10 pt-8 text-center">
+        <div className="relative z-10 pt-6 text-center sm:pt-8">
           <span className="text-sm font-medium text-slate-500 sm:text-base">&lsquo;26.하 CSM전략회의 이벤트</span>
         </div>
 
-        <div className="relative z-10 grid flex-1 grid-cols-3 items-center gap-4 px-8 sm:px-16">
+        <div className="relative z-10 grid flex-1 grid-cols-1 items-center gap-6 px-6 py-8 sm:grid-cols-3 sm:gap-4 sm:px-16 sm:py-0">
           <div className="flex flex-col items-center gap-1">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400 sm:text-sm">등수</span>
             <span className="text-6xl font-black tracking-tighter text-slate-900 sm:text-8xl">{round.label}</span>
@@ -67,7 +67,7 @@ export default function PrizeIntro({
           </div>
         </div>
 
-        <div className="relative z-10 pb-8" />
+        <div className="relative z-10 pb-6 sm:pb-8" />
       </div>
 
       <motion.button
