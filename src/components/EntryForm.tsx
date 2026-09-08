@@ -321,7 +321,7 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
             onClick={handleToggleEditIntent}
             className="text-xs font-medium text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
           >
-            {editIntent ? "새로 작성하기로 전환" : "내가 접수한 내용 수정하기"}
+            {editIntent ? "새로 작성하기로 전환" : "기존에 접수한 내용 수정하기"}
           </button>
         </div>
 

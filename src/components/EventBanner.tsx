@@ -5,8 +5,8 @@ const EVENT_TITLE_LINE1 = "우리 조직의 새로운 축,";
 const EVENT_TITLE_PREFIX = "어떠한 ";
 const EVENT_TITLE_HIGHLIGHT = "‘축의 전환’";
 const EVENT_TITLE_SUFFIX = "이 필요할까요?";
-const EVENT_SUBTITLE_LINE1 = "변화하는 환경 속에서 우리 조직이 나아가야 할 방향을";
-const EVENT_SUBTITLE_LINE2 = "함께 고민해주세요.";
+const EVENT_SUBTITLE_LINE1 = "변화하는 환경 속에서";
+const EVENT_SUBTITLE_LINE2 = "우리 조직이 나아가야 할 방향을\n함께 고민해주세요.";
 
 export default function EventBanner({
   badge = EVENT_BADGE,
@@ -76,10 +76,7 @@ export default function EventBanner({
           )}
         </h1>
         {(subtitleLine1 || subtitleLine2) && (
-          <p
-            className="text-sm leading-relaxed text-slate-700 sm:text-base"
-            style={{ textShadow: "0 1px 4px rgba(255,255,255,0.6)" }}
-          >
+          <p className="w-fit whitespace-pre-line rounded-lg bg-white/80 px-3 py-2 text-sm leading-relaxed text-slate-800 shadow-sm backdrop-blur-sm sm:text-base">
             {subtitleLine1}
             {subtitleLine1 && subtitleLine2 && <br />}
             {subtitleLine2}
