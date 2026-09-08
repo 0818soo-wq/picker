@@ -32,7 +32,7 @@ export default function PrizeLobby({
 
   return (
     <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl">
-      <Confetti />
+      {!hasRemainingRound && <Confetti />}
       {hasRemainingRound ? (
         <EventBanner
           badge="추첨 현황"
