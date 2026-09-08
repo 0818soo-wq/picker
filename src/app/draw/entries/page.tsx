@@ -39,6 +39,8 @@ export default function EntriesListPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [resettingAll, setResettingAll] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +75,47 @@ export default function EntriesListPage() {
       setEntries(data.entries ?? []);
     } finally {
       setRefreshing(false);
+    }
+  }
+
+  async function handleSeedDummy() {
+    if (seeding) return;
+    setSeeding(true);
+    try {
+      const res = await fetch("/api/admin/entries/seed-dummy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ count: 30 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        window.alert(data?.error ?? "더미데이터 추가에 실패했습니다.");
+        return;
+      }
+      window.alert(`더미데이터 ${data.added}건이 추가됐습니다.`);
+      await handleRefresh();
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  async function handleResetAll() {
+    if (resettingAll) return;
+    const ok = window.confirm(
+      "정말 작성카드를 전부 삭제할까요?\n\n당첨 상태뿐 아니라 접수된 카드 자체가 모두 사라지며, 되돌릴 수 없습니다.\n(테스트/리허설 준비 용도로만 사용하세요)"
+    );
+    if (!ok) return;
+
+    setResettingAll(true);
+    try {
+      const res = await fetch("/api/admin/entries/reset-all", { method: "POST" });
+      if (!res.ok) {
+        window.alert("작성카드 전체 삭제에 실패했습니다.");
+        return;
+      }
+      await handleRefresh();
+    } finally {
+      setResettingAll(false);
     }
   }
 
@@ -124,13 +167,31 @@ export default function EntriesListPage() {
             </div>
           </div>
 
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="소속 또는 이름 검색"
-            className="w-full max-w-xs rounded-full border-0 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 sm:w-64"
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="소속 또는 이름 검색"
+              className="w-full max-w-xs rounded-full border-0 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-slate-900 sm:w-64"
+            />
+            <button
+              type="button"
+              onClick={handleSeedDummy}
+              disabled={seeding}
+              className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {seeding ? "추가 중..." : "더미데이터 추가"}
+            </button>
+            <button
+              type="button"
+              onClick={handleResetAll}
+              disabled={resettingAll}
+              className="rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 shadow-sm transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {resettingAll ? "삭제 중..." : "작성카드 전체 삭제"}
+            </button>
+          </div>
         </div>
 
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
