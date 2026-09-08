@@ -328,7 +328,7 @@ export default function DrawPage() {
                     {entriesLoading
                       ? "불러오는 중..."
                       : remaining.length === 0
-                        ? "추첨 대상 없음"
+                        ? "추첨할 인원 없음"
                         : starting
                           ? "준비 중..."
                           : "추첨 시작"}

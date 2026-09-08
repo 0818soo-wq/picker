@@ -56,7 +56,7 @@ export default function EntriesListPage() {
   }
 
   async function handleDelete(entry: Entry) {
-    const ok = window.confirm(`"${entry.department} ${entry.name}" 접수를 삭제할까요? 삭제하면 추첨 대상에서도 제외됩니다.`);
+    const ok = window.confirm(`"${entry.department} ${entry.name}" 접수를 삭제할까요? 삭제하면 추첨 명단에서도 사라집니다.`);
     if (!ok) return;
 
     const res = await fetch(`/api/admin/entries/${entry.id}`, { method: "DELETE" });
@@ -111,7 +111,7 @@ export default function EntriesListPage() {
           <DashboardStat label="전체 접수" value={entries.length} />
           <DashboardStat label="지역단장 접수" value={drawCount} />
           <DashboardStat label="파트장 접수" value={staffCount} />
-          <DashboardStat label="추첨 대상" value={remainingCount} />
+          <DashboardStat label="미당첨" value={remainingCount} />
           <DashboardStat label="당첨자" value={winnerCount} />
         </div>
 

@@ -202,7 +202,7 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
             )}
             {isConfirmed && resolved && !resolved.eligible && (
               <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm leading-relaxed text-amber-700">
-                이벤트 대상자가 아닙니다. 추첨대상에선 제외되지만, 의견 제출은 가능합니다.
+                이벤트 대상자가 아닙니다. 추첨에서는 제외되지만, 의견 제출은 가능합니다.
               </p>
             )}
             {lookupState === "not_found" && (

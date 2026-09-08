@@ -100,7 +100,7 @@ export default function StatusPage() {
         ) : (
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <GroupSection
-              title="지역단 (추첨 대상)"
+              title="지역단"
               attendees={regionAttendees}
               submittedNames={submittedNames}
               entryByName={entryByName}

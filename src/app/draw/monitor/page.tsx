@@ -103,7 +103,7 @@ export default function MonitorPage() {
             <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Stat label="지역단장 접수" value={drawGroup.length} />
               <Stat label="추첨 완료" value={winners.length} />
-              <Stat label="추첨 대상 남음" value={remaining} />
+              <Stat label="미당첨 인원" value={remaining} />
               <Stat label="본사 파트장 접수" value={staffGroup.length} />
             </div>
 
