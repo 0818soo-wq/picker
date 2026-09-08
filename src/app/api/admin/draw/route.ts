@@ -17,7 +17,10 @@ function shuffle<T>(items: T[]): T[] {
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const requestedCount = Math.floor(Number((body as { count?: unknown })?.count) || 1);
-  const count = Math.min(Math.max(requestedCount, 1), 10);
+  const count = Math.min(Math.max(requestedCount, 1), 12);
+
+  const requestedRank = Number((body as { rank?: unknown })?.rank);
+  const rank = Number.isInteger(requestedRank) && requestedRank >= 1 && requestedRank <= 5 ? requestedRank : null;
 
   const supabase = createServiceRoleClient();
 
@@ -55,10 +58,10 @@ export async function POST(req: Request) {
 
   const { data: updated, error: updateError } = await supabase
     .from("entries")
-    .update({ is_winner: true, won_at: new Date().toISOString() })
+    .update({ is_winner: true, won_at: new Date().toISOString(), prize_rank: rank })
     .in("id", ids)
     .eq("is_winner", false)
-    .select("id, department, name, content");
+    .select("id, department, name, content, prize_rank");
 
   if (updateError || !updated || updated.length === 0) {
     console.error("mark winner failed", updateError);
