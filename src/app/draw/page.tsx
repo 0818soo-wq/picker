@@ -301,11 +301,20 @@ export default function DrawPage() {
         {phase === "spin" && currentRound && roundWinners.length > 0 && (
           <motion.div key="spin" {...fadeUp} className="flex w-full flex-col items-center gap-4">
           <div
-            className={`relative w-full overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl ${
+            className={`relative w-full overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 ${
               isMultiDraw ? "max-w-6xl" : "max-w-3xl"
             }`}
           >
-            <div className="flex flex-col items-center gap-2 px-6 pt-8 text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이 프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. */}
+            <img
+              src="/images/event-visual-draw.webp"
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-white/55 backdrop-blur-md" />
+
+            <div className="relative z-10 flex flex-col items-center gap-2 px-6 pt-8 text-center">
               <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
                 AI 당첨자 추첨 <span className="text-blue-600">Agent</span>
               </h1>
@@ -314,7 +323,7 @@ export default function DrawPage() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-4 px-6 py-8 sm:px-10 sm:py-10">
+            <div className="relative z-10 flex flex-col items-center gap-4 px-6 py-8 sm:px-10 sm:py-10">
               <p className="text-lg font-medium text-blue-600">추첨 중...</p>
               {roundWinners.length === 1 ? (
                 <SlotReel

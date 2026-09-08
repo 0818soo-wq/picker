@@ -39,10 +39,10 @@ export default function PrizeIntro({
           </div>
 
           <div className="flex flex-col items-center gap-4">
-            <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-gradient-to-b from-[#eaf2fb] to-[#9fb9d6] shadow-inner sm:h-44 sm:w-44">
+            <div className="flex h-32 w-40 items-center justify-center sm:h-44 sm:w-56">
               {round.prizeImage ? (
                 /* eslint-disable-next-line @next/next/no-img-element -- 상품 사진은 next/image 최적화 없이 원본 그대로 표시합니다. */
-                <img src={round.prizeImage} alt={round.prizeName} className="h-full w-full object-cover" />
+                <img src={round.prizeImage} alt={round.prizeName} className="h-full w-full object-contain drop-shadow-md" />
               ) : (
                 <svg viewBox="0 0 100 100" className="h-14 w-14 text-slate-500/60 sm:h-16 sm:w-16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="20" y="40" width="60" height="45" rx="4" stroke="currentColor" strokeWidth="4" />

@@ -44,10 +44,10 @@ export default function PrizeReveal({
             <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-6 py-2 text-2xl font-black text-white sm:px-8 sm:py-2.5 sm:text-3xl">
               {round.label}
             </span>
-            <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gradient-to-b from-[#eaf2fb] to-[#9fb9d6] shadow-inner sm:h-32 sm:w-32">
+            <div className="flex h-28 w-32 items-center justify-center sm:h-32 sm:w-40">
               {round.prizeImage ? (
                 /* eslint-disable-next-line @next/next/no-img-element -- 상품 사진은 next/image 최적화 없이 원본 그대로 표시합니다. */
-                <img src={round.prizeImage} alt={round.prizeName} className="h-full w-full object-cover" />
+                <img src={round.prizeImage} alt={round.prizeName} className="h-full w-full object-contain drop-shadow-md" />
               ) : (
                 <svg viewBox="0 0 100 100" className="h-12 w-12 text-slate-500/60" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="20" y="40" width="60" height="45" rx="4" stroke="currentColor" strokeWidth="4" />
@@ -58,10 +58,10 @@ export default function PrizeReveal({
             <p className="whitespace-pre-line text-center text-sm font-semibold leading-snug text-slate-700">{round.prizeName}</p>
           </div>
 
-          <div className="flex flex-col justify-center gap-2 sm:h-full sm:overflow-y-auto">
-            <span className="text-xs font-medium text-slate-400">{round.label} 당첨자</span>
+          <div className="flex flex-col items-center justify-center gap-2 sm:items-stretch sm:h-full sm:overflow-y-auto">
+            <span className="text-xs font-medium text-slate-400 text-center sm:text-left">{round.label} 당첨자</span>
             <div
-              className="grid content-start items-start justify-items-stretch gap-3"
+              className="grid content-start items-start justify-center justify-items-stretch gap-3 sm:justify-start"
               style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 220px))" }}
             >
               {winners.map((w) => {

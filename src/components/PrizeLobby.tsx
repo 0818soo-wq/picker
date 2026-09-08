@@ -84,10 +84,10 @@ export default function PrizeLobby({
                   <span className="text-sm font-bold text-slate-900">
                     {round.label}({round.count}명)
                   </span>
-                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-b from-[#eaf2fb] to-[#9fb9d6] shadow-inner">
+                  <div className="flex h-12 w-16 items-center justify-center">
                     {round.prizeImage ? (
                       /* eslint-disable-next-line @next/next/no-img-element -- 상품 사진은 next/image 최적화 없이 원본 그대로 표시합니다. */
-                      <img src={round.prizeImage} alt={round.prizeName} className="h-full w-full object-cover" />
+                      <img src={round.prizeImage} alt={round.prizeName} className="h-full w-full object-contain" />
                     ) : (
                       <svg viewBox="0 0 100 100" className="h-6 w-6 text-slate-500/60" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="20" y="40" width="60" height="45" rx="4" stroke="currentColor" strokeWidth="6" />

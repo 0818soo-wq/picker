@@ -160,38 +160,34 @@ export function MultiSlotReel({
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="w-full overflow-x-auto">
+      <div
+        className="grid w-full justify-center gap-3"
+        style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP}px, 1fr))` }}
+      >
+        {top.map((winner, i) => (
+          <CompactReelRow
+            key={winner.id}
+            pool={pool}
+            winner={winner}
+            duration={COMPACT_BASE_DURATION + i * COMPACT_SETTLE_STAGGER}
+            onSettle={handleRowSettle}
+          />
+        ))}
+      </div>
+      {bottom.length > 0 && (
         <div
-          className="grid gap-3"
-          style={{ gridTemplateColumns: `repeat(${top.length}, minmax(${COMPACT_ITEM_WIDTH}px, 1fr))` }}
+          className="grid w-full justify-center gap-3"
+          style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP}px, 1fr))` }}
         >
-          {top.map((winner, i) => (
+          {bottom.map((winner, i) => (
             <CompactReelRow
               key={winner.id}
               pool={pool}
               winner={winner}
-              duration={COMPACT_BASE_DURATION + i * COMPACT_SETTLE_STAGGER}
+              duration={COMPACT_BASE_DURATION + (top.length + i) * COMPACT_SETTLE_STAGGER}
               onSettle={handleRowSettle}
             />
           ))}
-        </div>
-      </div>
-      {bottom.length > 0 && (
-        <div className="w-full overflow-x-auto">
-          <div
-            className="grid gap-3"
-            style={{ gridTemplateColumns: `repeat(${bottom.length}, minmax(${COMPACT_ITEM_WIDTH}px, 1fr))` }}
-          >
-            {bottom.map((winner, i) => (
-              <CompactReelRow
-                key={winner.id}
-                pool={pool}
-                winner={winner}
-                duration={COMPACT_BASE_DURATION + (top.length + i) * COMPACT_SETTLE_STAGGER}
-                onSettle={handleRowSettle}
-              />
-            ))}
-          </div>
         </div>
       )}
     </div>
