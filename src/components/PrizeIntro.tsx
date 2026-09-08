@@ -44,7 +44,7 @@ export default function PrizeIntro({
                 </svg>
               )}
             </div>
-            <p className="max-w-[14rem] text-center text-lg font-bold text-slate-900 sm:max-w-xs sm:text-2xl">
+            <p className="max-w-[14rem] whitespace-pre-line text-center text-lg font-bold leading-snug text-slate-900 sm:max-w-xs sm:text-2xl">
               {round.prizeName}
             </p>
           </div>

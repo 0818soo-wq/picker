@@ -48,7 +48,7 @@ export default function PrizeReveal({
                 </svg>
               )}
             </div>
-            <p className="text-center text-sm font-semibold text-slate-700">{round.prizeName}</p>
+            <p className="whitespace-pre-line text-center text-sm font-semibold leading-snug text-slate-700">{round.prizeName}</p>
           </div>
 
           <div className="flex h-full flex-col justify-center gap-2 overflow-y-auto">

@@ -160,11 +160,34 @@ export default function DrawPage() {
     if (full) setSelectedEntry(full);
   }
 
+  async function handleReset() {
+    if (!window.confirm("정말 초기화하시겠습니까? 지금까지의 추첨 기록이 모두 사라집니다.")) return;
+    await fetch("/api/admin/reset", { method: "POST" });
+    await fetchEntries();
+  }
+
   return (
     <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
+
+      {(phase === "cover" || phase === "lobby") && (
+        <motion.button
+          type="button"
+          onClick={handleReset}
+          aria-label="초기화"
+          title="초기화"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          className="fixed right-4 top-4 z-40 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-slate-400 shadow-sm backdrop-blur-sm transition-colors hover:bg-white hover:text-slate-600"
+        >
+          <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 9A8 8 0 1 1 4 13" />
+          </svg>
+        </motion.button>
+      )}
 
       <AnimatePresence mode="wait">
         {phase === "cover" && (
@@ -212,7 +235,12 @@ export default function DrawPage() {
 
         {phase === "lobby" && (
           <motion.div key="lobby" {...fadeUp} className="flex w-full flex-col items-center gap-4">
-            <PrizeLobby winners={allWinners} totalEntries={entries.length} onSelectWinner={openEntryModal} />
+            <PrizeLobby
+              winners={allWinners}
+              totalEntries={entries.length}
+              onSelectWinner={openEntryModal}
+              onStartDraw={handleStartWithVideo}
+            />
             <button type="button" onClick={handleShowCover} className="text-xs text-slate-300 hover:text-slate-500">
               대문화면가기
             </button>
@@ -233,13 +261,15 @@ export default function DrawPage() {
             ) : (
               <PrizeIntro round={currentRound} onStart={handleStartDraw} starting={starting} />
             )}
+            <button type="button" onClick={handleGoToLobby} className="text-xs text-slate-300 hover:text-slate-500">
+              메인화면가기
+            </button>
           </motion.div>
         )}
 
         {phase === "spin" && currentRound && roundWinners.length > 0 && (
-          <motion.div
-            key="spin"
-            {...fadeUp}
+          <motion.div key="spin" {...fadeUp} className="flex w-full flex-col items-center gap-4">
+          <div
             className={`relative w-full overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl ${
               isMultiDraw ? "max-w-6xl" : "max-w-3xl"
             }`}
@@ -271,11 +301,15 @@ export default function DrawPage() {
                 />
               )}
             </div>
+          </div>
+            <button type="button" onClick={handleGoToLobby} className="text-xs text-slate-300 hover:text-slate-500">
+              메인화면가기
+            </button>
           </motion.div>
         )}
 
         {phase === "reveal" && currentRound && roundWinners.length > 0 && (
-          <motion.div key="reveal" {...fadeUp} className="flex w-full flex-col items-center gap-6">
+          <motion.div key="reveal" {...fadeUp} className="flex w-full flex-col items-center gap-4">
             <PrizeReveal
               round={currentRound}
               winners={roundWinners}
@@ -283,6 +317,9 @@ export default function DrawPage() {
               onNext={handleNextRound}
               onSelectWinner={openEntryModal}
             />
+            <button type="button" onClick={handleGoToLobby} className="text-xs text-slate-300 hover:text-slate-500">
+              메인화면가기
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

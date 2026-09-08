@@ -14,11 +14,17 @@ export default function PrizeLobby({
   winners,
   totalEntries,
   onSelectWinner,
+  onStartDraw,
 }: {
   winners: WinnerEntry[];
   totalEntries: number;
   onSelectWinner: (winner: WinnerEntry) => void;
+  onStartDraw: () => void;
 }) {
+  const hasRemainingRound = PRIZE_ROUNDS.some(
+    (round) => winners.filter((w) => w.prize_rank === round.rank).length < round.count
+  );
+
   return (
     <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl">
       <EventBanner
@@ -42,8 +48,21 @@ export default function PrizeLobby({
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#13294b] text-sm font-bold text-white">
                     {round.rank}
                   </span>
-                  <span className="text-sm font-bold text-slate-900">{round.label}</span>
-                  <span className="line-clamp-2 text-[11px] text-slate-500">{round.prizeName}</span>
+                  <span className="text-sm font-bold text-slate-900">
+                    {round.label}({round.count}명)
+                  </span>
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-b from-[#eaf2fb] to-[#9fb9d6] shadow-inner">
+                    {round.prizeImage ? (
+                      /* eslint-disable-next-line @next/next/no-img-element -- 상품 사진은 next/image 최적화 없이 원본 그대로 표시합니다. */
+                      <img src={round.prizeImage} alt={round.prizeName} className="h-full w-full object-cover" />
+                    ) : (
+                      <svg viewBox="0 0 100 100" className="h-6 w-6 text-slate-500/60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="20" y="40" width="60" height="45" rx="4" stroke="currentColor" strokeWidth="6" />
+                        <rect x="12" y="26" width="76" height="18" rx="4" stroke="currentColor" strokeWidth="6" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="line-clamp-2 whitespace-pre-line text-[11px] text-slate-500">{round.prizeName}</span>
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -73,6 +92,16 @@ export default function PrizeLobby({
             );
           })}
         </div>
+
+        {hasRemainingRound && (
+          <button
+            type="button"
+            onClick={onStartDraw}
+            className="mx-auto flex h-14 w-64 items-center justify-center rounded-full bg-slate-900 text-base font-bold text-white shadow-sm transition-colors hover:bg-slate-700"
+          >
+            추첨하러가기
+          </button>
+        )}
 
         <AdminSubNav />
       </div>

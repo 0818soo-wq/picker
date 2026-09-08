@@ -18,10 +18,10 @@ export type PrizeRound = {
 // 진행 순서: 5등 -> 4등 -> 3등 -> 2등 -> 1등 (배열 순서 = 진행 순서)
 export const PRIZE_ROUNDS: PrizeRound[] = [
   { rank: 5, label: "5등", prizeName: "삼성라이온즈 굿즈", count: 10, prizeImage: null },
-  { rank: 4, label: "4등", prizeName: "배드민턴&탁구 선수단 사인 유니폼", count: 12, prizeImage: null },
-  { rank: 3, label: "3등", prizeName: "블루밍스 여자농구단 사인 공인구", count: 2, prizeImage: null },
-  { rank: 2, label: "2등", prizeName: "배드민턴 선수단 사인 라켓&가방", count: 1, prizeImage: null },
-  { rank: 1, label: "1등", prizeName: "안세영선수 유니폼 & 배드민턴 선수단 사인 라켓&가방", count: 1, prizeImage: null },
+  { rank: 4, label: "4등", prizeName: "배드민턴&탁구 선수단\n사인 유니폼", count: 12, prizeImage: null },
+  { rank: 3, label: "3등", prizeName: "블루밍스 여자농구단\n사인 공인구", count: 2, prizeImage: null },
+  { rank: 2, label: "2등", prizeName: "배드민턴 선수단\n사인 라켓&가방", count: 1, prizeImage: null },
+  { rank: 1, label: "1등", prizeName: "안세영선수 유니폼\n+ 배드민턴 선수단\n사인 라켓&가방", count: 1, prizeImage: null },
 ];
 
 export function getPrizeRound(rank: PrizeRank): PrizeRound {

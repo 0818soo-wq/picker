@@ -7,6 +7,7 @@ import AdminSubNav from "@/components/AdminSubNav";
 import RefreshButton from "@/components/RefreshButton";
 import WrittenCardModal from "@/components/WrittenCardModal";
 import { resolveWinnerDisplay } from "@/lib/format";
+import { PRIZE_ROUNDS } from "@/lib/prizeRounds";
 
 type Entry = {
   id: string;
@@ -16,6 +17,7 @@ type Entry = {
   group_type: "draw" | "no_draw";
   is_winner: boolean;
   won_at: string | null;
+  prize_rank: number | null;
   created_at: string;
 };
 
@@ -62,16 +64,6 @@ export default function MonitorPage() {
     [drawGroup]
   );
   const remaining = drawGroup.length - winners.length;
-
-  // 같은 시각(won_at)에 당첨된 인원은 한 번에 뽑힌 것으로 간주해 라운드 인원수를 계산합니다.
-  const roundSizeByWonAt = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const w of winners) {
-      if (!w.won_at) continue;
-      counts.set(w.won_at, (counts.get(w.won_at) ?? 0) + 1);
-    }
-    return counts;
-  }, [winners]);
 
   return (
     <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
@@ -132,7 +124,11 @@ export default function MonitorPage() {
                         </span>
                         {w.won_at && (
                           <span className="ml-auto whitespace-nowrap text-xs text-slate-400">
-                            {new Date(w.won_at).toLocaleTimeString("ko-KR")} ({roundSizeByWonAt.get(w.won_at) ?? 1}명)
+                            {new Date(w.won_at).toLocaleTimeString("ko-KR")}
+                            {(() => {
+                              const round = PRIZE_ROUNDS.find((r) => r.rank === w.prize_rank);
+                              return round ? ` (${round.label} / ${round.count}명)` : "";
+                            })()}
                           </span>
                         )}
                       </div>
