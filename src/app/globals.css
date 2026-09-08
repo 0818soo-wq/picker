@@ -47,6 +47,17 @@
   font-family: "Paperlogy", var(--font-geist-sans), sans-serif;
 }
 
+@font-face {
+  font-family: "KimjungchulScript";
+  src: url("/fonts/KimjungchulScript-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+.font-kimjungchul {
+  font-family: "KimjungchulScript", "Paperlogy", var(--font-geist-sans), sans-serif;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

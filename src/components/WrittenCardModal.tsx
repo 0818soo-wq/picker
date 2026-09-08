@@ -49,7 +49,7 @@ export default function WrittenCardModal({
 
         <div className="max-h-[45vh] overflow-y-auto px-6 py-6 sm:px-10 sm:py-8">
           <p
-            className="whitespace-pre-wrap text-lg leading-[2.75rem] text-slate-900 sm:text-xl"
+            className="font-kimjungchul whitespace-pre-wrap text-xl leading-[2.75rem] text-slate-900 sm:text-2xl"
             style={{
               backgroundImage:
                 "repeating-linear-gradient(to bottom, transparent 0, transparent 2.7rem, #e2e6ee 2.7rem, #e2e6ee calc(2.7rem + 1px))",
