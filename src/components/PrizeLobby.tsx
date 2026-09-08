@@ -13,14 +13,14 @@ type WinnerEntry = ReelEntry & { prize_rank: number | null };
 // 당첨자 버튼을 쌓아 보여줍니다. 아직 추첨 전인 등수는 열이 비어있습니다.
 export default function PrizeLobby({
   winners,
-  totalEntries,
   onSelectWinner,
   onStartDraw,
+  onSelectRound,
 }: {
   winners: WinnerEntry[];
-  totalEntries: number;
   onSelectWinner: (winner: WinnerEntry) => void;
   onStartDraw: () => void;
+  onSelectRound: (rank: number) => void;
 }) {
   const hasRemainingRound = PRIZE_ROUNDS.some(
     (round) => winners.filter((w) => w.prize_rank === round.rank).length < round.count
@@ -29,27 +29,54 @@ export default function PrizeLobby({
   return (
     <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl">
       <Confetti />
-      <EventBanner
-        badge="추첨 현황"
-        titleLine1="당첨을 축하합니다!"
-        titlePrefix=""
-        titleHighlight=""
-        titleSuffix=""
-        subtitleLine1={`총 ${totalEntries}개의 의견이 접수되었습니다.`}
-        subtitleLine2=""
-      />
+      {hasRemainingRound ? (
+        <EventBanner
+          badge="추첨 현황"
+          titleLine1="CSM전략회의 EVENT 추첨을 시작할까요?"
+          titlePrefix=""
+          titleHighlight=""
+          titleSuffix=""
+          titleSize="large"
+          subtitleLine1=""
+          subtitleLine2=""
+        />
+      ) : (
+        <EventBanner
+          badge="추첨 현황"
+          titleLine1="당첨을 축하합니다!"
+          titlePrefix=""
+          titleHighlight=""
+          titleSuffix=""
+          titleSize="large"
+          subtitleLine1={`총 ${winners.length}명의 당첨자에게 개별적으로 선물이 전달됩니다.`}
+          subtitleLine2=""
+        />
+      )}
 
       <div className="flex flex-col gap-6 px-6 py-8 sm:px-10 sm:py-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4">
           {PRIZE_ROUNDS.map((round) => {
             const roundWinners = winners.filter((w) => w.prize_rank === round.rank);
 
+            const roundIncomplete = roundWinners.length < round.count;
+
             return (
               <div key={round.rank} className="flex flex-col gap-3 rounded-2xl bg-white/50 p-4 ring-1 ring-white/60 backdrop-blur-xl">
                 <div className="flex flex-col items-center gap-1 text-center">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#13294b] text-sm font-bold text-white">
-                    {round.rank}
-                  </span>
+                  {roundIncomplete ? (
+                    <button
+                      type="button"
+                      onClick={() => onSelectRound(round.rank)}
+                      title="이 등수 추첨하러 가기"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#13294b] text-sm font-bold text-white transition-colors hover:bg-[#1c3a68]"
+                    >
+                      {round.rank}
+                    </button>
+                  ) : (
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#13294b] text-sm font-bold text-white">
+                      {round.rank}
+                    </span>
+                  )}
                   <span className="text-sm font-bold text-slate-900">
                     {round.label}({round.count}명)
                   </span>

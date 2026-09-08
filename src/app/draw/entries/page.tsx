@@ -20,7 +20,17 @@ type Entry = {
   ai_reason?: string | null;
 };
 
-type Filter = "all" | "draw" | "no_draw";
+function formatEntryTime(createdAt: string): string {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+}
+
+type Filter = "all" | "draw" | "no_draw" | "suspicious";
+
+function isEntrySuspicious(entry: Entry): boolean {
+  return getSuspiciousReason(entry.content, entry.name) !== null || entry.ai_off_topic === true;
+}
 
 export default function EntriesListPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -81,11 +91,16 @@ export default function EntriesListPage() {
   const filtered = useMemo(() => {
     const q = query.trim();
     return entries
-      .filter((e) => filter === "all" || e.group_type === filter)
+      .filter((e) => {
+        if (filter === "suspicious") return isEntrySuspicious(e);
+        return filter === "all" || e.group_type === filter;
+      })
       .filter((e) => !q || e.department.includes(q) || e.name.includes(q))
       // 당첨자 카드를 맨 위로 올립니다.
       .sort((a, b) => Number(b.is_winner) - Number(a.is_winner));
   }, [entries, filter, query]);
+
+  const suspiciousCount = useMemo(() => entries.filter(isEntrySuspicious).length, [entries]);
 
   const drawCount = entries.filter((e) => e.group_type === "draw").length;
   const staffCount = entries.filter((e) => e.group_type === "no_draw").length;
@@ -130,6 +145,12 @@ export default function EntriesListPage() {
           <FilterTab label="전체" active={filter === "all"} onClick={() => setFilter("all")} />
           <FilterTab label="지역단장" active={filter === "draw"} onClick={() => setFilter("draw")} />
           <FilterTab label="파트장" active={filter === "no_draw"} onClick={() => setFilter("no_draw")} />
+          <FilterTab
+            label={`문제카드확인 (${suspiciousCount})`}
+            active={filter === "suspicious"}
+            onClick={() => setFilter("suspicious")}
+            danger
+          />
         </div>
 
         {loadError && (
@@ -164,13 +185,24 @@ function DashboardStat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function FilterTab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function FilterTab({
+  label,
+  active,
+  onClick,
+  danger,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  danger?: boolean;
+}) {
+  const activeClass = danger ? "bg-pink-500 text-white" : "bg-slate-900 text-white";
   return (
     <button
       type="button"
       onClick={onClick}
       className={`rounded-full px-4 py-1.5 text-sm font-medium shadow-sm transition-colors ${
-        active ? "bg-slate-900 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+        active ? activeClass : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
       }`}
     >
       {label}
@@ -180,7 +212,7 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
 
 function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) {
   const heuristicReason = getSuspiciousReason(entry.content, entry.name);
-  const isSuspicious = heuristicReason !== null || entry.ai_off_topic === true;
+  const isSuspicious = isEntrySuspicious(entry);
   const reasonLabel = heuristicReason
     ? SUSPICIOUS_REASON_LABELS[heuristicReason]
     : entry.ai_reason ?? "주제와 무관한 내용";
@@ -254,7 +286,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
 
       <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2">
         <span className="text-[11px] text-slate-400">
-          {entry.group_type === "draw" ? "지역단장" : "파트장"}
+          {entry.group_type === "draw" ? "지역단장" : "파트장"} · {formatEntryTime(entry.created_at)}
         </span>
         <div className="flex items-center gap-2">
           {entry.is_winner && (

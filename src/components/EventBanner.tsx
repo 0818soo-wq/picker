@@ -17,6 +17,7 @@ export default function EventBanner({
   titleSuffix = EVENT_TITLE_SUFFIX,
   subtitleLine1 = EVENT_SUBTITLE_LINE1,
   subtitleLine2 = EVENT_SUBTITLE_LINE2,
+  titleSize = "normal",
 }: {
   badge?: string;
   titleIcon?: ReactNode;
@@ -26,6 +27,7 @@ export default function EventBanner({
   titleSuffix?: string;
   subtitleLine1?: string;
   subtitleLine2?: string;
+  titleSize?: "normal" | "large";
 }) {
   // 커스텀 문구 없이 기본 문구 그대로 쓰는 경우(대기/추첨 화면, 접수 화면)는
   // 나침반이 있는 원본 배경을, 당첨자 발표처럼 문구가 매번 바뀌는 화면은
@@ -54,7 +56,14 @@ export default function EventBanner({
         <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-4 py-1.5 text-xs font-bold text-white sm:text-sm">
           {badge}
         </span>
-        <h1 className="text-2xl font-extrabold leading-snug text-slate-900 sm:text-3xl">
+        <h1
+          className={
+            titleSize === "large"
+              ? "text-4xl font-extrabold leading-snug text-slate-900 sm:text-5xl"
+              : "text-2xl font-extrabold leading-snug text-slate-900 sm:text-3xl"
+          }
+        >
+
           {titleIcon && <>{titleIcon} </>}
           {titleLine1}
           {(titlePrefix || titleHighlight || titleSuffix) && (

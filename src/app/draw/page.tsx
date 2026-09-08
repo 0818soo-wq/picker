@@ -78,6 +78,16 @@ export default function DrawPage() {
     setPhase("lobby");
   }
 
+  function handleSelectRound(rank: number) {
+    const index = PRIZE_ROUNDS.findIndex((round) => round.rank === rank);
+    if (index === -1) return;
+    const round = PRIZE_ROUNDS[index];
+    const drawnCount = allWinners.filter((w) => w.prize_rank === round.rank).length;
+    if (drawnCount >= round.count) return;
+    setRoundIndex(index);
+    setPhase("prizeIntro");
+  }
+
   function handleStartWithVideo() {
     const nextIndex = findNextRoundIndex();
     if (nextIndex === -1) {
@@ -237,9 +247,9 @@ export default function DrawPage() {
           <motion.div key="lobby" {...fadeUp} className="flex w-full flex-col items-center gap-4">
             <PrizeLobby
               winners={allWinners}
-              totalEntries={entries.length}
               onSelectWinner={openEntryModal}
               onStartDraw={handleStartWithVideo}
+              onSelectRound={handleSelectRound}
             />
             <button type="button" onClick={handleShowCover} className="text-xs text-slate-300 hover:text-slate-500">
               대문화면가기

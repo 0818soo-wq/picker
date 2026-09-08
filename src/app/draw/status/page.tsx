@@ -16,7 +16,14 @@ type Entry = {
   content: string;
   group_type: "draw" | "no_draw";
   is_winner: boolean;
+  created_at: string;
 };
+
+function formatEntryTime(createdAt: string): string {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+}
 
 const REFRESH_INTERVAL_MS = 15000;
 
@@ -194,8 +201,13 @@ function GroupSection({
                   <span className="text-slate-800">
                     {a.department} {a.title} {a.name}
                   </span>
-                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-600">
-                    제출
+                  <span className="flex items-center gap-2">
+                    {entry && (
+                      <span className="text-xs text-slate-400">{formatEntryTime(entry.created_at)}</span>
+                    )}
+                    <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-600">
+                      제출
+                    </span>
                   </span>
                 </button>
               </li>
