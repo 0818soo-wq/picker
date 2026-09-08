@@ -13,11 +13,14 @@ create table public.entries (
   content text not null,
   is_winner boolean not null default false,
   won_at timestamptz,
+  -- 몇 등에 당첨됐는지 (5=5등 ... 1=1등). 당첨 전에는 null입니다.
+  prize_rank integer check (prize_rank between 1 and 5),
   created_at timestamptz not null default now()
 );
 
 create index entries_group_type_idx on public.entries (group_type);
 create index entries_is_winner_idx on public.entries (is_winner);
+create index entries_prize_rank_idx on public.entries (prize_rank);
 
 alter table public.entries enable row level security;
 
