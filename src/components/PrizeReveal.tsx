@@ -54,8 +54,8 @@ export default function PrizeReveal({
           <div className="flex h-full flex-col justify-center gap-2 overflow-y-auto">
             <span className="text-xs font-medium text-slate-400">{round.label} 당첨자</span>
             <div
-              className="grid content-start gap-3"
-              style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+              className="grid content-start items-start justify-items-stretch gap-3"
+              style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 220px))` }}
             >
               {winners.map((w) => {
                 const resolved = resolveWinnerDisplay(w.name, w.department);

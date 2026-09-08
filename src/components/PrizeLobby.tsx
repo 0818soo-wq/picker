@@ -2,6 +2,7 @@
 
 import EventBanner from "@/components/EventBanner";
 import AdminSubNav from "@/components/AdminSubNav";
+import Confetti from "@/components/Confetti";
 import { PRIZE_ROUNDS } from "@/lib/prizeRounds";
 import { resolveWinnerDisplay } from "@/lib/format";
 import type { ReelEntry } from "@/components/SlotReel";
@@ -27,6 +28,7 @@ export default function PrizeLobby({
 
   return (
     <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl">
+      <Confetti />
       <EventBanner
         badge="추첨 현황"
         titleLine1="당첨을 축하합니다!"
