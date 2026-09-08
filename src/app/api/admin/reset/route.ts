@@ -9,7 +9,7 @@ export async function POST() {
 
   const { error } = await supabase
     .from("entries")
-    .update({ is_winner: false, won_at: null })
+    .update({ is_winner: false, won_at: null, prize_rank: null })
     .eq("is_winner", true);
 
   if (error) {

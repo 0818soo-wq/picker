@@ -1,12 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import EventBanner, { MountainBackdrop, SailboatIcon } from "@/components/EventBanner";
+import { MountainBackdrop, SailboatIcon } from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
-import WinnerSheet, { WinnerNameGrid } from "@/components/WinnerSheet";
-import { resumeAudioForPlayback } from "@/lib/audioBoost";
+import PrizeIntro from "@/components/PrizeIntro";
+import PrizeReveal from "@/components/PrizeReveal";
+import PrizeLobby from "@/components/PrizeLobby";
+import WrittenCardModal from "@/components/WrittenCardModal";
+import { PRIZE_ROUNDS } from "@/lib/prizeRounds";
+import { resolveWinnerDisplay } from "@/lib/format";
 
 // 애플 느낌의 부드러운 전환에 쓰는 이징/트랜지션 프리셋입니다.
 const APPLE_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -17,23 +20,25 @@ const fadeUp = {
   transition: { duration: 0.5, ease: APPLE_EASE },
 };
 
-type Entry = ReelEntry & { is_winner: boolean; created_at: string; group_type: "draw" | "no_draw" };
-type Phase = "cover" | "landing" | "ready" | "spin" | "reveal";
+type Entry = ReelEntry & {
+  is_winner: boolean;
+  created_at: string;
+  group_type: "draw" | "no_draw";
+  prize_rank: number | null;
+};
+type Phase = "cover" | "lobby" | "prizeIntro" | "spin" | "reveal";
 
 export default function DrawPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [phase, setPhase] = useState<Phase>("cover");
+  const [roundIndex, setRoundIndex] = useState(0);
   const [roundWinners, setRoundWinners] = useState<ReelEntry[]>([]);
   const [pool, setPool] = useState<ReelEntry[]>([]);
   const [drawRound, setDrawRound] = useState(0);
-  const [drawCount, setDrawCount] = useState(1);
   const [starting, setStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const introRef = useRef<HTMLVideoElement>(null);
-  const winRef = useRef<HTMLVideoElement>(null);
-  const [introEnded, setIntroEnded] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch("/api/admin/entries", { cache: "no-store" });
@@ -48,45 +53,47 @@ export default function DrawPage() {
   }, [fetchEntries]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- 다른 화면에서 #main으로 돌아오면 대문화면을 건너뜁니다.
-    if (window.location.hash === "#main") setPhase("ready");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 다른 화면에서 #main으로 돌아오면 관리하기 화면을 보여줍니다.
+    if (window.location.hash === "#main") setPhase("lobby");
   }, []);
 
   const drawGroup = entries.filter((e) => e.group_type === "draw");
   const remaining = drawGroup.filter((e) => !e.is_winner);
-  const winners = drawGroup.filter((e) => e.is_winner);
+  const allWinners = drawGroup.filter((e) => e.is_winner);
   const isMultiDraw = roundWinners.length > 1;
 
-  function handleIntroClick() {
-    const video = introRef.current;
-    if (introEnded) {
-      handleGoToMainFromVideo();
+  // 아직 정해진 인원을 다 못 뽑은 첫 번째 등수를 찾습니다. 없으면 -1(모두 완료).
+  function findNextRoundIndex(): number {
+    return PRIZE_ROUNDS.findIndex((round) => {
+      const count = allWinners.filter((w) => w.prize_rank === round.rank).length;
+      return count < round.count;
+    });
+  }
+
+  function handleShowCover() {
+    setPhase("cover");
+  }
+
+  function handleGoToLobby() {
+    setPhase("lobby");
+  }
+
+  function handleStartWithVideo() {
+    const nextIndex = findNextRoundIndex();
+    if (nextIndex === -1) {
+      // 5등~1등 모두 이미 추첨이 끝난 경우, 곧바로 현황(관리하기) 화면으로 보냅니다.
+      setPhase("lobby");
       return;
     }
-    if (!video || !video.paused) return;
-    video.play().catch(() => {});
+    setRoundIndex(nextIndex);
+    setPhase("prizeIntro");
   }
 
-  useEffect(() => {
-    if (phase !== "landing") return;
-    const video = introRef.current;
-    if (video) video.currentTime = 0;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- 영상 화면에 새로 들어올 때마다 종료 상태를 초기화합니다.
-    setIntroEnded(false);
-  }, [phase]);
+  async function handleStartDraw() {
+    if (starting) return;
+    const round = PRIZE_ROUNDS[roundIndex];
+    if (!round) return;
 
-  function handleIntroEnded() {
-    // 영상이 끝나도 자동으로 넘어가지 않고, 영상을 한 번 더 눌러야 메인화면으로 넘어갑니다.
-    setIntroEnded(true);
-  }
-
-  function handleGoToMainFromVideo() {
-    setPhase("ready");
-    resumeAudioForPlayback();
-  }
-
-  async function handleStart() {
-    if (starting || remaining.length === 0) return;
     setErrorMessage(null);
     setStarting(true);
     try {
@@ -100,7 +107,7 @@ export default function DrawPage() {
       const res = await fetch("/api/admin/draw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: drawCount }),
+        body: JSON.stringify({ count: round.count, rank: round.rank }),
       });
       const data = await res.json().catch(() => ({}));
 
@@ -128,40 +135,29 @@ export default function DrawPage() {
     }
   }
 
-  function handleBackToMain() {
-    setPhase("ready");
-    setRoundWinners([]);
-  }
-
-  function handleShowCover() {
-    setPhase("cover");
-  }
-
-  function handleStartWithVideo() {
-    setPhase("landing");
-  }
-
-  function handleSkipIntro() {
-    const video = introRef.current;
-    if (video) video.pause();
-    setPhase("ready");
-  }
-
   useEffect(() => {
     if (phase !== "reveal" || roundWinners.length === 0) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 당첨 확정 후 최신 통계를 다시 불러옵니다.
     fetchEntries();
-    const video = winRef.current;
-    if (video) {
-      video.currentTime = 0;
-      video.play().catch(() => {});
-    }
   }, [phase, roundWinners, fetchEntries]);
 
-  async function handleReset() {
-    if (!window.confirm("초기화 하시겠습니까?")) return;
-    await fetch("/api/admin/reset", { method: "POST" });
-    await fetchEntries();
+  function handleNextRound() {
+    const nextIndex = roundIndex + 1;
+    setRoundWinners([]);
+    if (nextIndex >= PRIZE_ROUNDS.length) {
+      setPhase("lobby");
+      return;
+    }
+    setRoundIndex(nextIndex);
+    setPhase("prizeIntro");
+  }
+
+  const currentRound = PRIZE_ROUNDS[roundIndex];
+  const isLastRound = roundIndex >= PRIZE_ROUNDS.length - 1;
+
+  function openEntryModal(winner: ReelEntry) {
+    const full = entries.find((e) => e.id === winner.id);
+    if (full) setSelectedEntry(full);
   }
 
   return (
@@ -170,272 +166,140 @@ export default function DrawPage() {
       <div className="pointer-events-none absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
 
-      {(phase === "ready" || phase === "spin") && (
-        <motion.button
-          type="button"
-          onClick={handleReset}
-          aria-label="초기화"
-          title="초기화"
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          className="fixed right-4 top-4 z-40 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-slate-400 shadow-sm backdrop-blur-sm transition-colors hover:bg-white hover:text-slate-600"
-        >
-          <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5" />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4.5 9A8 8 0 1 1 4 13"
-            />
-          </svg>
-        </motion.button>
-      )}
-
       <AnimatePresence mode="wait">
-      {phase === "cover" && (
-        <motion.div
-          key="cover"
-          {...fadeUp}
-          className="relative flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-12 overflow-hidden px-6 py-16 text-center"
-        >
-          <MountainBackdrop className="absolute inset-x-0 bottom-0 h-1/2 w-full text-slate-300/50" />
-
-          <SailboatIcon className="relative z-10 h-10 w-10 text-slate-900 sm:h-12 sm:w-12" />
-          <h1 className="relative z-10 flex flex-col items-center gap-3 font-paperlogy">
-            <span className="text-base font-medium tracking-wide text-slate-500 sm:text-xl">
-              &lsquo;26.하 CSM전략회의 이벤트
-            </span>
-            <span className="text-5xl font-black leading-none tracking-tighter text-slate-900 sm:text-8xl">
-              AI 당첨자 추첨 <span className="text-blue-600">Agent</span>
-            </span>
-          </h1>
-
-          <div className="relative z-10 flex flex-wrap items-center justify-center gap-3">
-            <motion.button
-              type="button"
-              onClick={handleStartWithVideo}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ duration: 0.2, ease: APPLE_EASE }}
-              className="flex h-12 w-40 items-center justify-center rounded-full bg-slate-900 text-base font-semibold text-white shadow-sm"
-            >
-              추첨하기
-            </motion.button>
-            <motion.button
-              type="button"
-              onClick={handleBackToMain}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ duration: 0.2, ease: APPLE_EASE }}
-              className="flex h-12 w-40 items-center justify-center rounded-full bg-white text-base font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200"
-            >
-              관리하기
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
-
-      {phase === "landing" && (
-        <motion.div
-          key="landing"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4, ease: APPLE_EASE }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black"
-          onClick={handleIntroClick}
-        >
-          <video
-            ref={introRef}
-            src="/videos/intro.mp4"
-            className="h-full w-full object-cover"
-            playsInline
-            onEnded={handleIntroEnded}
-            onError={() => setPhase("ready")}
-          />
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSkipIntro();
-            }}
-            className="absolute bottom-6 right-6 z-10 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white/50 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white/80"
+        {phase === "cover" && (
+          <motion.div
+            key="cover"
+            {...fadeUp}
+            className="relative flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-12 overflow-hidden px-6 py-16 text-center"
           >
-            스킵
-          </button>
-        </motion.div>
-      )}
+            <MountainBackdrop className="absolute inset-x-0 bottom-0 h-1/2 w-full text-slate-300/50" />
 
-      {(phase === "ready" || phase === "spin") && (
-        <motion.div
-          key="main"
-          {...fadeUp}
-          className={`relative w-full overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl ${
-            phase === "spin" && isMultiDraw ? "max-w-6xl" : "max-w-3xl"
-          }`}
-        >
-          <EventBanner />
+            <SailboatIcon className="relative z-10 h-10 w-10 text-slate-900 sm:h-12 sm:w-12" />
+            <h1 className="relative z-10 flex flex-col items-center gap-3 font-paperlogy">
+              <span className="text-base font-medium tracking-wide text-slate-500 sm:text-xl">
+                &lsquo;26.하 CSM전략회의 이벤트
+              </span>
+              <span className="text-5xl font-black leading-none tracking-tighter text-slate-900 sm:text-8xl">
+                AI 당첨자 추첨 <span className="text-blue-600">Agent</span>
+              </span>
+            </h1>
 
-          <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
-            {phase === "ready" && (
-              <div className="flex flex-col items-center gap-10">
-                <div className="flex flex-col items-center gap-2 rounded-3xl bg-white/50 px-10 py-7 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
-                  <span className="text-sm font-medium text-slate-500">총 제출된 &lsquo;축&rsquo;의 개수</span>
-                  <span className="flex items-baseline gap-1 text-5xl font-extrabold text-slate-900">
-                    {entries.length}
-                    <span className="text-xl font-semibold text-slate-400">개</span>
-                  </span>
-                </div>
+            <div className="relative z-10 flex flex-wrap items-center justify-center gap-3">
+              <motion.button
+                type="button"
+                onClick={handleStartWithVideo}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.2, ease: APPLE_EASE }}
+                className="flex h-12 w-40 items-center justify-center rounded-full bg-slate-900 text-base font-semibold text-white shadow-sm"
+              >
+                추첨하기
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={handleGoToLobby}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.2, ease: APPLE_EASE }}
+                className="flex h-12 w-40 items-center justify-center rounded-full bg-white text-base font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200"
+              >
+                관리하기
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
 
-                {errorMessage && (
-                  <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{errorMessage}</p>
-                )}
+        {phase === "lobby" && (
+          <motion.div key="lobby" {...fadeUp} className="flex w-full flex-col items-center gap-4">
+            <PrizeLobby winners={allWinners} totalEntries={entries.length} onSelectWinner={openEntryModal} />
+            <button type="button" onClick={handleShowCover} className="text-xs text-slate-300 hover:text-slate-500">
+              대문화면가기
+            </button>
+          </motion.div>
+        )}
 
-                <div className="flex flex-col items-center gap-3">
-                  <p className="text-sm text-slate-500">한 번에 추첨할 인원</p>
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                      <motion.button
-                        key={n}
-                        type="button"
-                        onClick={() => setDrawCount(n)}
-                        disabled={starting}
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.92 }}
-                        transition={{ duration: 0.15, ease: APPLE_EASE }}
-                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                          drawCount === n
-                            ? "bg-slate-900 text-white"
-                            : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        {n}
-                      </motion.button>
-                    ))}
-                  </div>
-
-                  <motion.button
-                    type="button"
-                    onClick={handleStart}
-                    disabled={starting || entriesLoading || remaining.length === 0}
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="flex h-16 w-64 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-white shadow-sm transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {entriesLoading
-                      ? "불러오는 중..."
-                      : remaining.length === 0
-                        ? "추첨할 인원 없음"
-                        : starting
-                          ? "준비 중..."
-                          : "추첨 시작"}
-                  </motion.button>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="flex flex-col items-center gap-0.5 rounded-2xl bg-white/40 px-5 py-2.5 ring-1 ring-white/60">
-                    <span className="text-base font-bold text-slate-900">{entries.length}</span>
-                    <span className="text-[11px] text-slate-500">총 접수인원</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-0.5 rounded-2xl bg-white/40 px-5 py-2.5 ring-1 ring-white/60">
-                    <span className="text-base font-bold text-slate-900">{winners.length}</span>
-                    <span className="text-[11px] text-slate-500">추첨인원</span>
-                  </div>
-                </div>
-              </div>
+        {phase === "prizeIntro" && currentRound && (
+          <motion.div key="prizeIntro" {...fadeUp} className="flex w-full flex-col items-center gap-4">
+            {errorMessage && (
+              <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{errorMessage}</p>
             )}
-
-            {phase === "spin" && roundWinners.length > 0 && (
-              <div className="flex flex-col items-center gap-4">
-                <p className="text-lg font-medium text-blue-600">추첨 중...</p>
-                {roundWinners.length === 1 ? (
-                  <SlotReel
-                    key={drawRound}
-                    pool={pool}
-                    winner={roundWinners[0]}
-                    onSettle={() => setPhase("reveal")}
-                  />
-                ) : (
-                  <MultiSlotReel
-                    key={drawRound}
-                    pool={pool}
-                    winners={roundWinners}
-                    onAllSettled={() => setPhase("reveal")}
-                  />
-                )}
-              </div>
+            {entriesLoading ? (
+              <p className="text-sm text-slate-500">불러오는 중...</p>
+            ) : remaining.length === 0 ? (
+              <p className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700">
+                추첨할 인원이 없습니다. 접수 현황을 확인해 주세요.
+              </p>
+            ) : (
+              <PrizeIntro round={currentRound} onStart={handleStartDraw} starting={starting} />
             )}
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
 
-      {phase === "reveal" && roundWinners.length > 0 && (
-        <motion.div
-          key="reveal"
-          {...fadeUp}
-          className={`flex w-full flex-col items-center gap-6 ${isMultiDraw ? "max-w-5xl" : "max-w-2xl"}`}
-        >
-          <video
-            ref={winRef}
-            src="/videos/win.mp4"
-            className="max-h-[40vh] w-full max-w-md rounded-2xl border border-slate-200 bg-white"
-            playsInline
-            muted
-            onError={(e) => {
-              (e.currentTarget as HTMLVideoElement).style.display = "none";
-            }}
-          />
-          {roundWinners.length === 1 ? (
-            <WinnerSheet
-              department={roundWinners[0].department}
-              name={roundWinners[0].name}
-              content={roundWinners[0].content}
+        {phase === "spin" && currentRound && roundWinners.length > 0 && (
+          <motion.div
+            key="spin"
+            {...fadeUp}
+            className={`relative w-full overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl ${
+              isMultiDraw ? "max-w-6xl" : "max-w-3xl"
+            }`}
+          >
+            <div className="flex flex-col items-center gap-2 px-6 pt-8 text-center">
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                AI 당첨자 추첨 <span className="text-blue-600">Agent</span>
+              </h1>
+              <p className="text-sm font-medium text-slate-500">
+                {currentRound.label} {currentRound.prizeName} {currentRound.count}명
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-4 px-6 py-8 sm:px-10 sm:py-10">
+              <p className="text-lg font-medium text-blue-600">추첨 중...</p>
+              {roundWinners.length === 1 ? (
+                <SlotReel
+                  key={drawRound}
+                  pool={pool}
+                  winner={roundWinners[0]}
+                  onSettle={() => setPhase("reveal")}
+                />
+              ) : (
+                <MultiSlotReel
+                  key={drawRound}
+                  pool={pool}
+                  winners={roundWinners}
+                  onAllSettled={() => setPhase("reveal")}
+                />
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {phase === "reveal" && currentRound && roundWinners.length > 0 && (
+          <motion.div key="reveal" {...fadeUp} className="flex w-full flex-col items-center gap-6">
+            <PrizeReveal
+              round={currentRound}
+              winners={roundWinners}
+              isLast={isLastRound}
+              onNext={handleNextRound}
+              onSelectWinner={openEntryModal}
             />
-          ) : (
-            <WinnerNameGrid winners={roundWinners} />
-          )}
-          <motion.button
-            type="button"
-            onClick={handleBackToMain}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="flex h-14 w-56 items-center justify-center rounded-full bg-slate-900 text-base font-semibold text-white shadow-sm hover:bg-slate-700"
-          >
-            추첨화면으로
-          </motion.button>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
       </AnimatePresence>
 
-      {phase !== "cover" && phase !== "landing" && (
-      <div className="mt-10 flex flex-col items-center gap-2">
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-300">
-          <button type="button" onClick={handleShowCover} className="hover:text-slate-500">
-            대문화면가기
-          </button>
-          <span>·</span>
-          <Link href="/draw/status" className="hover:text-slate-500">
-            작성자현황
-          </Link>
-          <span>·</span>
-          <Link href="/draw/entries" className="hover:text-slate-500">
-            작성카드보기
-          </Link>
-          <span>·</span>
-          <Link href="/draw/monitor" className="hover:text-slate-500">
-            당첨자현황
-          </Link>
-        </div>
-        {phase !== "ready" && (
-          <button type="button" onClick={handleBackToMain} className="text-xs text-slate-300 hover:text-slate-500">
-            메인화면가기
-          </button>
-        )}
-      </div>
-      )}
+      {selectedEntry && (() => {
+        const resolved = resolveWinnerDisplay(selectedEntry.name, selectedEntry.department);
+        return (
+          <WrittenCardModal
+            department={resolved.department}
+            name={`${resolved.name}${resolved.titleSuffix}`}
+            content={selectedEntry.content}
+            groupLabel="지역단장"
+            isWinner={selectedEntry.is_winner}
+            onClose={() => setSelectedEntry(null)}
+          />
+        );
+      })()}
     </main>
   );
 }

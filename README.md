@@ -1,15 +1,17 @@
-# picker — 조직 전환 추첨 이벤트
+# picker — '26.하 CSM전략회의 AI 당첨자 추첨 Agent
 
-접수(서술형 의견 작성)와 실시간 추첨(슬롯머신 릴 애니메이션 + 캐릭터 영상)으로 구성된 사내 이벤트 웹앱입니다.
+접수(서술형 의견 작성)와 실시간 다단계 추첨(슬롯머신 릴 애니메이션)으로 구성된 사내 이벤트 웹앱입니다.
 
 ## 구성
 
-- `/entry/leader` — **지역단장** 접수 페이지 (추첨 대상) — 지역단장들에게 공유하는 링크
-- `/entry/staff` — **본사 파트장** 접수 페이지 (추첨 제외) — 본사 파트장들에게 공유하는 링크
+- `/entry/leader` — **지역단장** 접수 페이지 — 지역단장들에게 공유하는 링크
+- `/entry/staff` — **본사 파트장** 접수 페이지 — 본사 파트장들에게 공유하는 링크
 - `/draw` — 관리자용 추첨 페이지 (비밀번호로 보호) — 행사 진행자가 화면에 띄우는 페이지
 - `/admin-login` — `/draw` 접근을 위한 비밀번호 입력 페이지
 
-두 접수 페이지는 같은 양식(소속/이름 + 서술형 의견)을 쓰지만, `/entry/staff`로 접수한 인원은 추첨 대상에서 자동으로 제외됩니다. 데이터(접수 내용)는 [Supabase](https://supabase.com) Postgres 테이블에 저장되고, 앱은 [Vercel](https://vercel.com)에 배포합니다.
+두 접수 페이지는 같은 양식(소속/이름 + 서술형 의견)을 쓰지만, `/entry/staff`로 접수한 인원은 추첨에서 자동으로 제외됩니다. 데이터(접수 내용)는 [Supabase](https://supabase.com) Postgres 테이블에 저장되고, 앱은 [Vercel](https://vercel.com)에 배포합니다.
+
+`/draw`는 5등부터 1등까지 순서대로 진행하는 다단계 추첨입니다. 각 등수의 상품 구성은 [`src/lib/prizeRounds.ts`](./src/lib/prizeRounds.ts)에서 관리합니다.
 
 ## 1. Supabase 설정
 
@@ -33,16 +35,11 @@ cp .env.example .env.local
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase secret(service_role) 키 (서버에서만 사용, 절대 클라이언트에 노출되지 않음) |
 | `ADMIN_PASSCODE` | `/draw` 페이지 접근 비밀번호 |
 | `ADMIN_SESSION_SECRET` | 관리자 로그인 세션 서명용 임의의 긴 문자열 (예: `openssl rand -hex 32`) |
-| `TYPECAST_API_KEY` | [typecast.ai](https://typecast.ai) API 키 (당첨자 이름을 실시간 음성으로 읽어주는 데 사용) |
-| `TYPECAST_VOICE_ID` | 당첨 발표에 사용할 목소리(예: 사장님 캐릭터)의 voice_id |
+| `ANTHROPIC_API_KEY` | (선택) 접수 내용이 행사 주제와 무관한지 AI로 판별하는 기능에 사용. 없어도 나머지 기능은 정상 동작 |
 
-`TYPECAST_VOICE_ID`를 모르면, 두 환경변수를 등록하고 배포한 뒤 관리자 로그인 상태로 `/api/admin/typecast-voices`에 접속하면 사용 가능한 목소리 목록(이름/ID)을 확인할 수 있습니다.
+## 3. 등수별 상품 구성
 
-## 3. 영상 자산
-
-`public/videos/intro.mp4`, `public/videos/win.mp4` 두 파일을 준비해 넣으면 추첨 화면에서 자동 재생됩니다. 자세한 내용은 [`public/videos/README.md`](./public/videos/README.md) 참고. 파일이 없어도 앱은 정상 동작하며 해당 단계를 건너뜁니다.
-
-당첨 화면에서는 영상과 별개로, 타입캐스트 API로 "축하합니다 {소속} {이름}단장입니다"를 실시간 생성해 재생합니다. `TYPECAST_API_KEY`/`TYPECAST_VOICE_ID`가 설정되지 않았거나 API 호출이 실패해도 화면 표시와 영상 재생 자체는 정상 동작합니다.
+`src/lib/prizeRounds.ts`에서 5등~1등의 상품명·인원수·상품 사진 경로를 관리합니다. 상품 사진을 받으면 `public/images/prizes/` 아래에 넣고 해당 등수의 `prizeImage` 값을 채우면 됩니다. 사진이 없으면 자동으로 기본 아이콘이 표시됩니다.
 
 ## 4. 로컬 실행
 
@@ -51,27 +48,26 @@ npm install
 npm run dev
 ```
 
-- [http://localhost:3000/entry/leader](http://localhost:3000/entry/leader) — 지역단장 접수 (추첨 대상)
-- [http://localhost:3000/entry/staff](http://localhost:3000/entry/staff) — 본사 파트장 접수 (추첨 제외)
+- [http://localhost:3000/entry/leader](http://localhost:3000/entry/leader) — 지역단장 접수
+- [http://localhost:3000/entry/staff](http://localhost:3000/entry/staff) — 본사 파트장 접수
 - [http://localhost:3000/draw](http://localhost:3000/draw) — 추첨 페이지 (비밀번호 입력 필요)
 
 ## 5. Vercel 배포
 
 1. 이 저장소를 [Vercel](https://vercel.com/new)에서 Import 합니다.
 2. Project Settings > Environment Variables에 위 환경변수들을 등록합니다.
-3. Deploy 하면 아래 두 링크를 각 대상에게 공유할 수 있습니다.
+3. Deploy 하면 아래 링크를 각 대상에게 공유할 수 있습니다.
    - `https://<프로젝트명>.vercel.app/entry/leader`
    - `https://<프로젝트명>.vercel.app/entry/staff`
+   - `https://<프로젝트명>.vercel.app/draw`
 
 ## 진행 순서 (행사 당일)
 
 1. 지역단장들에게 `/entry/leader`, 본사 파트장들에게 `/entry/staff` 링크를 각각 공유해 접수를 받습니다.
 2. 진행자는 `/admin-login`에서 비밀번호를 입력해 `/draw`에 접속합니다.
-3. **추첨 시작** 버튼을 누르면:
-   - 인트로 영상 재생 → 슬롯머신 릴이 지역단장 접수 내용을 빠르게 돌다가 서버에서 무작위로 선택된 당첨자에서 멈춤 → 당첨자 소속/이름/작성 내용 표시 + 축하 영상 재생
-   - 본사 파트장(`/entry/staff`) 접수자는 추첨 대상에 포함되지 않습니다.
-4. **다음 추첨**을 누르면 이전 당첨자는 자동으로 제외되고 다음 라운드를 진행할 수 있습니다.
-5. 리허설 후에는 idle 화면 하단의 **당첨 기록 초기화**로 테스트 당첨 기록을 지울 수 있습니다 (행사 중에는 사용하지 마세요).
+3. 대문화면에서 **추첨하기**를 누르면 5등부터 순서대로 상품 안내 → 추첨 애니메이션 → 발표 화면이 이어집니다. 발표 화면에서 **다음 추첨하러가기**를 누르면 다음 등수로 넘어가고, 1등까지 끝나면 **추첨 마치기**로 관리하기 화면으로 이동합니다.
+4. 대문화면의 **관리하기**를 누르면 지금까지의 등수별 당첨자 현황을 한 번에 볼 수 있습니다. 당첨자 버튼을 누르면 그 사람이 작성한 카드 내용을 볼 수 있습니다.
+5. 리허설 후에는 하단 메뉴의 관리자 화면에서 접수/당첨 기록을 초기화할 수 있습니다 (행사 중에는 사용하지 마세요).
 
 ## 기술 스택
 
