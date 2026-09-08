@@ -304,15 +304,16 @@ export default function DrawPage() {
             className={`relative w-full overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 ${
               isMultiDraw ? "max-w-6xl" : "max-w-3xl"
             }`}
+            style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이 프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이 프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. 좁은 모바일 화면에서는 와이드 사진이 부자연스럽게 잘려 sm 이상에서만 보여줍니다. */}
             <img
               src="/images/event-visual-draw.webp"
               alt=""
               aria-hidden="true"
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 hidden h-full w-full object-cover sm:block"
             />
-            <div className="absolute inset-0 bg-white/55 backdrop-blur-md" />
+            <div className="absolute inset-0 hidden bg-white/55 backdrop-blur-md sm:block" />
 
             <div className="relative z-10 flex flex-col items-center gap-2 px-6 pt-8 text-center">
               <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
