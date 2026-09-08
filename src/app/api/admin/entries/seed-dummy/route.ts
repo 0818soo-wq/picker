@@ -4,8 +4,8 @@ import { ATTENDEES, isDrawEligibleTitle } from "@/lib/attendees";
 
 export const runtime = "nodejs";
 
-const DEFAULT_COUNT = 30;
-const MAX_COUNT = 100;
+const DEFAULT_COUNT = 70;
+const MAX_COUNT = 150;
 
 // 작동 테스트용으로 실제 명단(ATTENDEES)에서 아직 접수하지 않은 사람들을
 // 골라 더미 접수 카드를 채워 넣습니다. 실제 행사 데이터가 아니라 테스트/
@@ -47,16 +47,12 @@ export async function POST(req: Request) {
 
   const existingKeys = new Set((existing ?? []).map((e) => `${e.department}__${e.name}__${e.group_type}`));
 
+  // 명단 순서 그대로 고정된 기준으로 뽑습니다. 매번 같은 조합이 뽑혀야
+  // 리셋 후 다시 채워도 이전과 동일한 테스트 인원으로 재현할 수 있습니다.
   const candidates = ATTENDEES.filter((a) => a.attending && isDrawEligibleTitle(a.title)).filter((a) => {
     const groupType = a.title === "파트장" || a.title === "지원파트장" ? "no_draw" : "draw";
     return !existingKeys.has(`${a.department}__${a.name}__${groupType}`);
   });
-
-  // 매번 다른 조합이 뽑히도록 섞습니다.
-  for (let i = candidates.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-  }
 
   const picked = candidates.slice(0, count);
 

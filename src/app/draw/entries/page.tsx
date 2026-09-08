@@ -85,7 +85,7 @@ export default function EntriesListPage() {
       const res = await fetch("/api/admin/entries/seed-dummy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: 30 }),
+        body: JSON.stringify({ count: 70 }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
