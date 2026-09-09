@@ -83,7 +83,8 @@ export default function DrawPage() {
   const drawGroup = entries.filter((e) => e.group_type === "draw");
   const remaining = drawGroup.filter((e) => !e.is_winner);
   const allWinners = drawGroup.filter((e) => e.is_winner);
-  const isMultiDraw = roundWinners.length > 1;
+  // 당첨자 데이터가 도착하기 전에도 카드 폭이 미리 정해지도록 등수 설정값(count) 기준으로 판단합니다.
+  const isMultiDraw = (PRIZE_ROUNDS[roundIndex]?.count ?? 0) > 1;
 
   // 아직 정해진 인원을 다 못 뽑은 첫 번째 등수를 찾습니다. 없으면 -1(모두 완료).
   function findNextRoundIndex(): number {
@@ -139,6 +140,9 @@ export default function DrawPage() {
 
     setErrorMessage(null);
     setStarting(true);
+    setRoundWinners([]);
+    // 당첨자 데이터를 기다리는 동안에도 "추첨 중..." 화면을 먼저 보여줘 기다리는 느낌을 줄입니다.
+    setPhase("spin");
     try {
       const currentPool = remaining.map(({ id, department, name, content }) => ({
         id,
@@ -156,23 +160,23 @@ export default function DrawPage() {
 
       if (!res.ok) {
         setErrorMessage(data?.error ?? "추첨에 실패했습니다.");
-        setStarting(false);
+        setPhase("prizeIntro");
         return;
       }
 
       const drawnWinners = (data.winners ?? []) as ReelEntry[];
       if (drawnWinners.length === 0) {
         setErrorMessage("추첨에 실패했습니다.");
-        setStarting(false);
+        setPhase("prizeIntro");
         return;
       }
 
       setRoundWinners(drawnWinners);
       setPool(currentPool);
       setDrawRound((r) => r + 1);
-      setPhase("spin");
     } catch {
       setErrorMessage("네트워크 오류가 발생했습니다.");
+      setPhase("prizeIntro");
     } finally {
       setStarting(false);
     }
@@ -362,7 +366,7 @@ export default function DrawPage() {
           </motion.div>
         )}
 
-        {phase === "spin" && currentRound && roundWinners.length > 0 && (
+        {phase === "spin" && currentRound && (
           <motion.div key="spin" {...fadeUp} className="flex w-full flex-col items-center gap-4">
           <div
             className={`relative w-full overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 ${
@@ -390,7 +394,11 @@ export default function DrawPage() {
 
             <div className="relative z-10 flex flex-col items-center gap-4 px-6 py-8 sm:px-10 sm:py-10">
               <p className="text-lg font-medium text-blue-600">추첨 중...</p>
-              {roundWinners.length === 1 ? (
+              {roundWinners.length === 0 ? (
+                <div className="flex h-40 w-full items-center justify-center">
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+                </div>
+              ) : roundWinners.length === 1 ? (
                 <SlotReel
                   key={drawRound}
                   pool={pool}

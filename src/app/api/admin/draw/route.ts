@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getSuspiciousReason } from "@/lib/moderation";
 import { isPriorityEntrant } from "@/lib/priorityEntrants";
@@ -100,14 +100,17 @@ export async function POST(req: Request) {
   }
 
   // 리셋(초기화) 버튼을 눌러도 사라지지 않는 누적 당첨 기록을 별도로 남깁니다.
-  // 이 기록 자체가 추첨 결과에 영향을 주지는 않으므로 실패해도 무시합니다.
+  // 이 기록 자체가 추첨 결과에 영향을 주지 않고 화면 전환 속도에도 영향을 주지 않도록,
+  // 응답을 먼저 보낸 뒤 백그라운드에서 기록합니다. 실패해도 무시합니다.
   if (rank !== null) {
-    const { error: historyError } = await supabase.from("winner_history").insert(
-      updated.map((w) => ({ department: w.department, name: w.name, prize_rank: rank }))
-    );
-    if (historyError) {
-      console.error("insert winner_history failed", historyError);
-    }
+    after(async () => {
+      const { error: historyError } = await supabase.from("winner_history").insert(
+        updated.map((w) => ({ department: w.department, name: w.name, prize_rank: rank }))
+      );
+      if (historyError) {
+        console.error("insert winner_history failed", historyError);
+      }
+    });
   }
 
   // 뽑힌 순서(피커 화면에서 보여줄 순서)를 유지합니다.
