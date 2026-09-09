@@ -22,10 +22,13 @@ export default function PrizeReveal({
   onNext: () => void;
   onSelectWinner: (winner: ReelEntry) => void;
 }) {
+  // 3등~1등처럼 당첨자가 적을 때는 카드를 더 크게 보여줍니다.
+  const isFewWinners = winners.length <= 3;
+
   return (
     <div className="flex w-full max-w-5xl flex-col items-center gap-6">
       <div
-        className="relative flex w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 sm:aspect-video"
+        className="relative flex w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60"
         style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이 프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. 좁은 모바일 화면에서는 와이드 사진이 부자연스럽게 잘려 sm 이상에서만 보여줍니다. */}
@@ -61,12 +64,9 @@ export default function PrizeReveal({
             <p className="whitespace-pre-line text-center text-sm font-semibold leading-snug text-slate-700">{round.prizeName}</p>
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-2 sm:items-stretch sm:h-full sm:overflow-y-auto">
+          <div className="flex flex-col items-center justify-center gap-2 sm:items-stretch">
             <span className="text-xs font-medium text-slate-400 text-center sm:text-left">{round.label} 당첨자</span>
-            <div
-              className="grid content-start items-start justify-center justify-items-stretch gap-3 sm:justify-start"
-              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 220px))" }}
-            >
+            <div className="grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-3">
               {winners.map((w) => {
                 const resolved = resolveWinnerDisplay(w.name, w.department);
                 return (
@@ -74,10 +74,16 @@ export default function PrizeReveal({
                     key={w.id}
                     type="button"
                     onClick={() => onSelectWinner(w)}
-                    className="flex flex-col items-center gap-0.5 rounded-2xl bg-white px-4 py-2.5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                    className={
+                      isFewWinners
+                        ? "flex flex-col items-center gap-1 rounded-2xl bg-white px-6 py-5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                        : "flex flex-col items-center gap-0.5 rounded-2xl bg-white px-4 py-2.5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                    }
                   >
-                    <span className="truncate text-[11px] text-slate-400">{resolved.department}</span>
-                    <span className="truncate text-sm font-bold text-slate-900 sm:text-base">
+                    <span className={isFewWinners ? "truncate text-sm text-slate-400" : "truncate text-[11px] text-slate-400"}>
+                      {resolved.department}
+                    </span>
+                    <span className={isFewWinners ? "truncate text-xl font-bold text-slate-900" : "truncate text-sm font-bold text-slate-900 sm:text-base"}>
                       {resolved.name}
                       {resolved.titleSuffix}
                     </span>

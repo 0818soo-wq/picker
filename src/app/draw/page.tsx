@@ -119,20 +119,12 @@ export default function DrawPage() {
       return;
     }
     setRoundIndex(nextIndex);
-    if (PRIZE_ROUNDS[nextIndex].rank === 5) {
-      // 5등 추첨 직전에만 AI 아나운서 영상을 전체화면으로 먼저 보여줍니다.
-      // 버튼 클릭(사용자 제스처) 안에서 바로 호출해야 브라우저가 전체화면 전환을 허용합니다.
-      document.documentElement.requestFullscreen?.().catch(() => {});
-      setPhase("video");
-    } else {
-      setPhase("prizeIntro");
-    }
+    // 5등 추첨 직전에만 AI 아나운서 영상을 화면 가득 채워 먼저 보여줍니다.
+    // (브라우저 창 자체를 전체화면으로 전환하지는 않습니다 - 그건 운영자가 직접 조작합니다.)
+    setPhase(PRIZE_ROUNDS[nextIndex].rank === 5 ? "video" : "prizeIntro");
   }
 
   function handleVideoFinished() {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    }
     setPhase("prizeIntro");
     // 영상이 끝나면(또는 건너뛰면) 5등 소개 화면을 잠깐 보여준 뒤 자동으로 추첨을 시작합니다.
     setTimeout(() => {
@@ -337,7 +329,7 @@ export default function DrawPage() {
               autoPlay
               playsInline
               controls
-              className="h-full w-full object-contain"
+              className="h-full w-full object-cover"
               onEnded={handleVideoFinished}
             />
             <button

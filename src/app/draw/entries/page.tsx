@@ -41,6 +41,7 @@ export default function EntriesListPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [resettingAll, setResettingAll] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,6 +144,23 @@ export default function EntriesListPage() {
 
   const suspiciousCount = useMemo(() => entries.filter(isEntrySuspicious).length, [entries]);
 
+  async function handleBulkDeleteSuspicious() {
+    if (bulkDeleting) return;
+    const targets = filtered;
+    if (targets.length === 0) return;
+
+    const ok = window.confirm(`문제카드 ${targets.length}건을 모두 삭제할까요? 삭제하면 추첨 명단에서도 사라지며, 되돌릴 수 없습니다.`);
+    if (!ok) return;
+
+    setBulkDeleting(true);
+    try {
+      await Promise.all(targets.map((e) => fetch(`/api/admin/entries/${e.id}`, { method: "DELETE" })));
+      await handleRefresh();
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
+
   const drawCount = entries.filter((e) => e.group_type === "draw").length;
   const staffCount = entries.filter((e) => e.group_type === "no_draw").length;
   const winnerCount = entries.filter((e) => e.group_type === "draw" && e.is_winner).length;
@@ -210,6 +228,16 @@ export default function EntriesListPage() {
             onClick={() => setFilter("suspicious")}
             danger
           />
+          {filter === "suspicious" && filtered.length > 0 && (
+            <button
+              type="button"
+              onClick={handleBulkDeleteSuspicious}
+              disabled={bulkDeleting}
+              className="rounded-full bg-red-500 px-4 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {bulkDeleting ? "삭제 중..." : `문제카드 일괄삭제 (${filtered.length})`}
+            </button>
+          )}
         </div>
 
         {loadError && (
