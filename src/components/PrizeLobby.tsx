@@ -52,7 +52,7 @@ export default function PrizeLobby({
           titleHighlight=""
           titleSuffix=""
           titleSize="large"
-          subtitleLine1={`총 ${winners.length}명의 당첨자에게 개별적으로 선물이 전달됩니다.`}
+          subtitleLine1="2027년의 좋은 기운을 받아 총 27명의 당첨자에게 개별적으로 선물이 전달됩니다."
           subtitleLine2=""
         />
       )}

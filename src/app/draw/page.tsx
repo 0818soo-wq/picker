@@ -83,8 +83,6 @@ export default function DrawPage() {
   const drawGroup = entries.filter((e) => e.group_type === "draw");
   const remaining = drawGroup.filter((e) => !e.is_winner);
   const allWinners = drawGroup.filter((e) => e.is_winner);
-  // 당첨자 데이터가 도착하기 전에도 카드 폭이 미리 정해지도록 등수 설정값(count) 기준으로 판단합니다.
-  const isMultiDraw = (PRIZE_ROUNDS[roundIndex]?.count ?? 0) > 1;
 
   // 아직 정해진 인원을 다 못 뽑은 첫 번째 등수를 찾습니다. 없으면 -1(모두 완료).
   function findNextRoundIndex(): number {
@@ -369,9 +367,7 @@ export default function DrawPage() {
         {phase === "spin" && currentRound && (
           <motion.div key="spin" {...fadeUp} className="flex w-full flex-col items-center gap-4">
           <div
-            className={`relative w-full overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 ${
-              isMultiDraw ? "max-w-7xl" : "max-w-4xl"
-            }`}
+            className="relative flex w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 sm:min-h-[75vh]"
             style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이 프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. 좁은 모바일 화면에서는 와이드 사진이 부자연스럽게 잘려 sm 이상에서만 보여줍니다. */}
@@ -392,7 +388,7 @@ export default function DrawPage() {
               </p>
             </div>
 
-            <div className="relative z-10 flex flex-col items-center gap-4 px-6 py-8 sm:px-10 sm:py-10">
+            <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 sm:px-10 sm:py-10">
               <p className="text-lg font-medium text-blue-600">추첨 중...</p>
               {roundWinners.length === 0 ? (
                 <div className="flex h-40 w-full items-center justify-center">

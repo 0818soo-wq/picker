@@ -134,11 +134,14 @@ const COMPACT_BASE_DURATION = 1.8;
 // 여러 명을 동시에 뽑을 때, 릴이 한꺼번에 딱 멈추지 않고 순서대로 "파바바박" 걸리는 느낌을 주기 위한 간격입니다.
 const COMPACT_SETTLE_STAGGER = 0.1;
 
-// 한 번에 여러 명을 추첨할 때, 당첨자 수(N)에 맞춰 상단/하단 행을 균형 있게 나눕니다.
-// 8명: 4+4, 7명: 4+3, 6명: 3+3 ... 항상 상단이 하단보다 많거나 같습니다.
-export function splitBalancedRows<T>(items: T[]): { top: T[]; bottom: T[] } {
-  const topCount = Math.ceil(items.length / 2);
-  return { top: items.slice(0, topCount), bottom: items.slice(topCount) };
+// 한 번에 여러 명을 추첨할 때, 한 줄에 최대 5명씩 끊어서 여러 줄로 나눕니다.
+// 13명: 5+5+3, 10명: 5+5, 2명: 2 ... 마지막 줄만 5명보다 적을 수 있습니다.
+export function splitIntoRows<T>(items: T[], maxPerRow = 5): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += maxPerRow) {
+    rows.push(items.slice(i, i + maxPerRow));
+  }
+  return rows;
 }
 
 export function MultiSlotReel({
@@ -150,7 +153,7 @@ export function MultiSlotReel({
   winners: ReelEntry[];
   onAllSettled: () => void;
 }) {
-  const { top, bottom } = splitBalancedRows(winners);
+  const rows = splitIntoRows(winners, 5);
   const settledCount = useRef(0);
 
   function handleRowSettle() {
@@ -158,38 +161,31 @@ export function MultiSlotReel({
     if (settledCount.current >= winners.length) onAllSettled();
   }
 
+  const rowsWithOffset: { row: ReelEntry[]; offset: number }[] = [];
+  for (const row of rows) {
+    const offset = rowsWithOffset.length === 0 ? 0 : rowsWithOffset[rowsWithOffset.length - 1].offset + rowsWithOffset[rowsWithOffset.length - 1].row.length;
+    rowsWithOffset.push({ row, offset });
+  }
+
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div
-        className="grid w-full justify-center gap-3"
-        style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP}px, 1fr))` }}
-      >
-        {top.map((winner, i) => (
-          <CompactReelRow
-            key={winner.id}
-            pool={pool}
-            winner={winner}
-            duration={COMPACT_BASE_DURATION + i * COMPACT_SETTLE_STAGGER}
-            onSettle={handleRowSettle}
-          />
-        ))}
-      </div>
-      {bottom.length > 0 && (
+      {rowsWithOffset.map(({ row, offset }, rowIndex) => (
         <div
+          key={rowIndex}
           className="grid w-full justify-center gap-3"
           style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP}px, 1fr))` }}
         >
-          {bottom.map((winner, i) => (
+          {row.map((winner, i) => (
             <CompactReelRow
               key={winner.id}
               pool={pool}
               winner={winner}
-              duration={COMPACT_BASE_DURATION + (top.length + i) * COMPACT_SETTLE_STAGGER}
+              duration={COMPACT_BASE_DURATION + (offset + i) * COMPACT_SETTLE_STAGGER}
               onSettle={handleRowSettle}
             />
           ))}
         </div>
-      )}
+      ))}
     </div>
   );
 }

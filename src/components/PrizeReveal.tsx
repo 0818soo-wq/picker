@@ -22,13 +22,41 @@ export default function PrizeReveal({
   onNext: () => void;
   onSelectWinner: (winner: ReelEntry) => void;
 }) {
-  // 3등~1등처럼 당첨자가 적을 때는 카드를 더 크게 보여줍니다.
+  // 3등~1등처럼 당첨자가 적을 때는 카드를 더 크게 보여줍니다. 1~2명일 때는 화면이
+  // 텅 비어 보이지 않도록 카드와 글자를 한층 더 키웁니다.
   const isFewWinners = winners.length <= 3;
+  const isVeryFewWinners = winners.length <= 2;
+
+  const cardClassName = isVeryFewWinners
+    ? "flex flex-col items-center gap-2 rounded-2xl bg-white px-14 py-10 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+    : isFewWinners
+      ? "flex flex-col items-center gap-1 rounded-2xl bg-white px-6 py-5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+      : "flex flex-col items-center gap-0.5 rounded-2xl bg-white px-4 py-2.5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50";
+
+  const departmentClassName = isVeryFewWinners
+    ? "truncate text-lg text-slate-400"
+    : isFewWinners
+      ? "truncate text-sm text-slate-400"
+      : "truncate text-[11px] text-slate-400";
+
+  const nameClassName = isVeryFewWinners
+    ? "truncate text-4xl font-bold text-slate-900 sm:text-5xl"
+    : isFewWinners
+      ? "truncate text-xl font-bold text-slate-900"
+      : "truncate text-sm font-bold text-slate-900 sm:text-base";
+
+  const prizeImageBoxClassName = isVeryFewWinners
+    ? "flex h-40 w-48 items-center justify-center sm:h-56 sm:w-64"
+    : "flex h-28 w-32 items-center justify-center sm:h-32 sm:w-40";
+
+  const prizeNameClassName = isVeryFewWinners
+    ? "whitespace-pre-line text-center text-base font-semibold leading-snug text-slate-700 sm:text-xl"
+    : "whitespace-pre-line text-center text-sm font-semibold leading-snug text-slate-700";
 
   return (
-    <div className="flex w-full max-w-7xl flex-col items-center gap-6">
+    <div className="flex w-full flex-col items-center gap-6">
       <div
-        className="relative flex w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 sm:min-h-[70vh]"
+        className="relative flex w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 sm:min-h-[78vh]"
         style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- next/image의 fill 방식이 프로덕션에서 간헐적으로 로드 실패해 일반 img로 우회합니다. 좁은 모바일 화면에서는 와이드 사진이 부자연스럽게 잘려 sm 이상에서만 보여줍니다. */}
@@ -50,7 +78,7 @@ export default function PrizeReveal({
             <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-6 py-2 text-2xl font-black text-white sm:px-8 sm:py-2.5 sm:text-3xl">
               {round.label}
             </span>
-            <div className="flex h-28 w-32 items-center justify-center sm:h-32 sm:w-40">
+            <div className={prizeImageBoxClassName}>
               {round.prizeImage ? (
                 /* eslint-disable-next-line @next/next/no-img-element -- 상품 사진은 next/image 최적화 없이 원본 그대로 표시합니다. */
                 <img src={round.prizeImage} alt={round.prizeName} className="h-full w-full object-contain drop-shadow-md" />
@@ -61,29 +89,24 @@ export default function PrizeReveal({
                 </svg>
               )}
             </div>
-            <p className="whitespace-pre-line text-center text-sm font-semibold leading-snug text-slate-700">{round.prizeName}</p>
+            <p className={prizeNameClassName}>{round.prizeName}</p>
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-2 sm:items-stretch">
-            <span className="text-xs font-medium text-slate-400 text-center sm:text-left">{round.label} 당첨자</span>
-            <div className="grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-3">
+          <div className="flex flex-col items-center justify-center gap-3 sm:items-center">
+            <span className="text-xs font-medium text-slate-400 text-center">{round.label} 당첨자</span>
+            <div
+              className={
+                isFewWinners
+                  ? "flex flex-wrap items-center justify-center gap-4"
+                  : "grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-3"
+              }
+            >
               {winners.map((w) => {
                 const resolved = resolveWinnerDisplay(w.name, w.department);
                 return (
-                  <button
-                    key={w.id}
-                    type="button"
-                    onClick={() => onSelectWinner(w)}
-                    className={
-                      isFewWinners
-                        ? "flex flex-col items-center gap-1 rounded-2xl bg-white px-6 py-5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
-                        : "flex flex-col items-center gap-0.5 rounded-2xl bg-white px-4 py-2.5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
-                    }
-                  >
-                    <span className={isFewWinners ? "truncate text-sm text-slate-400" : "truncate text-[11px] text-slate-400"}>
-                      {resolved.department}
-                    </span>
-                    <span className={isFewWinners ? "truncate text-xl font-bold text-slate-900" : "truncate text-sm font-bold text-slate-900 sm:text-base"}>
+                  <button key={w.id} type="button" onClick={() => onSelectWinner(w)} className={cardClassName}>
+                    <span className={departmentClassName}>{resolved.department}</span>
+                    <span className={nameClassName}>
                       {resolved.name}
                       {resolved.titleSuffix}
                     </span>
