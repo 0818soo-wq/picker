@@ -97,7 +97,7 @@ export default function PrizeReveal({
         transition={{ duration: 0.2, ease: APPLE_EASE }}
         className="flex h-14 w-64 items-center justify-center rounded-full bg-slate-900 text-base font-semibold text-white shadow-sm hover:bg-slate-700"
       >
-        {isLast ? "추첨 마치기" : "다음 추첨하러가기"}
+        {isLast ? "추첨 마치기" : "다음 추첨하기"}
       </motion.button>
     </div>
   );

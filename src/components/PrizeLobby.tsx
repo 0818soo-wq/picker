@@ -71,7 +71,7 @@ export default function PrizeLobby({
                     <button
                       type="button"
                       onClick={() => onSelectRound(round.rank)}
-                      title="이 등수 추첨하러 가기"
+                      title="이 등수 추첨하기"
                       className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#13294b] text-sm font-bold text-white transition-colors hover:bg-[#1c3a68]"
                     >
                       {round.rank}
@@ -132,7 +132,7 @@ export default function PrizeLobby({
             onClick={onStartDraw}
             className="mx-auto flex h-14 w-64 items-center justify-center rounded-full bg-slate-900 text-base font-bold text-white shadow-sm transition-colors hover:bg-slate-700"
           >
-            추첨하러가기
+            추첨하기
           </button>
         )}
 

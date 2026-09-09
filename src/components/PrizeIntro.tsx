@@ -82,7 +82,7 @@ export default function PrizeIntro({
         transition={{ duration: 0.2, ease: APPLE_EASE }}
         className="flex h-16 w-64 items-center justify-center rounded-full bg-slate-900 text-lg font-bold text-white shadow-sm transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {starting ? "준비 중..." : "추첨하러가기"}
+        {starting ? "준비 중..." : "추첨하기"}
       </motion.button>
     </div>
   );
