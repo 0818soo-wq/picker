@@ -6,6 +6,7 @@ export const runtime = "nodejs";
 
 const GROUP_TYPES = new Set(["draw", "no_draw"]);
 const MAX_CONTENT_LENGTH = 2000;
+const MAX_MANUAL_FIELD_LENGTH = 30;
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -17,6 +18,12 @@ export async function POST(req: Request) {
   const content = String((body as Record<string, unknown>).content ?? "").trim();
   const groupType = String((body as Record<string, unknown>).groupType ?? "");
   const replaceExisting = Boolean((body as Record<string, unknown>).replaceExisting);
+  const manualDepartment = String((body as Record<string, unknown>).manualDepartment ?? "")
+    .trim()
+    .slice(0, MAX_MANUAL_FIELD_LENGTH);
+  const manualName = String((body as Record<string, unknown>).manualName ?? "")
+    .trim()
+    .slice(0, MAX_MANUAL_FIELD_LENGTH);
 
   if (!GROUP_TYPES.has(groupType)) {
     return NextResponse.json({ error: "잘못된 접수 유형입니다." }, { status: 400 });
@@ -43,15 +50,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "접수가 마감되었습니다. 감사합니다." }, { status: 403 });
   }
 
-  // 소속/이름은 클라이언트가 보낸 값을 쓰지 않고, 사번으로 서버에서 다시
-  // 조회한 값만 사용합니다. 사번 자체는 접수 데이터에 저장하지 않습니다.
+  // 명단에서 조회되는 경우, 소속/이름은 클라이언트가 보낸 값을 쓰지 않고
+  // 사번으로 서버에서 다시 조회한 값만 사용합니다. 사번 자체는 접수
+  // 데이터에 저장하지 않습니다.
   const attendee = resolveAttendeeByEmployeeId(employeeId);
 
-  // 명단에 아예 없는 사번이라도(재입력해도 못 찾는 경우) 의견 제출 자체는
-  // 받아줍니다. 다만 누군지 알 수 없으므로 일반 표시로 저장하고, 신원이
+  // 명단에 없는 사번은 화면에서 직접 입력한 소속/이름을 사용합니다. 신원이
   // 확실하지 않아 동일인 여부를 판단할 수 없으니 중복 확인은 건너뜁니다.
-  const department = attendee ? attendee.department : "";
-  const name = attendee ? attendee.name : "미확인 참석자";
+  if (!attendee && (!manualDepartment || !manualName)) {
+    return NextResponse.json({ error: "소속과 이름을 입력해 주세요." }, { status: 400 });
+  }
+  const department = attendee ? attendee.department : manualDepartment;
+  const name = attendee ? attendee.name : manualName;
   // 명단에는 있지만 참석 예정이 아니거나, 아예 명단에 없는 분은 폼과
   // 상관없이 추첨 대상에서는 제외(no_draw)되도록 저장합니다.
   const effectiveGroupType = attendee?.attending ? groupType : "no_draw";

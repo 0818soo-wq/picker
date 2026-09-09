@@ -26,8 +26,6 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
   const [editNotice, setEditNotice] = useState<string | null>(null);
 
   const [lookupState, setLookupState] = useState<LookupState>("idle");
-  const [lookupError, setLookupError] = useState<string | null>(null);
-  const [lookupFailCount, setLookupFailCount] = useState(0);
   const [confirmedFor, setConfirmedFor] = useState<string | null>(null);
   const [resolved, setResolved] = useState<{
     department: string;
@@ -35,8 +33,13 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
     titleSuffix: string;
     eligible: boolean;
   } | null>(null);
+  const [manualDepartment, setManualDepartment] = useState("");
+  const [manualName, setManualName] = useState("");
 
   const isConfirmed = lookupState === "found" && confirmedFor === employeeId.trim();
+  const isManualMode = lookupState === "not_found" && confirmedFor === employeeId.trim();
+  const isManualReady = isManualMode && manualDepartment.trim() !== "" && manualName.trim() !== "";
+  const canWrite = isConfirmed || isManualReady;
 
   useEffect(() => {
     let cancelled = false;
@@ -58,9 +61,9 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
     setEmployeeId("");
     setContent("");
     setLookupState("idle");
-    setLookupFailCount(0);
     setResolved(null);
-    setLookupError(null);
+    setManualDepartment("");
+    setManualName("");
     setEditNotice(null);
     setErrorMessage(null);
   }
@@ -71,7 +74,8 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
     if (lookupState !== "idle") {
       setLookupState("idle");
       setResolved(null);
-      setLookupError(null);
+      setManualDepartment("");
+      setManualName("");
       setEditNotice(null);
     }
   }
@@ -81,7 +85,6 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
     if (!id) return;
 
     setLookupState("checking");
-    setLookupError(null);
 
     try {
       const res = await fetch("/api/entries/lookup", {
@@ -92,26 +95,14 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        const failCount = lookupFailCount + 1;
-        setLookupFailCount(failCount);
-
-        if (failCount >= 2) {
-          // 재입력했는데도 명단에서 못 찾은 경우, 참석 대상은 아니지만
-          // 의견 제출은 계속할 수 있게 해줍니다.
-          setResolved({ department: "", name: "", titleSuffix: "", eligible: false });
-          setConfirmedFor(id);
-          setLookupState("found");
-          setLookupError(null);
-          return;
-        }
-
-        setLookupState("not_found");
-        setLookupError(data?.error ?? "사번을 다시 확인해주세요. 오타 여부를 확인 후 재입력해주세요.");
+        // 명단에서 조회되지 않는 사번입니다. 재입력을 강제하지 않고, 소속/이름을
+        // 직접 입력해서 의견 제출을 계속할 수 있게 해줍니다.
         setResolved(null);
+        setConfirmedFor(id);
+        setLookupState("not_found");
         return;
       }
 
-      setLookupFailCount(0);
       setResolved({
         department: data.department,
         name: data.name,
@@ -125,9 +116,9 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
         await loadMyEntry(id);
       }
     } catch {
-      setLookupState("not_found");
-      setLookupError("네트워크 오류가 발생했습니다. 다시 시도해 주세요.");
       setResolved(null);
+      setConfirmedFor(id);
+      setLookupState("not_found");
     }
   }
 
@@ -154,8 +145,10 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
 
   function handleReviewSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!isConfirmed) {
-      setErrorMessage("사번 확인을 먼저 눌러주세요.");
+    if (!canWrite) {
+      setErrorMessage(
+        isManualMode ? "소속과 이름을 입력해 주세요." : "사번 확인을 먼저 눌러주세요."
+      );
       return;
     }
     if (!content.trim()) {
@@ -219,6 +212,8 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
         content: content.trim(),
         groupType,
         replaceExisting,
+        manualDepartment: isManualMode ? manualDepartment.trim() : undefined,
+        manualName: isManualMode ? manualName.trim() : undefined,
       }),
     });
   }
@@ -267,8 +262,16 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
           <div className="flex flex-col gap-6 px-6 py-8 sm:px-10 sm:py-10">
             <div className="rounded-2xl border border-slate-200 bg-[#fbfbfd] px-5 py-5">
               <p className="mb-3 text-sm font-semibold text-slate-500">
-                {resolved?.department} {resolved?.name}
-                {resolved?.titleSuffix}
+                {isManualMode ? (
+                  <>
+                    {manualDepartment} {manualName}
+                  </>
+                ) : (
+                  <>
+                    {resolved?.department} {resolved?.name}
+                    {resolved?.titleSuffix}
+                  </>
+                )}
               </p>
               <p
                 className="whitespace-pre-wrap text-base leading-relaxed text-slate-900"
@@ -368,12 +371,34 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
                 {editNotice}
               </p>
             )}
-            {lookupState === "not_found" && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{lookupError}</p>
+            {isManualMode && (
+              <div className="flex flex-col gap-3 rounded-lg bg-amber-50 px-3 py-3 text-sm leading-relaxed text-amber-700">
+                <p>
+                  조회되는 사번이 아닙니다. 사번을 다시 확인해 주세요.
+                  <br />
+                  다시 확인해도 나오지 않는다면, 추첨 대상에서는 제외되지만 의견은 아래에 직접 입력해 제출하실 수 있습니다.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="text"
+                    value={manualDepartment}
+                    onChange={(e) => setManualDepartment(e.target.value.slice(0, 30))}
+                    placeholder="소속을 입력하세요"
+                    className="min-w-0 flex-1 rounded-lg border-0 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-amber-200 focus:ring-2 focus:ring-amber-400"
+                  />
+                  <input
+                    type="text"
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value.slice(0, 30))}
+                    placeholder="이름을 입력하세요"
+                    className="min-w-0 flex-1 rounded-lg border-0 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-1 ring-amber-200 focus:ring-2 focus:ring-amber-400"
+                  />
+                </div>
+              </div>
             )}
           </div>
 
-          <div className={isConfirmed ? "" : "pointer-events-none opacity-40"}>
+          <div className={canWrite ? "" : "pointer-events-none opacity-40"}>
             <p className="-mb-4 mt-0 text-xs text-slate-400">
               나의 부서를 위한 마음을 담아 정성들여서 써주세요.
             </p>
@@ -382,7 +407,7 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
               onChange={(e) => setContent(e.target.value.slice(0, MAX_CONTENT_LENGTH))}
               placeholder="사번 확인 후 이곳에 자유롭게 의견을 적어주세요."
               rows={CONTENT_ROWS}
-              disabled={!isConfirmed}
+              disabled={!canWrite}
               className="mt-4 w-full resize-none bg-transparent text-slate-900 outline-none placeholder:text-slate-300"
               style={{
                 lineHeight: "2.5rem",
@@ -398,7 +423,7 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
 
           <button
             type="submit"
-            disabled={status === "submitting" || !isConfirmed}
+            disabled={status === "submitting" || !canWrite}
             className="flex h-12 items-center justify-center rounded-full bg-[#13294b] px-8 text-base font-semibold text-white transition-colors hover:bg-[#1c3a68] disabled:cursor-not-allowed disabled:opacity-60"
           >
             제출하기
