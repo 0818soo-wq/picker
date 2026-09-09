@@ -111,7 +111,7 @@ export default function SlotReel({
           paddingLeft: containerWidth ? containerWidth / 2 - ITEM_WIDTH / 2 : 0,
         }}
         animate={{ x: targetX ?? 0 }}
-        transition={targetX === null ? { duration: 0 } : { duration: 5.2, ease: [0.11, 0.83, 0.24, 1] }}
+        transition={targetX === null ? { duration: 0 } : { duration: 2.6, ease: [0.11, 0.83, 0.24, 1] }}
         onAnimationComplete={() => {
           if (targetX !== null) onSettle();
         }}
@@ -128,11 +128,11 @@ const COMPACT_ITEM_WIDTH = 152;
 const COMPACT_ITEM_HEIGHT = 208;
 const COMPACT_ITEM_GAP = 10;
 const COMPACT_SLOT_STEP = COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP;
-const COMPACT_LEAD_COUNT = 14;
-const COMPACT_TRAIL_COUNT = 4;
-const COMPACT_BASE_DURATION = 3.6;
+const COMPACT_LEAD_COUNT = 10;
+const COMPACT_TRAIL_COUNT = 3;
+const COMPACT_BASE_DURATION = 1.8;
 // 여러 명을 동시에 뽑을 때, 릴이 한꺼번에 딱 멈추지 않고 순서대로 "파바바박" 걸리는 느낌을 주기 위한 간격입니다.
-const COMPACT_SETTLE_STAGGER = 0.22;
+const COMPACT_SETTLE_STAGGER = 0.1;
 
 // 한 번에 여러 명을 추첨할 때, 당첨자 수(N)에 맞춰 상단/하단 행을 균형 있게 나눕니다.
 // 8명: 4+4, 7명: 4+3, 6명: 3+3 ... 항상 상단이 하단보다 많거나 같습니다.
