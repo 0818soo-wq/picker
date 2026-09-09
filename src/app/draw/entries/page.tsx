@@ -82,17 +82,15 @@ export default function EntriesListPage() {
     if (seeding) return;
     setSeeding(true);
     try {
-      const res = await fetch("/api/admin/entries/seed-dummy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: 70 }),
-      });
+      const res = await fetch("/api/admin/entries/seed-dummy", { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         window.alert(data?.error ?? "더미데이터 추가에 실패했습니다.");
         return;
       }
-      window.alert(`더미데이터 ${data.added}건이 추가됐습니다.`);
+      window.alert(
+        data.added > 0 ? `더미데이터 ${data.added}건이 추가됐습니다.` : "이미 고정 더미데이터 77개가 모두 들어있습니다."
+      );
       await handleRefresh();
     } finally {
       setSeeding(false);
