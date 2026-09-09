@@ -119,8 +119,25 @@ export default function DrawPage() {
       return;
     }
     setRoundIndex(nextIndex);
-    // 5등 추첨 직전에만 AI 아나운서 영상을 먼저 보여줍니다.
-    setPhase(PRIZE_ROUNDS[nextIndex].rank === 5 ? "video" : "prizeIntro");
+    if (PRIZE_ROUNDS[nextIndex].rank === 5) {
+      // 5등 추첨 직전에만 AI 아나운서 영상을 전체화면으로 먼저 보여줍니다.
+      // 버튼 클릭(사용자 제스처) 안에서 바로 호출해야 브라우저가 전체화면 전환을 허용합니다.
+      document.documentElement.requestFullscreen?.().catch(() => {});
+      setPhase("video");
+    } else {
+      setPhase("prizeIntro");
+    }
+  }
+
+  function handleVideoFinished() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    setPhase("prizeIntro");
+    // 영상이 끝나면(또는 건너뛰면) 5등 소개 화면을 잠깐 보여준 뒤 자동으로 추첨을 시작합니다.
+    setTimeout(() => {
+      handleStartDraw();
+    }, 1500);
   }
 
   async function handleStartDraw() {
@@ -307,30 +324,29 @@ export default function DrawPage() {
         )}
 
         {phase === "video" && (
-          <motion.div key="video" {...fadeUp} className="flex w-full max-w-5xl flex-col items-center gap-4">
-            <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-3xl bg-black shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60">
-              <video
-                key={FIFTH_RANK_VIDEO_SRC}
-                src={FIFTH_RANK_VIDEO_SRC}
-                autoPlay
-                playsInline
-                controls
-                className="h-full w-full"
-                onEnded={() => setPhase("prizeIntro")}
-              />
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={() => setPhase("prizeIntro")}
-                className="text-xs text-slate-400 hover:text-slate-600"
-              >
-                영상 건너뛰고 바로 추첨화면가기
-              </button>
-              <button type="button" onClick={handleGoToLobby} className="text-xs text-slate-300 hover:text-slate-500">
-                메인화면가기
-              </button>
-            </div>
+          <motion.div
+            key="video"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black"
+          >
+            <video
+              key={FIFTH_RANK_VIDEO_SRC}
+              src={FIFTH_RANK_VIDEO_SRC}
+              autoPlay
+              playsInline
+              controls
+              className="h-full w-full object-contain"
+              onEnded={handleVideoFinished}
+            />
+            <button
+              type="button"
+              onClick={handleVideoFinished}
+              className="absolute bottom-6 right-6 rounded-full bg-white/10 px-4 py-2 text-xs text-white/70 backdrop-blur-sm hover:bg-white/20 hover:text-white"
+            >
+              영상 건너뛰고 바로 추첨화면가기
+            </button>
           </motion.div>
         )}
 
