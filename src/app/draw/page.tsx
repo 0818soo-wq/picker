@@ -366,7 +366,7 @@ export default function DrawPage() {
           <motion.div key="spin" {...fadeUp} className="flex w-full flex-col items-center gap-4">
           <div
             className={`relative w-full overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 ${
-              isMultiDraw ? "max-w-6xl" : "max-w-3xl"
+              isMultiDraw ? "max-w-7xl" : "max-w-4xl"
             }`}
             style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
           >

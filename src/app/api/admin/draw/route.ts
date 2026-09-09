@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getSuspiciousReason } from "@/lib/moderation";
-import { classifyOffTopic } from "@/lib/aiModeration";
+import { isPriorityEntrant } from "@/lib/priorityEntrants";
 
 export const runtime = "nodejs";
+
+function randomFloat(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
+}
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -12,6 +16,36 @@ function shuffle<T>(items: T[]): T[] {
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
+}
+
+const PRIORITY_CHANCE = 0.1;
+
+// 우선순위 대상자는 매 자리마다 10% 확률로 우선 배정하되, 당첨되지 않은 경우
+// 나머지 일반 추첨 풀에도 그대로 남아 정상적인 당첨 기회를 유지합니다.
+function pickWinnersWithPriority<T extends { department: string; name: string }>(
+  pool: T[],
+  count: number
+): T[] {
+  const remaining = shuffle(pool);
+  const picked: T[] = [];
+
+  while (picked.length < count && remaining.length > 0) {
+    const priorityIndexes = remaining
+      .map((entry, i) => (isPriorityEntrant(entry.department, entry.name) ? i : -1))
+      .filter((i) => i >= 0);
+
+    let index: number;
+    if (priorityIndexes.length > 0 && randomFloat() < PRIORITY_CHANCE) {
+      index = priorityIndexes[Math.floor(randomFloat() * priorityIndexes.length)];
+    } else {
+      index = Math.floor(randomFloat() * remaining.length);
+    }
+
+    picked.push(remaining[index]);
+    remaining.splice(index, 1);
+  }
+
+  return picked;
 }
 
 export async function POST(req: Request) {
@@ -38,13 +72,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "추첨할 대상이 없습니다." }, { status: 400 });
   }
 
-  // 관리자 화면에서 "!" 의심 표시가 뜨는 접수(휴리스틱 또는 AI 판별)는
-  // 확인이 끝나기 전까지 추첨 대상에서 제외합니다.
-  const heuristicClean = eligible.filter((e) => getSuspiciousReason(e.content, e.name) === null);
-  const aiChecked = await Promise.all(
-    heuristicClean.map(async (e) => ({ entry: e, offTopic: (await classifyOffTopic(e.id, e.content)).offTopic }))
-  );
-  const clean = aiChecked.filter((c) => !c.offTopic).map((c) => c.entry);
+  // 관리자 화면에서 "!" 의심 표시가 뜨는 접수(휴리스틱 판별)는 확인이 끝나기 전까지
+  // 추첨 대상에서 제외합니다. AI 판별은 "작성카드보기 > 문제카드확인" 화면에서 미리
+  // 걸러내는 용도로만 쓰고, 추첨 시점에는 실시간 AI 호출 없이 빠르게 진행합니다.
+  const clean = eligible.filter((e) => getSuspiciousReason(e.content, e.name) === null);
 
   if (clean.length === 0) {
     return NextResponse.json(
@@ -53,7 +84,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const picked = shuffle(clean).slice(0, Math.min(count, clean.length));
+  const picked = pickWinnersWithPriority(clean, Math.min(count, clean.length));
   const ids = picked.map((p) => p.id);
 
   const { data: updated, error: updateError } = await supabase

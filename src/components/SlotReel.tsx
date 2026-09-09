@@ -124,8 +124,8 @@ export default function SlotReel({
   );
 }
 
-const COMPACT_ITEM_WIDTH = 118;
-const COMPACT_ITEM_HEIGHT = 150;
+const COMPACT_ITEM_WIDTH = 152;
+const COMPACT_ITEM_HEIGHT = 208;
 const COMPACT_ITEM_GAP = 10;
 const COMPACT_SLOT_STEP = COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP;
 const COMPACT_LEAD_COUNT = 14;
@@ -281,18 +281,36 @@ function CompactPaperCard({ item }: { item: ReelEntry }) {
       className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
       style={{ width: COMPACT_ITEM_WIDTH, height: COMPACT_ITEM_HEIGHT }}
     >
-      <div className="relative isolate flex flex-1 items-center justify-center overflow-hidden">
+      <div className="relative isolate shrink-0 overflow-hidden px-2 py-2">
         {/* eslint-disable-next-line @next/next/no-img-element -- 작은 릴 카드 배경용 실사 사진 */}
         <img
           src="/images/event-visual-compass.jpg"
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover object-left"
+          className="absolute inset-0 h-full w-full object-cover object-[left_bottom]"
         />
+        <span className="relative z-10 inline-flex w-fit items-center rounded-full bg-[#13294b] px-1.5 py-0.5 text-[6px] font-bold text-white">
+          {BADGE_TEXT}
+        </span>
       </div>
-      <div className="flex shrink-0 flex-col items-center gap-0.5 px-2 py-2 text-center">
-        <p className="truncate text-[8px] text-slate-400">{item.department}</p>
-        <p className="truncate text-[10px] font-bold text-slate-800">{item.name}</p>
+
+      <div className="flex flex-1 flex-col justify-between overflow-hidden px-2 py-1.5">
+        <p
+          className="line-clamp-4 flex-1 overflow-hidden text-left text-[8px] leading-4 text-slate-600"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(to bottom, transparent 0, transparent 1rem, #e5e9ef 1rem, #e5e9ef calc(1rem + 1px))",
+          }}
+        >
+          {item.content}
+        </p>
+
+        <div className="mt-1.5 flex shrink-0 gap-1 border-t border-slate-200 pt-1">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[7px] text-slate-400">{item.department}</p>
+            <p className="truncate text-[9px] font-bold text-slate-800">{item.name}</p>
+          </div>
+        </div>
       </div>
     </div>
   );
