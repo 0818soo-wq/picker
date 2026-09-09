@@ -51,7 +51,7 @@ function pickWinnersWithPriority<T extends { department: string; name: string }>
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const requestedCount = Math.floor(Number((body as { count?: unknown })?.count) || 1);
-  const count = Math.min(Math.max(requestedCount, 1), 12);
+  const count = Math.min(Math.max(requestedCount, 1), 13);
 
   const requestedRank = Number((body as { rank?: unknown })?.rank);
   const rank = Number.isInteger(requestedRank) && requestedRank >= 1 && requestedRank <= 5 ? requestedRank : null;
