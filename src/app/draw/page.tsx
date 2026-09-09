@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MountainBackdrop, SailboatIcon } from "@/components/EventBanner";
 import SlotReel, { MultiSlotReel, type ReelEntry } from "@/components/SlotReel";
@@ -44,6 +44,7 @@ export default function DrawPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [entriesOpen, setEntriesOpen] = useState<boolean | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch("/api/admin/entries", { cache: "no-store" });
@@ -327,12 +328,19 @@ export default function DrawPage() {
           >
             <video
               key={FIFTH_RANK_VIDEO_SRC}
+              ref={videoRef}
               src={FIFTH_RANK_VIDEO_SRC}
               autoPlay
               playsInline
-              controls
+              preload="auto"
+              disablePictureInPicture
               className="h-full w-full object-cover"
               onEnded={handleVideoFinished}
+              onClick={() => {
+                // 일부 브라우저에서 자동재생이 막힌 경우, 화면을 탭하면 재생을 이어갈 수 있게 합니다.
+                const el = videoRef.current;
+                if (el && el.paused) el.play().catch(() => {});
+              }}
             />
             <button
               type="button"
