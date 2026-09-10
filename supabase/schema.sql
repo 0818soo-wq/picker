@@ -58,3 +58,43 @@ on conflict (id) do nothing;
 alter table public.app_settings enable row level security;
 -- entries와 동일하게, 익명 클라이언트용 정책을 두지 않아 서버(Service Role)만 접근 가능합니다.
 -- 접수 화면(공개)에서의 조회는 /api/entries/status 서버 라우트가 Service Role로 대신 조회해 전달합니다.
+
+-- 등수별 당첨 확정을 "정원 확인 + 당첨 처리"가 하나의 원자적 동작이 되도록 만드는
+-- 함수입니다. 같은 등수에 대한 요청이 동시에 여러 번 들어와도(더블클릭, 새로고침
+-- 후 재시도 등) pg_advisory_xact_lock으로 등수별로 순서를 강제하기 때문에, 이미
+-- 정원이 찬 뒤에 들어온 요청은 절대 추가로 당첨자를 만들 수 없습니다. p_ids로 넘긴
+-- 후보 중 앞에서부터 남은 자리 수만큼만(정원을 넘지 않게) 당첨 처리합니다.
+create or replace function public.draw_winners(
+  p_ids uuid[],
+  p_rank integer,
+  p_max integer
+)
+returns setof public.entries
+language plpgsql
+as $$
+declare
+  v_already integer;
+  v_take integer;
+begin
+  perform pg_advisory_xact_lock(p_rank);
+
+  select count(*) into v_already
+    from public.entries
+    where is_winner = true and prize_rank = p_rank;
+
+  v_take := least(p_max - v_already, coalesce(array_length(p_ids, 1), 0));
+
+  if v_take is null or v_take <= 0 then
+    return;
+  end if;
+
+  return query
+    update public.entries e
+    set is_winner = true, won_at = now(), prize_rank = p_rank
+    from (
+      select unnest(p_ids[1:v_take]) as id
+    ) as pick
+    where e.id = pick.id and e.is_winner = false
+    returning e.*;
+end;
+$$;

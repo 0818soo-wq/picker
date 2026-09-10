@@ -49,6 +49,9 @@ function pickWinnersWithPriority<T extends { department: string; name: string }>
   return picked;
 }
 
+type EligibleRow = { id: string; department: string; name: string; content: string };
+type UpdatedRow = { id: string; department: string; name: string; content: string; prize_rank: number | null };
+
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const requestedCount = Math.floor(Number((body as { count?: unknown })?.count) || 1);
@@ -58,33 +61,7 @@ export async function POST(req: Request) {
   const rank = Number.isInteger(requestedRank) && requestedRank >= 1 && requestedRank <= 5 ? requestedRank : null;
 
   const supabase = createServiceRoleClient();
-
-  // 더블클릭, 새로고침 후 재시도, 같은 등수를 다시 선택하는 등의 상황에서 정원을
-  // 초과해 당첨자가 뽑히지 않도록, 이 등수에 이미 확정된 당첨자 수를 서버에서 직접
-  // 세어 남은 자리만큼만 추첨합니다. (클라이언트가 보내는 count는 참고만 합니다.)
-  let effectiveCount = count;
-  if (rank !== null) {
-    const round = getPrizeRound(rank as PrizeRank);
-    const { count: alreadyWonCount, error: countError } = await supabase
-      .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("is_winner", true)
-      .eq("prize_rank", rank);
-
-    if (countError) {
-      console.error("count existing winners failed", countError);
-      return NextResponse.json({ error: "당첨 현황을 확인하지 못했습니다." }, { status: 500 });
-    }
-
-    const remainingSlots = round.count - (alreadyWonCount ?? 0);
-    if (remainingSlots <= 0) {
-      return NextResponse.json(
-        { error: `${round.label} 추첨은 이미 정원(${round.count}명)이 모두 채워졌습니다.` },
-        { status: 400 }
-      );
-    }
-    effectiveCount = Math.min(count, remainingSlots);
-  }
+  const round = rank !== null ? getPrizeRound(rank as PrizeRank) : null;
 
   const { data: eligible, error } = await supabase
     .from("entries")
@@ -112,19 +89,72 @@ export async function POST(req: Request) {
     );
   }
 
-  const picked = pickWinnersWithPriority(clean, Math.min(effectiveCount, clean.length));
-  const ids = picked.map((p) => p.id);
+  let updated: UpdatedRow[] = [];
+  const order = new Map<string, number>();
 
-  const { data: updated, error: updateError } = await supabase
-    .from("entries")
-    .update({ is_winner: true, won_at: new Date().toISOString(), prize_rank: rank })
-    .in("id", ids)
-    .eq("is_winner", false)
-    .select("id, department, name, content, prize_rank");
+  if (rank !== null && round) {
+    // draw_winners RPC(schema.sql)가 등수별 advisory lock으로 "정원 확인 + 당첨 처리"를
+    // 하나의 트랜잭션으로 원자적으로 처리하므로, 같은 등수에 요청이 동시에 여러 번
+    // 들어와도(더블클릭 등) 정원을 절대 넘길 수 없습니다. 후보 중 일부가 그 사이
+    // 다른 등수 추첨 등으로 이미 당첨돼 무효화된 경우를 대비해, 부족하면 남은
+    // 후보 풀에서 더 뽑아 몇 차례 재시도해 정원을 채웁니다.
+    const triedIds = new Set<string>();
+    let remainingPool: EligibleRow[] = clean;
 
-  if (updateError || !updated || updated.length === 0) {
-    console.error("mark winner failed", updateError);
-    return NextResponse.json({ error: "당첨 처리에 실패했습니다. 다시 시도해 주세요." }, { status: 500 });
+    for (let attempt = 0; attempt < 5 && updated.length < round.count && remainingPool.length > 0; attempt++) {
+      const need = Math.min(round.count - updated.length, remainingPool.length);
+      const picked = pickWinnersWithPriority(remainingPool, need);
+      if (picked.length === 0) break;
+
+      picked.forEach((p) => triedIds.add(p.id));
+      remainingPool = remainingPool.filter((e) => !triedIds.has(e.id));
+
+      const { data: rpcData, error: rpcError } = await supabase.rpc("draw_winners", {
+        p_ids: picked.map((p) => p.id),
+        p_rank: rank,
+        p_max: round.count,
+      });
+
+      if (rpcError) {
+        console.error("draw_winners rpc failed", rpcError);
+        return NextResponse.json({ error: "당첨 처리에 실패했습니다. 다시 시도해 주세요." }, { status: 500 });
+      }
+
+      const newlyWon = (rpcData ?? []) as UpdatedRow[];
+      for (const w of newlyWon) {
+        if (!order.has(w.id)) order.set(w.id, order.size);
+        updated.push(w);
+      }
+
+      // 이번 시도에서 하나도 새로 당첨되지 않았다면(이미 정원이 꽉 찬 상태) 더 시도할 필요가 없습니다.
+      if (newlyWon.length === 0 && attempt > 0) break;
+    }
+
+    if (updated.length === 0) {
+      return NextResponse.json(
+        { error: `${round.label} 추첨은 이미 정원(${round.count}명)이 모두 채워졌습니다.` },
+        { status: 400 }
+      );
+    }
+  } else {
+    // rank가 없는 호출(현재 앱에서는 쓰이지 않지만 과거 호출 형태 호환용)은
+    // 정원 개념이 없으므로 기존 방식대로 단순 처리합니다.
+    const picked = pickWinnersWithPriority(clean, Math.min(count, clean.length));
+    const ids = picked.map((p) => p.id);
+    ids.forEach((id, i) => order.set(id, i));
+
+    const { data, error: updateError } = await supabase
+      .from("entries")
+      .update({ is_winner: true, won_at: new Date().toISOString(), prize_rank: null })
+      .in("id", ids)
+      .eq("is_winner", false)
+      .select("id, department, name, content, prize_rank");
+
+    if (updateError || !data || data.length === 0) {
+      console.error("mark winner failed", updateError);
+      return NextResponse.json({ error: "당첨 처리에 실패했습니다. 다시 시도해 주세요." }, { status: 500 });
+    }
+    updated = data;
   }
 
   // 리셋(초기화) 버튼을 눌러도 사라지지 않는 누적 당첨 기록을 별도로 남깁니다.
@@ -142,7 +172,6 @@ export async function POST(req: Request) {
   }
 
   // 뽑힌 순서(피커 화면에서 보여줄 순서)를 유지합니다.
-  const order = new Map(ids.map((id, i) => [id, i]));
   const winners = [...updated].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 
   return NextResponse.json({ winners });
