@@ -36,6 +36,8 @@ const FIFTH_RANK_VIDEO_SRC = "/videos/rank5-announcer.mp4";
 // 아나운서 영상 음성 대비 약 30% 크기로 시작하며, 운영자가 직접 끄고 켤 수 있습니다.
 const BGM_SRC = "/audio/prize-bgm.mp3";
 const BGM_VOLUME = 0.1;
+// 음악 파일 앞부분 약 4.5초가 무음이라, 매번 이 지점부터 재생(반복 시에도 동일)합니다.
+const BGM_START_OFFSET = 4.5;
 
 export default function DrawPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -75,6 +77,7 @@ export default function DrawPage() {
     if (!el) return;
     el.volume = BGM_VOLUME;
     el.muted = true;
+    el.currentTime = BGM_START_OFFSET;
     el.play().catch(() => {});
   }
 
@@ -90,12 +93,21 @@ export default function DrawPage() {
     }
     el.volume = BGM_VOLUME;
     el.muted = false;
+    el.currentTime = BGM_START_OFFSET;
     el.play()
       .then(() => {
         setBgmEverStarted(true);
         setBgmPlaying(true);
       })
       .catch(() => {});
+  }
+
+  // 무음 구간을 건너뛰기 위해 loop 속성 대신 직접 반복 재생을 제어합니다.
+  function handleBgmEnded() {
+    const el = bgmRef.current;
+    if (!el) return;
+    el.currentTime = BGM_START_OFFSET;
+    el.play().catch(() => {});
   }
 
   const fetchEntries = useCallback(async () => {
@@ -310,7 +322,7 @@ export default function DrawPage() {
       <div className="pointer-events-none absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
 
-      <audio ref={bgmRef} src={BGM_SRC} loop preload="auto" />
+      <audio ref={bgmRef} src={BGM_SRC} preload="auto" onEnded={handleBgmEnded} />
 
       {bgmEverStarted && (
         <motion.button
@@ -441,7 +453,7 @@ export default function DrawPage() {
               onClick={handleVideoFinished}
               className="absolute bottom-6 right-6 rounded-full bg-white/10 px-4 py-2 text-xs text-white/70 backdrop-blur-sm hover:bg-white/20 hover:text-white"
             >
-              영상 건너뛰고 바로 추첨화면가기
+              추첨바로가기
             </button>
           </motion.div>
         )}
