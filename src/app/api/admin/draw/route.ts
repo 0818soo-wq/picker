@@ -141,8 +141,13 @@ export async function POST(req: Request) {
 
   if (!useRpc || rank === null || !round) {
     // RPC 미설치 시 대체 경로: 요청 시점에 이 등수의 기존 당첨자 수를 세어
-    // 남은 자리만큼만 추첨합니다. (완벽히 원자적이진 않지만, 실제 사고 원인이었던
-    // 클라이언트 쪽 중복 호출은 이미 별도로 차단되어 있어 충분히 안전합니다.)
+    // 남은 자리만큼만 추첨합니다. DB 함수 방식과 달리 "개수 확인"과 "당첨 처리"가
+    // 완전한 하나의 트랜잭션은 아니라서, 이론상 진짜 동시 요청이 겹치면 극히
+    // 드물게 정원보다 적게 뽑힐 수는 있습니다(그 경우 관리하기 화면에 정원 미달로
+    // 표시되어 해당 등수를 다시 누르면 남은 인원만 자동으로 채워집니다 — 스스로
+    // 복구됩니다). 반대로 정원을 "초과"하는 것은 되돌리기 어려운 훨씬 나쁜
+    // 상황이므로, 재시도로 채우려 하지 않고 한 번만 시도해 정원 초과 가능성을
+    // 원천 차단합니다.
     updated = [];
     order.clear();
 
@@ -180,11 +185,11 @@ export async function POST(req: Request) {
       .eq("is_winner", false)
       .select("id, department, name, content, prize_rank");
 
-    if (updateError || !data || data.length === 0) {
+    if (updateError) {
       console.error("mark winner failed", updateError);
       return NextResponse.json({ error: "당첨 처리에 실패했습니다. 다시 시도해 주세요." }, { status: 500 });
     }
-    updated = data;
+    updated = data ?? [];
   }
 
   if (updated.length === 0) {
