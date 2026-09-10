@@ -31,7 +31,7 @@ export default function PrizeLobby({
   );
 
   return (
-    <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl">
+    <div className="relative w-full overflow-hidden rounded-3xl bg-white/60 shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 backdrop-blur-2xl">
       {!hasRemainingRound && <Confetti />}
       {hasRemainingRound ? (
         <EventBanner
@@ -57,48 +57,51 @@ export default function PrizeLobby({
         />
       )}
 
-      <div className="flex flex-col gap-6 px-6 py-8 sm:px-10 sm:py-10">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4">
+      <div className="flex flex-col gap-8 px-6 py-8 sm:px-10 sm:py-10">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5 sm:gap-6">
           {PRIZE_ROUNDS.map((round) => {
             const roundWinners = winners.filter((w) => w.prize_rank === round.rank);
 
             const roundIncomplete = roundWinners.length < round.count;
+            // 인원이 많은 등수(5등/4등)는 세로로 길게 늘어져 스크롤이 필요해지지 않도록
+            // 이름 목록을 2열로 나눠 보여줍니다.
+            const useTwoColumns = roundWinners.length > 4;
 
             return (
-              <div key={round.rank} className="flex flex-col gap-3 rounded-2xl bg-white/50 p-4 ring-1 ring-white/60 backdrop-blur-xl">
-                <div className="flex flex-col items-center gap-1 text-center">
+              <div key={round.rank} className="flex flex-col gap-4 rounded-2xl bg-white/50 p-5 ring-1 ring-white/60 backdrop-blur-xl sm:p-6">
+                <div className="flex flex-col items-center gap-2 text-center">
                   {roundIncomplete ? (
                     <button
                       type="button"
                       onClick={() => onSelectRound(round.rank)}
                       title="이 등수 추첨하기"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#13294b] text-sm font-bold text-white transition-colors hover:bg-[#1c3a68]"
+                      className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white transition-colors hover:bg-[#1c3a68]"
                     >
                       {round.rank}
                     </button>
                   ) : (
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#13294b] text-sm font-bold text-white">
+                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#13294b] text-lg font-bold text-white">
                       {round.rank}
                     </span>
                   )}
-                  <span className="text-sm font-bold text-slate-900">
+                  <span className="text-lg font-bold text-slate-900 sm:text-xl">
                     {round.label}({round.count}명)
                   </span>
-                  <div className="flex h-12 w-16 items-center justify-center">
+                  <div className="flex h-20 w-28 items-center justify-center sm:h-24 sm:w-32">
                     {round.prizeImage ? (
                       /* eslint-disable-next-line @next/next/no-img-element -- 상품 사진은 next/image 최적화 없이 원본 그대로 표시합니다. */
                       <img src={round.prizeImage} alt={round.prizeName} className="h-full w-full object-contain" />
                     ) : (
-                      <svg viewBox="0 0 100 100" className="h-6 w-6 text-slate-500/60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <svg viewBox="0 0 100 100" className="h-10 w-10 text-slate-500/60" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="20" y="40" width="60" height="45" rx="4" stroke="currentColor" strokeWidth="6" />
                         <rect x="12" y="26" width="76" height="18" rx="4" stroke="currentColor" strokeWidth="6" />
                       </svg>
                     )}
                   </div>
-                  <span className="line-clamp-2 whitespace-pre-line text-[11px] text-slate-500">{round.prizeName}</span>
+                  <span className="line-clamp-2 whitespace-pre-line text-sm text-slate-500 sm:text-base">{round.prizeName}</span>
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className={useTwoColumns ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"}>
                   {roundWinners.length > 0 ? (
                     roundWinners.map((w) => {
                       const resolved = resolveWinnerDisplay(w.name, w.department);
@@ -107,10 +110,10 @@ export default function PrizeLobby({
                           key={w.id}
                           type="button"
                           onClick={() => onSelectWinner(w)}
-                          className="flex flex-col items-center gap-0.5 rounded-xl bg-white px-2 py-2 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                          className="flex flex-col items-center gap-1 rounded-xl bg-white px-3 py-2.5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
                         >
-                          <span className="truncate text-[10px] text-slate-400">{resolved.department}</span>
-                          <span className="truncate text-xs font-bold text-slate-900">
+                          <span className="truncate text-xs text-slate-400 sm:text-sm">{resolved.department}</span>
+                          <span className="truncate text-sm font-bold text-slate-900 sm:text-base">
                             {resolved.name}
                             {resolved.titleSuffix}
                           </span>
@@ -118,7 +121,7 @@ export default function PrizeLobby({
                       );
                     })
                   ) : (
-                    <span className="py-2 text-center text-xs text-slate-400">추첨 전</span>
+                    <span className="py-2 text-center text-sm text-slate-400">추첨 전</span>
                   )}
                 </div>
               </div>
