@@ -16,7 +16,7 @@ type Entry = {
   group_type: "draw" | "no_draw";
   is_winner: boolean;
   created_at: string;
-  ai_off_topic?: boolean;
+  ai_off_topic?: boolean | null;
   ai_reason?: string | null;
 };
 

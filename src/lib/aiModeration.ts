@@ -11,6 +11,12 @@ type AiModerationResult = {
 
 const cache = new Map<string, AiModerationResult>();
 
+// 네트워크 호출 없이 캐시에 이미 판별 결과가 있는지만 확인합니다. 목록 조회
+// API가 AI 응답을 기다리지 않고 즉시 응답할 수 있도록 하는 용도입니다.
+export function getCachedClassification(id: string): AiModerationResult | undefined {
+  return cache.get(id);
+}
+
 const MAX_REASON_LENGTH = 20;
 
 const PROMPT_TEMPLATE = (content: string) => `다음은 사내 행사에서 "우리 조직의 새로운 축, 어떠한 '축의 전환'이 필요할까요?" 라는 질문에 대해 참석자가 작성한 응답입니다.
@@ -37,6 +43,8 @@ export async function classifyOffTopic(id: string, content: string): Promise<AiM
   }
 
   try {
+    // 외부 API가 응답 없이 멈추면 목록 조회 전체가 무한정 대기하게 되므로,
+    // 일정 시간(8초) 안에 응답이 없으면 실패로 간주하고 넘어갑니다.
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -49,6 +57,7 @@ export async function classifyOffTopic(id: string, content: string): Promise<AiM
         max_tokens: 60,
         messages: [{ role: "user", content: PROMPT_TEMPLATE(content) }],
       }),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!res.ok) {
