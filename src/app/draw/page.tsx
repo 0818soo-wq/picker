@@ -35,7 +35,7 @@ const FIFTH_RANK_VIDEO_SRC = "/videos/rank5-announcer.mp4";
 // 5등 추첨(첫 추첨)이 시작되는 순간부터 행사 끝까지 배경음악으로 틀어줍니다.
 // 아나운서 영상 음성 대비 약 30% 크기로 시작하며, 운영자가 직접 끄고 켤 수 있습니다.
 const BGM_SRC = "/audio/prize-bgm.mp3";
-const BGM_VOLUME = 0.3;
+const BGM_VOLUME = 0.2;
 
 export default function DrawPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -65,6 +65,18 @@ export default function DrawPage() {
       el.pause();
       setBgmPlaying(false);
     }
+  }
+
+  function startBgm() {
+    const el = bgmRef.current;
+    if (!el || !el.paused) return;
+    el.volume = BGM_VOLUME;
+    el.play()
+      .then(() => {
+        setBgmEverStarted(true);
+        setBgmPlaying(true);
+      })
+      .catch(() => {});
   }
 
   const fetchEntries = useCallback(async () => {
@@ -147,6 +159,8 @@ export default function DrawPage() {
 
   function handleVideoFinished() {
     setPhase("prizeIntro");
+    // 아나운서 영상이 끝나는(또는 건너뛰는) 순간 바로 배경음악을 시작합니다.
+    startBgm();
     // 영상이 끝나면(또는 건너뛰면) 5등 소개 화면을 잠깐 보여준 뒤 자동으로 추첨을 시작합니다.
     setTimeout(() => {
       handleStartDraw();
@@ -194,17 +208,9 @@ export default function DrawPage() {
       setRoundWinners(drawnWinners);
       setPool(currentPool);
 
-      // 5등(첫 추첨) 릴이 돌아가기 시작하는 시점부터 행사 끝까지 배경음악을 틀어줍니다.
-      if (round.rank === 5 && bgmRef.current) {
-        bgmRef.current.volume = BGM_VOLUME;
-        bgmRef.current
-          .play()
-          .then(() => {
-            setBgmEverStarted(true);
-            setBgmPlaying(true);
-          })
-          .catch(() => {});
-      }
+      // 보통은 아나운서 영상이 끝날 때 이미 배경음악이 시작되지만, 영상 화면을 거치지
+      // 않고(관리하기에서 5등을 바로 선택하는 등) 5등 추첨에 들어온 경우를 위한 안전장치입니다.
+      if (round.rank === 5) startBgm();
       setDrawRound((r) => r + 1);
     } catch {
       setErrorMessage("네트워크 오류가 발생했습니다.");
