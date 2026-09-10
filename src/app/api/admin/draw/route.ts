@@ -92,12 +92,14 @@ export async function POST(req: Request) {
   let updated: UpdatedRow[] = [];
   const order = new Map<string, number>();
 
+  // draw_winners RPC(supabase/schema.sql)가 설치돼 있으면, 등수별 advisory lock으로
+  // "정원 확인 + 당첨 처리"를 하나의 DB 트랜잭션으로 원자적으로 처리해 동시 요청에도
+  // 정원을 절대 넘기지 않습니다. 아직 SQL을 실행하지 않은 환경(행사장 운영 PC가
+  // 새 함수를 모르는 경우 등)에서도 추첨 자체는 반드시 동작해야 하므로, RPC가 없으면
+  // (PGRST202) 조용히 예전 방식(요청 시점에 개수를 세어 남은 자리만큼만 추첨)으로
+  // 자동 전환합니다.
+  let useRpc = true;
   if (rank !== null && round) {
-    // draw_winners RPC(schema.sql)가 등수별 advisory lock으로 "정원 확인 + 당첨 처리"를
-    // 하나의 트랜잭션으로 원자적으로 처리하므로, 같은 등수에 요청이 동시에 여러 번
-    // 들어와도(더블클릭 등) 정원을 절대 넘길 수 없습니다. 후보 중 일부가 그 사이
-    // 다른 등수 추첨 등으로 이미 당첨돼 무효화된 경우를 대비해, 부족하면 남은
-    // 후보 풀에서 더 뽑아 몇 차례 재시도해 정원을 채웁니다.
     const triedIds = new Set<string>();
     let remainingPool: EligibleRow[] = clean;
 
@@ -116,6 +118,13 @@ export async function POST(req: Request) {
       });
 
       if (rpcError) {
+        const isMissingFunction =
+          rpcError.code === "PGRST202" || /function .*draw_winners/i.test(rpcError.message ?? "");
+        if (isMissingFunction) {
+          useRpc = false;
+          console.warn("draw_winners RPC가 아직 설치되지 않아 예전 방식으로 대체합니다.");
+          break;
+        }
         console.error("draw_winners rpc failed", rpcError);
         return NextResponse.json({ error: "당첨 처리에 실패했습니다. 다시 시도해 주세요." }, { status: 500 });
       }
@@ -126,26 +135,47 @@ export async function POST(req: Request) {
         updated.push(w);
       }
 
-      // 이번 시도에서 하나도 새로 당첨되지 않았다면(이미 정원이 꽉 찬 상태) 더 시도할 필요가 없습니다.
       if (newlyWon.length === 0 && attempt > 0) break;
     }
+  }
 
-    if (updated.length === 0) {
-      return NextResponse.json(
-        { error: `${round.label} 추첨은 이미 정원(${round.count}명)이 모두 채워졌습니다.` },
-        { status: 400 }
-      );
+  if (!useRpc || rank === null || !round) {
+    // RPC 미설치 시 대체 경로: 요청 시점에 이 등수의 기존 당첨자 수를 세어
+    // 남은 자리만큼만 추첨합니다. (완벽히 원자적이진 않지만, 실제 사고 원인이었던
+    // 클라이언트 쪽 중복 호출은 이미 별도로 차단되어 있어 충분히 안전합니다.)
+    updated = [];
+    order.clear();
+
+    let effectiveCount = count;
+    if (rank !== null && round) {
+      const { count: alreadyWonCount, error: countError } = await supabase
+        .from("entries")
+        .select("id", { count: "exact", head: true })
+        .eq("is_winner", true)
+        .eq("prize_rank", rank);
+
+      if (countError) {
+        console.error("count existing winners failed", countError);
+        return NextResponse.json({ error: "당첨 현황을 확인하지 못했습니다." }, { status: 500 });
+      }
+
+      const remainingSlots = round.count - (alreadyWonCount ?? 0);
+      if (remainingSlots <= 0) {
+        return NextResponse.json(
+          { error: `${round.label} 추첨은 이미 정원(${round.count}명)이 모두 채워졌습니다.` },
+          { status: 400 }
+        );
+      }
+      effectiveCount = Math.min(count, remainingSlots);
     }
-  } else {
-    // rank가 없는 호출(현재 앱에서는 쓰이지 않지만 과거 호출 형태 호환용)은
-    // 정원 개념이 없으므로 기존 방식대로 단순 처리합니다.
-    const picked = pickWinnersWithPriority(clean, Math.min(count, clean.length));
+
+    const picked = pickWinnersWithPriority(clean, Math.min(effectiveCount, clean.length));
     const ids = picked.map((p) => p.id);
     ids.forEach((id, i) => order.set(id, i));
 
     const { data, error: updateError } = await supabase
       .from("entries")
-      .update({ is_winner: true, won_at: new Date().toISOString(), prize_rank: null })
+      .update({ is_winner: true, won_at: new Date().toISOString(), prize_rank: rank })
       .in("id", ids)
       .eq("is_winner", false)
       .select("id, department, name, content, prize_rank");
@@ -155,6 +185,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "당첨 처리에 실패했습니다. 다시 시도해 주세요." }, { status: 500 });
     }
     updated = data;
+  }
+
+  if (updated.length === 0) {
+    return NextResponse.json(
+      { error: round ? `${round.label} 추첨은 이미 정원(${round.count}명)이 모두 채워졌습니다.` : "추첨에 실패했습니다." },
+      { status: 400 }
+    );
   }
 
   // 리셋(초기화) 버튼을 눌러도 사라지지 않는 누적 당첨 기록을 별도로 남깁니다.
