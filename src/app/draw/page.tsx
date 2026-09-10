@@ -129,7 +129,7 @@ export default function DrawPage() {
     // 영상이 끝나면(또는 건너뛰면) 5등 소개 화면을 잠깐 보여준 뒤 자동으로 추첨을 시작합니다.
     setTimeout(() => {
       handleStartDraw();
-    }, 700);
+    }, 2000);
   }
 
   async function handleStartDraw() {
