@@ -13,14 +13,25 @@ export type PrizeRound = {
   prizeName: string; // 예: "삼성라이온즈 굿즈"
   count: number; // 이 등수에서 뽑는 인원 수
   prizeImage: string | null; // public/ 기준 경로. 아직 없으면 null
-  // 한 등수 안에 서로 다른 상품이 섞여 있을 때(예: 4등 = 배드민턴 5명 + 탁구 5명),
-  // 당첨자를 5명씩 끊은 줄마다 붙일 작은 라벨입니다. 없으면 라벨 없이 기존처럼 표시합니다.
+  // 한 등수 안에 서로 다른 상품이 섞여 있을 때(예: 4등 = 배드민턴 6명 + 탁구 6명),
+  // 당첨자를 그룹별로 나눠 붙일 작은 라벨입니다. 없으면 라벨 없이 기존처럼 표시합니다.
   rowLabels?: string[];
+  // 축하합니다 화면에서 당첨자 카드를 한 줄에 몇 명까지 보여줄지 지정합니다.
+  // rowLabels가 있으면 각 라벨 그룹 안에서 이 수만큼 끊어 여러 줄로 보여줍니다.
+  // 지정하지 않으면 기본값(3명)을 씁니다.
+  revealMaxPerRow?: number;
 };
 
 // 진행 순서: 5등 -> 4등 -> 3등 -> 2등 -> 1등 (배열 순서 = 진행 순서)
 export const PRIZE_ROUNDS: PrizeRound[] = [
-  { rank: 5, label: "5등", prizeName: "삼성라이온즈 굿즈", count: 11, prizeImage: "/images/prizes/rank5-lions-goods.webp" },
+  {
+    rank: 5,
+    label: "5등",
+    prizeName: "삼성라이온즈 굿즈",
+    count: 11,
+    prizeImage: "/images/prizes/rank5-lions-goods.webp",
+    revealMaxPerRow: 4,
+  },
   {
     rank: 4,
     label: "4등",
@@ -28,6 +39,7 @@ export const PRIZE_ROUNDS: PrizeRound[] = [
     count: 12,
     prizeImage: "/images/prizes/rank4-jerseys.webp",
     rowLabels: ["배드민턴 유니폼", "탁구 유니폼"],
+    revealMaxPerRow: 3,
   },
   { rank: 3, label: "3등", prizeName: "블루밍스 선수단\n사인 공인구", count: 2, prizeImage: "/images/prizes/rank3-basketball.webp" },
   { rank: 2, label: "2등", prizeName: "배드민턴 선수단\n사인 라켓&가방", count: 1, prizeImage: "/images/prizes/rank2-bag-racket.webp" },
