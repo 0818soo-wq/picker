@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { resolveAttendeeByEmployeeId } from "@/lib/employeeDirectory";
+import { isLeaderTitle } from "@/lib/attendees";
 
 export const runtime = "nodejs";
 
@@ -62,9 +63,11 @@ export async function POST(req: Request) {
   }
   const department = attendee ? attendee.department : manualDepartment;
   const name = attendee ? attendee.name : manualName;
-  // 명단에는 있지만 참석 예정이 아니거나, 아예 명단에 없는 분은 폼과
-  // 상관없이 추첨 대상에서는 제외(no_draw)되도록 저장합니다.
-  const effectiveGroupType = attendee?.attending ? groupType : "no_draw";
+  // 접수 링크는 하나로 통일되어 있으며, 어느 링크로 들어왔는지(폼이 보낸
+  // groupType)와 무관하게 사번으로 조회한 실제 직책만으로 추첨 대상 여부를
+  // 판단합니다. 지역단장/사업단장(및 참석 예정자)만 추첨(draw) 대상이고,
+  // 파트장을 포함한 그 외 직책이나 명단에 없는 분은 의견 제출만 가능합니다.
+  const effectiveGroupType = attendee?.attending && isLeaderTitle(attendee.title) ? "draw" : "no_draw";
   const skipDuplicateCheck = !attendee;
 
   let existingId: string | null = null;

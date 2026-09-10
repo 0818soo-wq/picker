@@ -4,12 +4,11 @@
 
 ## 구성
 
-- `/entry/leader` — **지역단장** 접수 페이지 — 지역단장들에게 공유하는 링크
-- `/entry/staff` — **본사 파트장** 접수 페이지 — 본사 파트장들에게 공유하는 링크
+- `/entry/leader` — 접수 페이지 — 지역단장/파트장 구분 없이 모두에게 공유하는 하나의 링크 (`/entry/staff`, `/br`, `/of`로 접속해도 동일한 화면으로 연결됩니다)
 - `/draw` — 관리자용 추첨 페이지 (비밀번호로 보호) — 행사 진행자가 화면에 띄우는 페이지
 - `/admin-login` — `/draw` 접근을 위한 비밀번호 입력 페이지
 
-두 접수 페이지는 같은 양식(소속/이름 + 서술형 의견)을 쓰지만, `/entry/staff`로 접수한 인원은 추첨에서 자동으로 제외됩니다. 데이터(접수 내용)는 [Supabase](https://supabase.com) Postgres 테이블에 저장되고, 앱은 [Vercel](https://vercel.com)에 배포합니다.
+접수 링크는 하나지만, 사번으로 조회한 실제 직책(명단 기준, [`src/lib/attendees.ts`](./src/lib/attendees.ts))에 따라 지역단장/사업단장만 자동으로 추첨 대상(draw)이 되고, 파트장을 포함한 그 외 직책은 의견 제출만 되고 추첨에서는 자동으로 제외(no_draw)됩니다. 데이터(접수 내용)는 [Supabase](https://supabase.com) Postgres 테이블에 저장되고, 앱은 [Vercel](https://vercel.com)에 배포합니다.
 
 `/draw`는 5등부터 1등까지 순서대로 진행하는 다단계 추첨입니다. 각 등수의 상품 구성은 [`src/lib/prizeRounds.ts`](./src/lib/prizeRounds.ts)에서 관리합니다.
 
@@ -48,22 +47,20 @@ npm install
 npm run dev
 ```
 
-- [http://localhost:3000/entry/leader](http://localhost:3000/entry/leader) — 지역단장 접수
-- [http://localhost:3000/entry/staff](http://localhost:3000/entry/staff) — 본사 파트장 접수
+- [http://localhost:3000/entry/leader](http://localhost:3000/entry/leader) — 접수 (지역단장/파트장 공통 링크)
 - [http://localhost:3000/draw](http://localhost:3000/draw) — 추첨 페이지 (비밀번호 입력 필요)
 
 ## 5. Vercel 배포
 
 1. 이 저장소를 [Vercel](https://vercel.com/new)에서 Import 합니다.
 2. Project Settings > Environment Variables에 위 환경변수들을 등록합니다.
-3. Deploy 하면 아래 링크를 각 대상에게 공유할 수 있습니다.
-   - `https://<프로젝트명>.vercel.app/entry/leader`
-   - `https://<프로젝트명>.vercel.app/entry/staff`
+3. Deploy 하면 아래 링크를 공유할 수 있습니다.
+   - `https://<프로젝트명>.vercel.app/entry/leader` — 접수 (지역단장/파트장 공통)
    - `https://<프로젝트명>.vercel.app/draw`
 
 ## 진행 순서 (행사 당일)
 
-1. 지역단장들에게 `/entry/leader`, 본사 파트장들에게 `/entry/staff` 링크를 각각 공유해 접수를 받습니다.
+1. 지역단장/본사 파트장 구분 없이 모두에게 `/entry/leader` 링크 하나만 공유해 접수를 받습니다. 추첨 대상 여부는 자동으로 판단됩니다.
 2. 진행자는 `/admin-login`에서 비밀번호를 입력해 `/draw`에 접속합니다.
 3. 대문화면에서 **추첨하기**를 누르면 5등부터 순서대로 상품 안내 → 추첨 애니메이션 → 발표 화면이 이어집니다. 발표 화면에서 **다음 추첨하러가기**를 누르면 다음 등수로 넘어가고, 1등까지 끝나면 **추첨 마치기**로 관리하기 화면으로 이동합니다.
 4. 대문화면의 **관리하기**를 누르면 지금까지의 등수별 당첨자 현황을 한 번에 볼 수 있습니다. 당첨자 버튼을 누르면 그 사람이 작성한 카드 내용을 볼 수 있습니다.

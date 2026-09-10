@@ -302,6 +302,13 @@ export function isDrawEligibleTitle(title: string): boolean {
   return LEADER_TITLES.has(title) || PART_LEADER_TITLES.has(title);
 }
 
+// 접수 링크를 하나로 합친 뒤, 사번으로 조회한 실제 직책(명단 기준)만으로
+// 추첨 대상 여부를 판단하기 위한 함수입니다. 지역단장/사업단장만 추첨
+// 대상이며, 파트장/지원파트장을 포함한 그 외 직책은 의견 제출만 가능합니다.
+export function isLeaderTitle(title: string): boolean {
+  return LEADER_TITLES.has(title);
+}
+
 export function findAttendeeByName(name: string): Attendee | undefined {
   const cleaned = name.trim();
   const candidates = ATTENDEES.filter((a) => a.name === cleaned);
