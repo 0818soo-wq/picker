@@ -30,28 +30,28 @@ export default function PrizeReveal({
   const cardClassName = isVeryFewWinners
     ? "flex flex-col items-center gap-2 rounded-2xl bg-white px-14 py-10 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
     : isFewWinners
-      ? "flex flex-col items-center gap-1 rounded-2xl bg-white px-6 py-5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
-      : "flex flex-col items-center gap-0.5 rounded-2xl bg-white px-4 py-2.5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50";
+      ? "flex flex-col items-center gap-1.5 rounded-2xl bg-white px-8 py-6 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+      : "flex flex-col items-center gap-1.5 rounded-2xl bg-white px-5 py-4 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50";
 
   const departmentClassName = isVeryFewWinners
     ? "truncate text-lg text-slate-400"
     : isFewWinners
-      ? "truncate text-sm text-slate-400"
-      : "truncate text-[11px] text-slate-400";
+      ? "truncate text-base text-slate-400 sm:text-lg"
+      : "truncate text-sm text-slate-400 sm:text-base";
 
   const nameClassName = isVeryFewWinners
     ? "truncate text-4xl font-bold text-slate-900 sm:text-5xl"
     : isFewWinners
-      ? "truncate text-xl font-bold text-slate-900"
-      : "truncate text-sm font-bold text-slate-900 sm:text-base";
+      ? "truncate text-2xl font-bold text-slate-900 sm:text-3xl"
+      : "truncate text-lg font-bold text-slate-900 sm:text-xl";
 
   const prizeImageBoxClassName = isVeryFewWinners
     ? "flex h-40 w-48 items-center justify-center sm:h-56 sm:w-64"
-    : "flex h-28 w-32 items-center justify-center sm:h-32 sm:w-40";
+    : "flex h-32 w-40 items-center justify-center sm:h-44 sm:w-56";
 
   const prizeNameClassName = isVeryFewWinners
     ? "whitespace-pre-line text-center text-base font-semibold leading-snug text-slate-700 sm:text-xl"
-    : "whitespace-pre-line text-center text-sm font-semibold leading-snug text-slate-700";
+    : "whitespace-pre-line text-center text-base font-semibold leading-snug text-slate-700 sm:text-lg";
 
   // 4등처럼 한 등수 안에 서로 다른 상품이 섞여 있을 때, 줄마다 작은 라벨을 붙여
   // 구분해 보여줍니다(예: 상단 5명 배드민턴 유니폼 / 하단 5명 탁구 유니폼).
@@ -88,14 +88,14 @@ export default function PrizeReveal({
         />
         <div className="absolute inset-0 hidden bg-white/55 backdrop-blur-md sm:block" />
 
-        <div className="relative z-10 flex flex-col items-center gap-1 pt-6 text-center">
-          <span className="text-sm font-medium text-slate-500">&lsquo;26.하 CSM전략회의 이벤트</span>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">축하합니다!</h1>
+        <div className="relative z-10 flex flex-col items-center gap-1 pt-6 text-center sm:pt-8">
+          <span className="text-base font-medium text-slate-500 sm:text-lg">&lsquo;26.하 CSM전략회의 이벤트</span>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">축하합니다!</h1>
         </div>
 
-        <div className="relative z-10 grid flex-1 grid-cols-1 items-center gap-6 px-6 py-6 sm:grid-cols-[minmax(0,220px)_1fr] sm:gap-10 sm:overflow-hidden sm:px-14 sm:py-4">
-          <div className="flex flex-col items-center gap-3">
-            <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-6 py-2 text-2xl font-black text-white sm:px-8 sm:py-2.5 sm:text-3xl">
+        <div className="relative z-10 grid flex-1 grid-cols-1 items-center gap-6 px-6 py-6 sm:grid-cols-[minmax(0,260px)_1fr] sm:gap-10 sm:overflow-hidden sm:px-14 sm:py-4">
+          <div className="flex flex-col items-center gap-4">
+            <span className="inline-flex w-fit items-center rounded-full bg-[#13294b] px-8 py-2.5 text-3xl font-black text-white sm:px-10 sm:py-3 sm:text-4xl">
               {round.label}
             </span>
             <div className={prizeImageBoxClassName}>
@@ -112,16 +112,16 @@ export default function PrizeReveal({
             <p className={prizeNameClassName}>{round.prizeName}</p>
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-3 sm:items-center">
-            <span className="text-xs font-medium text-slate-400 text-center">{round.label} 당첨자</span>
+          <div className="flex flex-col items-center justify-center gap-4 sm:items-center">
+            <span className="text-sm font-medium text-slate-400 text-center sm:text-base">{round.label} 당첨자</span>
             {labeledRows ? (
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-6">
                 {labeledRows.map((rowWinners, rowIndex) => (
-                  <div key={rowIndex} className="flex flex-col items-center gap-1.5">
+                  <div key={rowIndex} className="flex flex-col items-center gap-2">
                     {round.rowLabels?.[rowIndex] && (
-                      <span className="text-[11px] font-medium text-slate-400">{round.rowLabels[rowIndex]}</span>
+                      <span className="text-sm font-medium text-slate-400 sm:text-base">{round.rowLabels[rowIndex]}</span>
                     )}
-                    <div className="grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-3 sm:grid-cols-5">
+                    <div className="grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-4 sm:grid-cols-6">
                       {rowWinners.map(renderWinnerCard)}
                     </div>
                   </div>
@@ -132,7 +132,7 @@ export default function PrizeReveal({
                 className={
                   isFewWinners
                     ? "flex flex-wrap items-center justify-center gap-4"
-                    : "grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-3"
+                    : "grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-4"
                 }
               >
                 {winners.map(renderWinnerCard)}
