@@ -263,28 +263,28 @@ export default function DrawPage() {
           <motion.div
             key="cover"
             {...fadeUp}
-            className="relative flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center gap-12 overflow-hidden px-6 py-16 text-center"
+            className="relative flex min-h-[85vh] w-full flex-col items-center justify-center gap-14 overflow-hidden px-6 py-16 text-center"
           >
             <MountainBackdrop className="absolute inset-x-0 bottom-0 h-1/2 w-full text-slate-300/50" />
 
-            <SailboatIcon className="relative z-10 h-10 w-10 text-slate-900 sm:h-12 sm:w-12" />
-            <h1 className="relative z-10 flex flex-col items-center gap-3 font-paperlogy">
-              <span className="text-base font-medium tracking-wide text-slate-500 sm:text-xl">
+            <SailboatIcon className="relative z-10 h-14 w-14 text-slate-900 sm:h-20 sm:w-20" />
+            <h1 className="relative z-10 flex flex-col items-center gap-4 font-paperlogy">
+              <span className="text-lg font-medium tracking-wide text-slate-500 sm:text-2xl">
                 &lsquo;26.하 CSM전략회의 이벤트
               </span>
-              <span className="text-5xl font-black leading-none tracking-tighter text-slate-900 sm:text-8xl">
+              <span className="text-6xl font-black leading-none tracking-tighter text-slate-900 sm:text-9xl">
                 AI 당첨자 추첨 <span className="text-blue-600">Agent</span>
               </span>
             </h1>
 
-            <div className="relative z-10 flex flex-wrap items-center justify-center gap-3">
+            <div className="relative z-10 flex flex-wrap items-center justify-center gap-4">
               <motion.button
                 type="button"
                 onClick={handleStartWithVideo}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ duration: 0.2, ease: APPLE_EASE }}
-                className="flex h-12 w-40 items-center justify-center rounded-full bg-slate-900 text-base font-semibold text-white shadow-sm"
+                className="flex h-16 w-56 items-center justify-center rounded-full bg-slate-900 text-lg font-semibold text-white shadow-sm"
               >
                 추첨하기
               </motion.button>
@@ -294,7 +294,7 @@ export default function DrawPage() {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ duration: 0.2, ease: APPLE_EASE }}
-                className="flex h-12 w-40 items-center justify-center rounded-full bg-white text-base font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200"
+                className="flex h-16 w-56 items-center justify-center rounded-full bg-white text-lg font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200"
               >
                 관리하기
               </motion.button>
