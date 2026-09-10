@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { PrizeRound } from "@/lib/prizeRounds";
-import type { ReelEntry } from "@/components/SlotReel";
+import { splitIntoRows, type ReelEntry } from "@/components/SlotReel";
 import { resolveWinnerDisplay } from "@/lib/format";
 
 const APPLE_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -53,6 +53,26 @@ export default function PrizeReveal({
     ? "whitespace-pre-line text-center text-base font-semibold leading-snug text-slate-700 sm:text-xl"
     : "whitespace-pre-line text-center text-sm font-semibold leading-snug text-slate-700";
 
+  // 4등처럼 한 등수 안에 서로 다른 상품이 섞여 있을 때, 줄마다 작은 라벨을 붙여
+  // 구분해 보여줍니다(예: 상단 5명 배드민턴 유니폼 / 하단 5명 탁구 유니폼).
+  const labeledRows =
+    round.rowLabels && round.rowLabels.length > 0
+      ? splitIntoRows(winners, Math.ceil(winners.length / round.rowLabels.length))
+      : null;
+
+  function renderWinnerCard(w: ReelEntry) {
+    const resolved = resolveWinnerDisplay(w.name, w.department);
+    return (
+      <button key={w.id} type="button" onClick={() => onSelectWinner(w)} className={cardClassName}>
+        <span className={departmentClassName}>{resolved.department}</span>
+        <span className={nameClassName}>
+          {resolved.name}
+          {resolved.titleSuffix}
+        </span>
+      </button>
+    );
+  }
+
   return (
     <div className="flex w-full flex-col items-center gap-6">
       <div
@@ -94,26 +114,30 @@ export default function PrizeReveal({
 
           <div className="flex flex-col items-center justify-center gap-3 sm:items-center">
             <span className="text-xs font-medium text-slate-400 text-center">{round.label} 당첨자</span>
-            <div
-              className={
-                isFewWinners
-                  ? "flex flex-wrap items-center justify-center gap-4"
-                  : "grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-3"
-              }
-            >
-              {winners.map((w) => {
-                const resolved = resolveWinnerDisplay(w.name, w.department);
-                return (
-                  <button key={w.id} type="button" onClick={() => onSelectWinner(w)} className={cardClassName}>
-                    <span className={departmentClassName}>{resolved.department}</span>
-                    <span className={nameClassName}>
-                      {resolved.name}
-                      {resolved.titleSuffix}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            {labeledRows ? (
+              <div className="flex flex-col items-center gap-4">
+                {labeledRows.map((rowWinners, rowIndex) => (
+                  <div key={rowIndex} className="flex flex-col items-center gap-1.5">
+                    {round.rowLabels?.[rowIndex] && (
+                      <span className="text-[11px] font-medium text-slate-400">{round.rowLabels[rowIndex]}</span>
+                    )}
+                    <div className="grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-3 sm:grid-cols-5">
+                      {rowWinners.map(renderWinnerCard)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div
+                className={
+                  isFewWinners
+                    ? "flex flex-wrap items-center justify-center gap-4"
+                    : "grid grid-cols-3 content-start items-start justify-center justify-items-stretch gap-3"
+                }
+              >
+                {winners.map(renderWinnerCard)}
+              </div>
+            )}
           </div>
         </div>
       </div>

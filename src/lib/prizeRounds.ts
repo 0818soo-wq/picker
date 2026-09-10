@@ -13,12 +13,22 @@ export type PrizeRound = {
   prizeName: string; // 예: "삼성라이온즈 굿즈"
   count: number; // 이 등수에서 뽑는 인원 수
   prizeImage: string | null; // public/ 기준 경로. 아직 없으면 null
+  // 한 등수 안에 서로 다른 상품이 섞여 있을 때(예: 4등 = 배드민턴 5명 + 탁구 5명),
+  // 당첨자를 5명씩 끊은 줄마다 붙일 작은 라벨입니다. 없으면 라벨 없이 기존처럼 표시합니다.
+  rowLabels?: string[];
 };
 
 // 진행 순서: 5등 -> 4등 -> 3등 -> 2등 -> 1등 (배열 순서 = 진행 순서)
 export const PRIZE_ROUNDS: PrizeRound[] = [
   { rank: 5, label: "5등", prizeName: "삼성라이온즈 굿즈", count: 13, prizeImage: "/images/prizes/rank5-lions-goods.webp" },
-  { rank: 4, label: "4등", prizeName: "배드민턴&탁구 선수단\n사인 유니폼", count: 10, prizeImage: "/images/prizes/rank4-jerseys.webp" },
+  {
+    rank: 4,
+    label: "4등",
+    prizeName: "배드민턴&탁구 선수단\n사인 유니폼",
+    count: 10,
+    prizeImage: "/images/prizes/rank4-jerseys.webp",
+    rowLabels: ["배드민턴 유니폼", "탁구 유니폼"],
+  },
   { rank: 3, label: "3등", prizeName: "블루밍스 선수단\n사인 공인구", count: 2, prizeImage: "/images/prizes/rank3-basketball.webp" },
   { rank: 2, label: "2등", prizeName: "배드민턴 선수단\n사인 라켓&가방", count: 1, prizeImage: "/images/prizes/rank2-bag-racket.webp" },
   { rank: 1, label: "1등", prizeName: "안세영선수 유니폼\n+ 배드민턴 선수단\n사인 라켓&가방", count: 1, prizeImage: "/images/prizes/rank1-uniform-set.webp" },

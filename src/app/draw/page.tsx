@@ -415,6 +415,7 @@ export default function DrawPage() {
                   pool={pool}
                   winners={roundWinners}
                   onAllSettled={() => setPhase("reveal")}
+                  rowLabels={currentRound.rowLabels}
                 />
               )}
             </div>

@@ -148,10 +148,12 @@ export function MultiSlotReel({
   pool,
   winners,
   onAllSettled,
+  rowLabels,
 }: {
   pool: ReelEntry[];
   winners: ReelEntry[];
   onAllSettled: () => void;
+  rowLabels?: string[];
 }) {
   const rows = splitIntoRows(winners, 5);
   const settledCount = useRef(0);
@@ -170,20 +172,24 @@ export function MultiSlotReel({
   return (
     <div className="flex w-full flex-col items-center gap-4">
       {rowsWithOffset.map(({ row, offset }, rowIndex) => (
-        <div
-          key={rowIndex}
-          className="grid w-full justify-center gap-3"
-          style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP}px, 1fr))` }}
-        >
-          {row.map((winner, i) => (
-            <CompactReelRow
-              key={winner.id}
-              pool={pool}
-              winner={winner}
-              duration={COMPACT_BASE_DURATION + (offset + i) * COMPACT_SETTLE_STAGGER}
-              onSettle={handleRowSettle}
-            />
-          ))}
+        <div key={rowIndex} className="flex w-full flex-col items-center gap-1.5">
+          {rowLabels?.[rowIndex] && (
+            <span className="text-xs font-medium text-slate-400">{rowLabels[rowIndex]}</span>
+          )}
+          <div
+            className="grid w-full justify-center gap-3"
+            style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP}px, 1fr))` }}
+          >
+            {row.map((winner, i) => (
+              <CompactReelRow
+                key={winner.id}
+                pool={pool}
+                winner={winner}
+                duration={COMPACT_BASE_DURATION + (offset + i) * COMPACT_SETTLE_STAGGER}
+                onSettle={handleRowSettle}
+              />
+            ))}
+          </div>
         </div>
       ))}
     </div>
