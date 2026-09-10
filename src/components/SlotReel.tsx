@@ -95,7 +95,8 @@ export default function SlotReel({
   return (
     <div
       ref={containerRef}
-      className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 py-6"
+      className="relative w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 py-6"
+      style={{ height: ITEM_HEIGHT + 48 }}
     >
       <div
         className="pointer-events-none absolute inset-y-0 left-1/2 z-10 -translate-x-1/2 rounded-2xl border-4 border-blue-600 shadow-[0_0_30px_rgba(37,99,235,0.35)]"
@@ -175,14 +176,14 @@ export function MultiSlotReel({
   }
 
   return (
-    <div className="flex w-full flex-col items-center gap-4">
+    <div className="flex w-full shrink-0 flex-col items-center gap-4">
       {rowsWithOffset.map(({ row, offset }, rowIndex) => (
-        <div key={rowIndex} className="flex w-full flex-col items-center gap-1.5">
+        <div key={rowIndex} className="flex w-full shrink-0 flex-col items-center gap-1.5">
           {rowLabels?.[rowIndex] && (
             <span className="text-xs font-medium text-slate-400">{rowLabels[rowIndex]}</span>
           )}
           <div
-            className="grid w-full justify-center gap-3"
+            className="grid w-full shrink-0 justify-center gap-3"
             style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP}px, 1fr))` }}
           >
             {row.map((winner, i) => (
@@ -252,8 +253,8 @@ function CompactReelRow({
   return (
     <div
       ref={containerRef}
-      className="relative w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 py-3"
-      style={{ minWidth: COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP }}
+      className="relative w-full shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 py-3"
+      style={{ minWidth: COMPACT_ITEM_WIDTH + COMPACT_ITEM_GAP, height: COMPACT_ITEM_HEIGHT + 24 }}
     >
       <div
         className="pointer-events-none absolute inset-y-0 left-1/2 z-10 -translate-x-1/2 rounded-xl border-[3px] border-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.35)]"
