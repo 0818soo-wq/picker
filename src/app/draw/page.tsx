@@ -20,6 +20,42 @@ const fadeUp = {
   transition: { duration: 0.5, ease: APPLE_EASE },
 };
 
+// 추첨 릴 화면(특히 4등처럼 카드가 2줄인 경우)이 화면 높이보다 커지면
+// 스크롤이나 잘림 없이, 내용 전체를 한 덩어리로 축소해 화면 안에 들어오게 합니다.
+function ScaleToFitHeight({ children }: { children: React.ReactNode }) {
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [naturalHeight, setNaturalHeight] = useState(0);
+
+  useEffect(() => {
+    function recompute() {
+      const el = innerRef.current;
+      if (!el) return;
+      const h = el.scrollHeight;
+      setNaturalHeight(h);
+      // 상단바/하단 버튼 등 주변 여백을 고려한 여유값입니다.
+      const available = window.innerHeight - 140;
+      setScale(h > 0 && available > 0 ? Math.min(1, available / h) : 1);
+    }
+    recompute();
+    const ro = new ResizeObserver(recompute);
+    if (innerRef.current) ro.observe(innerRef.current);
+    window.addEventListener("resize", recompute);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", recompute);
+    };
+  }, []);
+
+  return (
+    <div style={{ width: "100%", height: naturalHeight ? naturalHeight * scale : undefined }}>
+      <div ref={innerRef} style={{ transform: `scale(${scale})`, transformOrigin: "top center", width: "100%" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 type Entry = ReelEntry & {
   is_winner: boolean;
   created_at: string;
@@ -322,7 +358,7 @@ export default function DrawPage() {
   });
 
   return (
-    <main className="relative flex flex-1 flex-col items-center justify-center overflow-x-hidden overflow-y-auto bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
+    <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
@@ -485,6 +521,7 @@ export default function DrawPage() {
 
         {phase === "spin" && currentRound && (
           <motion.div key="spin" {...fadeUp} className="flex w-full flex-col items-center gap-4">
+          <ScaleToFitHeight>
           <div
             className="relative flex w-full flex-col overflow-hidden rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] ring-1 ring-white/60 sm:min-h-[75vh]"
             style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 45%, #9fb9d6 100%)" }}
@@ -531,6 +568,7 @@ export default function DrawPage() {
               )}
             </div>
           </div>
+          </ScaleToFitHeight>
             <button type="button" onClick={handleGoToLobby} className="text-xs text-slate-300 hover:text-slate-500">
               메인화면가기
             </button>
