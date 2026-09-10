@@ -67,10 +67,29 @@ export default function DrawPage() {
     }
   }
 
+  // 영상이 재생되는 동안 배경음악을 미리 무음으로 재생해둡니다. 이렇게 하면
+  // 버퍼링/디코딩이 영상 재생 중(약 15초)에 미리 끝나 있어서, 영상이 끝나는
+  // 순간 음소거만 풀면 되므로 지연 없이 바로 소리가 나옵니다.
+  function primeBgm() {
+    const el = bgmRef.current;
+    if (!el) return;
+    el.volume = BGM_VOLUME;
+    el.muted = true;
+    el.play().catch(() => {});
+  }
+
   function startBgm() {
     const el = bgmRef.current;
-    if (!el || !el.paused) return;
+    if (!el) return;
+    if (!el.paused) {
+      // 이미 무음으로 재생 중이었다면(primeBgm) 소리만 켭니다.
+      el.muted = false;
+      setBgmEverStarted(true);
+      setBgmPlaying(true);
+      return;
+    }
     el.volume = BGM_VOLUME;
+    el.muted = false;
     el.play()
       .then(() => {
         setBgmEverStarted(true);
@@ -157,9 +176,8 @@ export default function DrawPage() {
     const startingWithVideo = PRIZE_ROUNDS[nextIndex].rank === 5;
     setPhase(startingWithVideo ? "video" : "prizeIntro");
     if (startingWithVideo) {
-      // 영상이 재생되는 동안(약 15초) 배경음악 파일을 미리 다 받아둬서,
-      // 영상이 끝나자마자 지연 없이 바로 재생되게 합니다.
-      bgmRef.current?.load();
+      // 영상이 재생되는 동안 배경음악을 무음으로 미리 재생해둡니다.
+      primeBgm();
     }
   }
 
