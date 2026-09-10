@@ -7,6 +7,12 @@ import AdminSubNav from "@/components/AdminSubNav";
 import RefreshButton from "@/components/RefreshButton";
 import { getSuspiciousReason, SUSPICIOUS_REASON_LABELS } from "@/lib/moderation";
 import { stripDepartmentSuffix, stripLeaderTitle } from "@/lib/format";
+import { PRIZE_ROUNDS } from "@/lib/prizeRounds";
+import { displayDepartment, findAttendeeByName, findAttendeeByNameAndDepartment } from "@/lib/attendees";
+
+// 추첨을 진행하려면 최소 이만큼의 "유효한"(오탈자/성의없는 내용 등 무효표 제외)
+// 지역단장 접수가 있어야 합니다. 등수별 추첨 인원(5등~1등)의 합계로 계산합니다.
+const MIN_VALID_ENTRIES = PRIZE_ROUNDS.reduce((sum, round) => sum + round.count, 0);
 
 type Entry = {
   id: string;
@@ -165,6 +171,8 @@ export default function EntriesListPage() {
   const staffCount = entries.filter((e) => e.group_type === "no_draw").length;
   const winnerCount = entries.filter((e) => e.group_type === "draw" && e.is_winner).length;
   const remainingCount = drawCount - winnerCount;
+  const validDrawCount = entries.filter((e) => e.group_type === "draw" && !isEntrySuspicious(e)).length;
+  const minReached = validDrawCount >= MIN_VALID_ENTRIES;
 
   return (
     <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
@@ -210,12 +218,17 @@ export default function EntriesListPage() {
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-6">
           <DashboardStat label="전체 접수" value={entries.length} />
           <DashboardStat label="지역단장 접수" value={drawCount} />
           <DashboardStat label="파트장 접수" value={staffCount} />
           <DashboardStat label="미당첨" value={remainingCount} />
           <DashboardStat label="당첨자" value={winnerCount} />
+          <DashboardStat
+            label={`유효 접수 (최소 ${MIN_VALID_ENTRIES}명)`}
+            value={validDrawCount}
+            badge={minReached ? "최소인원 달성" : undefined}
+          />
         </div>
 
         <div className="mb-6 flex gap-2">
@@ -263,10 +276,13 @@ export default function EntriesListPage() {
   );
 }
 
-function DashboardStat({ label, value }: { label: string; value: number }) {
+function DashboardStat({ label, value, badge }: { label: string; value: number; badge?: string }) {
   return (
     <div className="flex flex-col items-center gap-1 rounded-2xl bg-white/60 py-4 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
-      <span className="text-2xl font-bold text-slate-900">{value}</span>
+      <span className="flex items-center gap-1.5">
+        <span className="text-2xl font-bold text-slate-900">{value}</span>
+        {badge && <span className="text-[10px] font-bold text-red-500">{badge}</span>}
+      </span>
       <span className="text-xs text-slate-500">{label}</span>
     </div>
   );
@@ -303,6 +319,13 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
   const reasonLabel = heuristicReason
     ? SUSPICIOUS_REASON_LABELS[heuristicReason]
     : entry.ai_reason ?? "주제와 무관한 내용";
+  // 명단에서 찾아지면 본부/사업부까지 함께 보여주고, 명단에 없는(수동 입력) 접수는
+  // 원래 소속 표시만 그대로 보여줍니다.
+  const attendee =
+    findAttendeeByNameAndDepartment(entry.name, entry.department) ?? findAttendeeByName(entry.name);
+  const departmentDisplay = attendee
+    ? displayDepartment(attendee.team, stripDepartmentSuffix(entry.department))
+    : stripDepartmentSuffix(entry.department);
   const [showReason, setShowReason] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -332,7 +355,7 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
         style={{ background: "linear-gradient(180deg, #eaf2fb 0%, #cfe0f2 100%)" }}
       >
         <span className="truncate text-xs font-medium text-slate-600">
-          {stripDepartmentSuffix(entry.department)}
+          {departmentDisplay}
         </span>
         <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-900">
           {isSuspicious && (

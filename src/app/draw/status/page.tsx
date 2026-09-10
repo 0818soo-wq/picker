@@ -6,8 +6,10 @@ import { MountainBackdrop } from "@/components/EventBanner";
 import AdminSubNav from "@/components/AdminSubNav";
 import RefreshButton from "@/components/RefreshButton";
 import WrittenCardModal from "@/components/WrittenCardModal";
-import { ATTENDEES, classifyAttendeeGroup, type Attendee } from "@/lib/attendees";
+import { ATTENDEES, classifyAttendeeGroup, displayDepartment, type Attendee } from "@/lib/attendees";
 import { stripLeaderTitle } from "@/lib/format";
+import { getSuspiciousReason } from "@/lib/moderation";
+import { PRIZE_ROUNDS } from "@/lib/prizeRounds";
 
 type Entry = {
   id: string;
@@ -17,7 +19,16 @@ type Entry = {
   group_type: "draw" | "no_draw";
   is_winner: boolean;
   created_at: string;
+  ai_off_topic?: boolean | null;
 };
+
+function isEntrySuspicious(entry: Entry): boolean {
+  return getSuspiciousReason(entry.content, entry.name) !== null || entry.ai_off_topic === true;
+}
+
+// 추첨을 진행하려면 최소 이만큼의 "유효한"(오탈자/성의없는 내용 등 무효표 제외)
+// 지역단장 접수가 있어야 합니다. 등수별 추첨 인원(5등~1등)의 합계로 계산합니다.
+const MIN_VALID_ENTRIES = PRIZE_ROUNDS.reduce((sum, round) => sum + round.count, 0);
 
 function formatEntryTime(createdAt: string): string {
   const date = new Date(createdAt);
@@ -67,6 +78,12 @@ export default function StatusPage() {
     [entries]
   );
 
+  const validDrawCount = useMemo(
+    () => entries.filter((e) => e.group_type === "draw" && !isEntrySuspicious(e)).length,
+    [entries]
+  );
+  const minReached = validDrawCount >= MIN_VALID_ENTRIES;
+
   const attendees = useMemo(() => ATTENDEES.filter((a) => a.attending), []);
   const regionAttendees = useMemo(
     () => attendees.filter((a) => classifyAttendeeGroup(a) === "region"),
@@ -92,6 +109,14 @@ export default function StatusPage() {
             <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
           </div>
           <p className="mt-1 text-sm text-slate-500">{REFRESH_INTERVAL_MS / 1000}초마다 자동으로 갱신됩니다.</p>
+        </div>
+
+        <div className="mb-6 grid max-w-xs grid-cols-1">
+          <DashboardStat
+            label={`유효 접수 (최소 ${MIN_VALID_ENTRIES}명)`}
+            value={validDrawCount}
+            badge={minReached ? "최소인원 달성" : undefined}
+          />
         </div>
 
         <input
@@ -199,7 +224,7 @@ function GroupSection({
                   className="flex w-full items-center justify-between px-4 py-2 text-left text-sm hover:bg-slate-50 disabled:cursor-default disabled:hover:bg-transparent"
                 >
                   <span className="text-slate-800">
-                    {a.department} {a.title} {a.name}
+                    {displayDepartment(a.team, a.department)} {a.title} {a.name}
                   </span>
                   <span className="flex items-center gap-2">
                     {entry && (
@@ -229,7 +254,7 @@ function GroupSection({
           {filteredPending.map((a, i) => (
             <li key={`${a.name}-${i}`} className="flex items-center justify-between px-4 py-2 text-sm">
               <span className="text-slate-800">
-                {a.department} {a.title} {a.name}
+                {displayDepartment(a.team, a.department)} {a.title} {a.name}
               </span>
               <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
                 미제출
@@ -247,10 +272,13 @@ function GroupSection({
   );
 }
 
-function DashboardStat({ label, value }: { label: string; value: number }) {
+function DashboardStat({ label, value, badge }: { label: string; value: number; badge?: string }) {
   return (
     <div className="flex flex-col items-center gap-1 rounded-2xl bg-white/60 py-4 shadow-sm ring-1 ring-white/60 backdrop-blur-xl">
-      <span className="text-2xl font-bold text-slate-900">{value}</span>
+      <span className="flex items-center gap-1.5">
+        <span className="text-2xl font-bold text-slate-900">{value}</span>
+        {badge && <span className="text-[10px] font-bold text-red-500">{badge}</span>}
+      </span>
       <span className="text-xs text-slate-500">{label}</span>
     </div>
   );
