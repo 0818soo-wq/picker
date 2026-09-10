@@ -2,6 +2,7 @@ import { NextResponse, after } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getSuspiciousReason } from "@/lib/moderation";
 import { isPriorityEntrant } from "@/lib/priorityEntrants";
+import { getPrizeRound, type PrizeRank } from "@/lib/prizeRounds";
 
 export const runtime = "nodejs";
 
@@ -58,6 +59,33 @@ export async function POST(req: Request) {
 
   const supabase = createServiceRoleClient();
 
+  // 더블클릭, 새로고침 후 재시도, 같은 등수를 다시 선택하는 등의 상황에서 정원을
+  // 초과해 당첨자가 뽑히지 않도록, 이 등수에 이미 확정된 당첨자 수를 서버에서 직접
+  // 세어 남은 자리만큼만 추첨합니다. (클라이언트가 보내는 count는 참고만 합니다.)
+  let effectiveCount = count;
+  if (rank !== null) {
+    const round = getPrizeRound(rank as PrizeRank);
+    const { count: alreadyWonCount, error: countError } = await supabase
+      .from("entries")
+      .select("id", { count: "exact", head: true })
+      .eq("is_winner", true)
+      .eq("prize_rank", rank);
+
+    if (countError) {
+      console.error("count existing winners failed", countError);
+      return NextResponse.json({ error: "당첨 현황을 확인하지 못했습니다." }, { status: 500 });
+    }
+
+    const remainingSlots = round.count - (alreadyWonCount ?? 0);
+    if (remainingSlots <= 0) {
+      return NextResponse.json(
+        { error: `${round.label} 추첨은 이미 정원(${round.count}명)이 모두 채워졌습니다.` },
+        { status: 400 }
+      );
+    }
+    effectiveCount = Math.min(count, remainingSlots);
+  }
+
   const { data: eligible, error } = await supabase
     .from("entries")
     .select("id, department, name, content")
@@ -84,7 +112,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const picked = pickWinnersWithPriority(clean, Math.min(count, clean.length));
+  const picked = pickWinnersWithPriority(clean, Math.min(effectiveCount, clean.length));
   const ids = picked.map((p) => p.id);
 
   const { data: updated, error: updateError } = await supabase

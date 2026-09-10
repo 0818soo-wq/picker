@@ -328,6 +328,16 @@ export default function DrawPage() {
     await fetchEntries();
   }
 
+  // 더블클릭 등으로 정원을 초과해 잘못 뽑힌 당첨자를 한 명만 취소합니다.
+  async function handleRevokeWinner(winner: ReelEntry) {
+    await fetch("/api/admin/revoke-winner", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: winner.id }),
+    });
+    await fetchEntries();
+  }
+
   // PC/프로젝터에서 마우스 없이 스페이스바(또는 엔터, →)만 눌러도 화면별
   // "다음" 버튼을 누른 것과 동일하게 진행할 수 있게 해줍니다. 무선 프리젠터
   // 클리커도 보통 이 키들을 보내므로 클리커로도 조작할 수 있습니다.
@@ -456,6 +466,7 @@ export default function DrawPage() {
               onSelectWinner={openEntryModal}
               onStartDraw={handleStartWithVideo}
               onSelectRound={handleSelectRound}
+              onRevokeWinner={handleRevokeWinner}
               entriesOpen={entriesOpen}
               onToggleEntriesOpen={handleToggleEntriesOpen}
             />
