@@ -35,7 +35,7 @@ const FIFTH_RANK_VIDEO_SRC = "/videos/rank5-announcer.mp4";
 // 5등 추첨(첫 추첨)이 시작되는 순간부터 행사 끝까지 배경음악으로 틀어줍니다.
 // 아나운서 영상 음성 대비 약 30% 크기로 시작하며, 운영자가 직접 끄고 켤 수 있습니다.
 const BGM_SRC = "/audio/prize-bgm.mp3";
-const BGM_VOLUME = 0.2;
+const BGM_VOLUME = 0.1;
 
 export default function DrawPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -154,7 +154,13 @@ export default function DrawPage() {
     setRoundIndex(nextIndex);
     // 5등 추첨 직전에만 AI 아나운서 영상을 화면 가득 채워 먼저 보여줍니다.
     // (브라우저 창 자체를 전체화면으로 전환하지는 않습니다 - 그건 운영자가 직접 조작합니다.)
-    setPhase(PRIZE_ROUNDS[nextIndex].rank === 5 ? "video" : "prizeIntro");
+    const startingWithVideo = PRIZE_ROUNDS[nextIndex].rank === 5;
+    setPhase(startingWithVideo ? "video" : "prizeIntro");
+    if (startingWithVideo) {
+      // 영상이 재생되는 동안(약 15초) 배경음악 파일을 미리 다 받아둬서,
+      // 영상이 끝나자마자 지연 없이 바로 재생되게 합니다.
+      bgmRef.current?.load();
+    }
   }
 
   function handleVideoFinished() {
