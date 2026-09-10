@@ -250,6 +250,12 @@ export default function DrawPage() {
   // 클리커도 보통 이 키들을 보내므로 클리커로도 조작할 수 있습니다.
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        // 배경음악을 일시정지/재개합니다. pause 후 play는 멈춘 지점부터 이어서 재생됩니다.
+        if (bgmEverStarted) toggleBgm();
+        return;
+      }
+
       if (e.code !== "Space" && e.key !== "Enter" && e.key !== "ArrowRight") return;
       e.preventDefault();
 
