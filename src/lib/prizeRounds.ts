@@ -20,12 +20,12 @@ export type PrizeRound = {
 
 // 진행 순서: 5등 -> 4등 -> 3등 -> 2등 -> 1등 (배열 순서 = 진행 순서)
 export const PRIZE_ROUNDS: PrizeRound[] = [
-  { rank: 5, label: "5등", prizeName: "삼성라이온즈 굿즈", count: 13, prizeImage: "/images/prizes/rank5-lions-goods.webp" },
+  { rank: 5, label: "5등", prizeName: "삼성라이온즈 굿즈", count: 11, prizeImage: "/images/prizes/rank5-lions-goods.webp" },
   {
     rank: 4,
     label: "4등",
     prizeName: "배드민턴&탁구 선수단\n사인 유니폼",
-    count: 10,
+    count: 12,
     prizeImage: "/images/prizes/rank4-jerseys.webp",
     rowLabels: ["배드민턴 유니폼", "탁구 유니폼"],
   },

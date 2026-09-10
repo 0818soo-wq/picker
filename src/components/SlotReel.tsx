@@ -155,7 +155,12 @@ export function MultiSlotReel({
   onAllSettled: () => void;
   rowLabels?: string[];
 }) {
-  const rows = splitIntoRows(winners, 5);
+  // 4등처럼 등수 안에 서로 다른 상품이 섞여 있으면(rowLabels) 라벨 개수에 맞춰
+  // 균등하게 나누고, 그렇지 않으면 한 줄에 최대 5명씩 끊습니다.
+  const rows =
+    rowLabels && rowLabels.length > 0
+      ? splitIntoRows(winners, Math.ceil(winners.length / rowLabels.length))
+      : splitIntoRows(winners, 5);
   const settledCount = useRef(0);
 
   function handleRowSettle() {
