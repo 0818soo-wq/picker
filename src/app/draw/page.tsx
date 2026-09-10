@@ -195,8 +195,13 @@ export default function DrawPage() {
 
   function handleVideoFinished() {
     setPhase("prizeIntro");
-    // 아나운서 영상이 끝나는(또는 건너뛰는) 순간 바로 배경음악을 시작합니다.
-    startBgm();
+    // 영상이 끝나는(또는 건너뛰는) 순간에는 무음으로 미리 재생 중이던 배경음악을
+    // 잠깐 멈춰두고, 3초 뒤에 처음(BGM_START_OFFSET)부터 소리 내어 시작합니다.
+    const primedEl = bgmRef.current;
+    primedEl?.pause();
+    setTimeout(() => {
+      startBgm();
+    }, 3000);
     // 영상이 끝나면(또는 건너뛰면) 5등 소개 화면을 잠깐 보여준 뒤 자동으로 추첨을 시작합니다.
     setTimeout(() => {
       handleStartDraw();
