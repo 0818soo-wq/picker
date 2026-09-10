@@ -236,7 +236,7 @@ export default function DrawPage() {
   });
 
   return (
-    <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
+    <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
