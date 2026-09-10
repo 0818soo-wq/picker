@@ -84,6 +84,7 @@ export default function DrawPage() {
   const [pool, setPool] = useState<ReelEntry[]>([]);
   const [drawRound, setDrawRound] = useState(0);
   const [starting, setStarting] = useState(false);
+  const startingRef = useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [entriesOpen, setEntriesOpen] = useState<boolean | null>(null);
@@ -245,10 +246,14 @@ export default function DrawPage() {
   }
 
   async function handleStartDraw() {
-    if (starting) return;
+    // starting은 React state라 갱신이 비동기적이라, 버튼 클릭과 키보드 단축키(무선
+    // 클리커의 키 반복 입력 등)가 같은 틱에 겹치면 이 체크만으로는 중복 호출을 못
+    // 막을 수 있습니다. 즉시 반영되는 ref로 먼저 동기적으로 막습니다.
+    if (startingRef.current) return;
     const round = PRIZE_ROUNDS[roundIndex];
     if (!round) return;
 
+    startingRef.current = true;
     setErrorMessage(null);
     setStarting(true);
     setRoundWinners([]);
@@ -293,6 +298,7 @@ export default function DrawPage() {
       setErrorMessage("네트워크 오류가 발생했습니다.");
       setPhase("prizeIntro");
     } finally {
+      startingRef.current = false;
       setStarting(false);
     }
   }
@@ -343,6 +349,10 @@ export default function DrawPage() {
   // 클리커도 보통 이 키들을 보내므로 클리커로도 조작할 수 있습니다.
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      // 키를 길게 누르고 있거나(무선 클리커 포함) 브라우저의 키 반복 입력으로
+      // 같은 동작이 여러 번 실행되는 것을 막습니다.
+      if (e.repeat) return;
+
       if (e.key === "Escape") {
         // 배경음악을 일시정지/재개합니다. pause 후 play는 멈춘 지점부터 이어서 재생됩니다.
         if (bgmEverStarted) toggleBgm();
