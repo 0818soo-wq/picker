@@ -289,7 +289,7 @@ function CompactPaperCard({ item }: { item: ReelEntry }) {
       className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
       style={{ width: COMPACT_ITEM_WIDTH, height: COMPACT_ITEM_HEIGHT }}
     >
-      <div className="relative isolate shrink-0 overflow-hidden px-2 py-2">
+      <div className="relative isolate flex shrink-0 items-center overflow-hidden px-2 py-2" style={{ height: 34 }}>
         {/* eslint-disable-next-line @next/next/no-img-element -- 작은 릴 카드 배경용 실사 사진 */}
         <img
           src="/images/event-visual-compass.jpg"

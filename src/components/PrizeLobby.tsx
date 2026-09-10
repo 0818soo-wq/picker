@@ -16,7 +16,6 @@ export default function PrizeLobby({
   onSelectWinner,
   onStartDraw,
   onSelectRound,
-  onRevokeWinner,
   entriesOpen,
   onToggleEntriesOpen,
 }: {
@@ -24,7 +23,6 @@ export default function PrizeLobby({
   onSelectWinner: (winner: WinnerEntry) => void;
   onStartDraw: () => void;
   onSelectRound: (rank: number) => void;
-  onRevokeWinner: (winner: WinnerEntry) => void;
   entriesOpen: boolean | null;
   onToggleEntriesOpen: () => void;
 }) {
@@ -108,32 +106,18 @@ export default function PrizeLobby({
                     roundWinners.map((w) => {
                       const resolved = resolveWinnerDisplay(w.name, w.department);
                       return (
-                        <div key={w.id} className="relative">
-                          <button
-                            type="button"
-                            onClick={() => onSelectWinner(w)}
-                            className="flex w-full flex-col items-center gap-1 rounded-xl bg-white px-3 py-2.5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
-                          >
-                            <span className="truncate text-xs text-slate-400 sm:text-sm">{resolved.department}</span>
-                            <span className="truncate text-sm font-bold text-slate-900 sm:text-base">
-                              {resolved.name}
-                              {resolved.titleSuffix}
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            title="당첨 취소"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (window.confirm(`${resolved.name}${resolved.titleSuffix}님의 당첨을 취소할까요? 실수로 정원을 초과해 뽑힌 경우에만 사용하세요.`)) {
-                                onRevokeWinner(w);
-                              }
-                            }}
-                            className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-600"
-                          >
-                            ×
-                          </button>
-                        </div>
+                        <button
+                          key={w.id}
+                          type="button"
+                          onClick={() => onSelectWinner(w)}
+                          className="flex flex-col items-center gap-1 rounded-xl bg-white px-3 py-2.5 text-center shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                        >
+                          <span className="truncate text-xs text-slate-400 sm:text-sm">{resolved.department}</span>
+                          <span className="truncate text-sm font-bold text-slate-900 sm:text-base">
+                            {resolved.name}
+                            {resolved.titleSuffix}
+                          </span>
+                        </button>
                       );
                     })
                   ) : (
