@@ -32,6 +32,11 @@ type Phase = "cover" | "lobby" | "video" | "prizeIntro" | "spin" | "reveal";
 // 실제 파일을 넣으면 바로 재생됩니다.
 const FIFTH_RANK_VIDEO_SRC = "/videos/rank5-announcer.mp4";
 
+// 5등 추첨(첫 추첨)이 시작되는 순간부터 행사 끝까지 배경음악으로 틀어줍니다.
+// 아나운서 영상 음성 대비 약 30% 크기로 시작하며, 운영자가 직접 끄고 켤 수 있습니다.
+const BGM_SRC = "/audio/prize-bgm.mp3";
+const BGM_VOLUME = 0.3;
+
 export default function DrawPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
@@ -45,6 +50,22 @@ export default function DrawPage() {
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [entriesOpen, setEntriesOpen] = useState<boolean | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const [bgmEverStarted, setBgmEverStarted] = useState(false);
+  const [bgmPlaying, setBgmPlaying] = useState(false);
+
+  function toggleBgm() {
+    const el = bgmRef.current;
+    if (!el) return;
+    if (el.paused) {
+      el.play()
+        .then(() => setBgmPlaying(true))
+        .catch(() => {});
+    } else {
+      el.pause();
+      setBgmPlaying(false);
+    }
+  }
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch("/api/admin/entries", { cache: "no-store" });
@@ -172,6 +193,18 @@ export default function DrawPage() {
 
       setRoundWinners(drawnWinners);
       setPool(currentPool);
+
+      // 5등(첫 추첨) 릴이 돌아가기 시작하는 시점부터 행사 끝까지 배경음악을 틀어줍니다.
+      if (round.rank === 5 && bgmRef.current) {
+        bgmRef.current.volume = BGM_VOLUME;
+        bgmRef.current
+          .play()
+          .then(() => {
+            setBgmEverStarted(true);
+            setBgmPlaying(true);
+          })
+          .catch(() => {});
+      }
       setDrawRound((r) => r + 1);
     } catch {
       setErrorMessage("네트워크 오류가 발생했습니다.");
@@ -240,6 +273,31 @@ export default function DrawPage() {
       <div className="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-slate-300/30 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
+
+      <audio ref={bgmRef} src={BGM_SRC} loop preload="auto" />
+
+      {bgmEverStarted && (
+        <motion.button
+          type="button"
+          onClick={toggleBgm}
+          aria-label={bgmPlaying ? "배경음악 정지" : "배경음악 재생"}
+          title={bgmPlaying ? "배경음악 정지" : "배경음악 재생"}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          className="fixed left-4 top-4 z-40 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-slate-400 shadow-sm backdrop-blur-sm transition-colors hover:bg-white hover:text-slate-600"
+        >
+          {bgmPlaying ? (
+            <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="currentColor">
+              <rect x="6" y="5" width="4" height="14" rx="1" />
+              <rect x="14" y="5" width="4" height="14" rx="1" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="currentColor">
+              <path d="M7 5v14l12-7z" />
+            </svg>
+          )}
+        </motion.button>
+      )}
 
       {(phase === "cover" || phase === "lobby") && (
         <motion.button
