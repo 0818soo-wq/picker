@@ -110,6 +110,14 @@ export async function POST(req: Request) {
   });
 
   if (error) {
+    // 위의 "기존 접수 확인" 쿼리와 이 저장 사이의 짧은 틈에 거의 동시에 두 번 접수(더블클릭,
+    // 새로고침 후 재시도 등)가 들어오면 둘 다 "기존 접수 없음"으로 판단해 중복 저장을
+    // 시도할 수 있습니다. entries_dedupe_idx(supabase/schema.sql) 유니크 인덱스가 DB에
+    // 설치돼 있으면 이런 경우 두 번째 저장이 23505(유니크 제약 위반) 에러로 거부되므로,
+    // 이를 "이미 접수함"으로 처리해 중복 저장을 확실하게 차단합니다.
+    if (error.code === "23505") {
+      return NextResponse.json({ duplicate: true }, { status: 409 });
+    }
     console.error("entry insert failed", error);
     return NextResponse.json(
       { error: "접수 저장에 실패했습니다. 잠시 후 다시 시도해 주세요." },

@@ -22,6 +22,13 @@ create index entries_group_type_idx on public.entries (group_type);
 create index entries_is_winner_idx on public.entries (is_winner);
 create index entries_prize_rank_idx on public.entries (prize_rank);
 
+-- 같은 사람(소속+이름+접수유형)의 중복 접수를 DB 차원에서 막습니다. 애플리케이션에서도
+-- "접수 전 기존 접수 확인" 로직으로 막고 있지만, 그 확인과 실제 저장 사이에는 짧은 틈이
+-- 있어서 거의 동시에 두 번 접수(더블클릭, 새로고침 후 재시도 등)가 들어오면 이 틈을 타고
+-- 중복 행이 생길 수 있습니다. 이 유니크 인덱스가 있으면 그런 경우에도 DB가 두 번째 저장을
+-- 거부해 확실하게 막아줍니다(애플리케이션은 이 거부를 "이미 접수함"으로 처리합니다).
+create unique index if not exists entries_dedupe_idx on public.entries (department, name, group_type);
+
 alter table public.entries enable row level security;
 
 -- 모든 접근은 서버(Secret/Service Role Key)를 통해서만 이루어집니다.

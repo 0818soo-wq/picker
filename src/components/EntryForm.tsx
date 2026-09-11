@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import EventBanner from "@/components/EventBanner";
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -28,6 +28,7 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
     "CSM을 위한 축의 전환을 이뤄내시길 기원합니다!"
   );
   const [editNotice, setEditNotice] = useState<string | null>(null);
+  const submittingRef = useRef(false);
 
   const [lookupState, setLookupState] = useState<LookupState>("idle");
   const [confirmedFor, setConfirmedFor] = useState<string | null>(null);
@@ -164,7 +165,11 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
   }
 
   async function handleConfirmSubmit() {
-    if (status === "submitting") return;
+    // status는 React state라 갱신이 비동기라서, 버튼을 아주 빠르게 두 번 누르면(더블클릭,
+    // 터치 오작동 등) 두 요청이 모두 이 체크를 통과해 접수가 중복 생성될 수 있습니다.
+    // submittingRef는 동기적으로 즉시 반영되므로 이런 경우를 확실히 막아줍니다.
+    if (submittingRef.current) return;
+    submittingRef.current = true;
 
     setStatus("submitting");
     setErrorMessage(null);
@@ -204,6 +209,8 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
       setStatus("error");
       setReviewMode(false);
       setErrorMessage("네트워크 오류가 발생했습니다. 다시 시도해 주세요.");
+    } finally {
+      submittingRef.current = false;
     }
   }
 
