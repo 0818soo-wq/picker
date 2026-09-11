@@ -167,8 +167,17 @@ export default function EntriesListPage() {
     }
   }
 
+  // "no_draw" 접수 중, 명단(ATTENDEES)에서 실제로 찾아지는 사람은 본사파트장 접수로,
+  // 명단에 없어 화면에서 소속/이름을 직접 입력한 경우는 기타 접수로 구분합니다.
+  function isKnownAttendeeEntry(entry: Entry): boolean {
+    return Boolean(
+      findAttendeeByNameAndDepartment(entry.name, entry.department) ?? findAttendeeByName(entry.name)
+    );
+  }
+
   const drawCount = entries.filter((e) => e.group_type === "draw").length;
-  const staffCount = entries.filter((e) => e.group_type === "no_draw").length;
+  const staffCount = entries.filter((e) => e.group_type === "no_draw" && isKnownAttendeeEntry(e)).length;
+  const otherCount = entries.filter((e) => e.group_type === "no_draw" && !isKnownAttendeeEntry(e)).length;
   const winnerCount = entries.filter((e) => e.group_type === "draw" && e.is_winner).length;
   const remainingCount = drawCount - winnerCount;
   const validDrawCount = entries.filter((e) => e.group_type === "draw" && !isEntrySuspicious(e)).length;
@@ -218,10 +227,11 @@ export default function EntriesListPage() {
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-6">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-7">
           <DashboardStat label="전체 접수" value={entries.length} />
           <DashboardStat label="지역단장 접수" value={drawCount} />
           <DashboardStat label="본사파트장 접수" value={staffCount} />
+          <DashboardStat label="기타 접수" value={otherCount} />
           <DashboardStat
             label={`유효 접수 (최소 ${MIN_VALID_ENTRIES}명/문제카드제외)`}
             value={validDrawCount}
