@@ -60,6 +60,7 @@ export type SuspiciousReason =
   | "laugh_cry_only"
   | "placeholder_word"
   | "off_topic"
+  | "question_restated"
   | "not_attendee";
 
 export const SUSPICIOUS_REASON_LABELS: Record<SuspiciousReason, string> = {
@@ -69,6 +70,7 @@ export const SUSPICIOUS_REASON_LABELS: Record<SuspiciousReason, string> = {
   laugh_cry_only: "'ㅋㅋㅋ' 같은 표현만 입력",
   placeholder_word: "의미 없는 단어만 입력",
   off_topic: "주제와 무관한 문구",
+  question_restated: "질문 문구를 그대로 입력함",
   not_attendee: "명단에 없는 이름",
 };
 
@@ -118,6 +120,27 @@ function containsPlaceholderInShortContent(compact: string): boolean {
   return UNAMBIGUOUS_PLACEHOLDER_WORDS.some((word) => lower.includes(word));
 }
 
+// 접수 화면(EventBanner.tsx 기본 문구)에 그대로 떠 있는 질문을 실제 의견 대신
+// 그대로 베껴 쓴 경우를 잡습니다. 문장 자체는 문법적으로 멀쩡해서 다른 휴리스틱으로는
+// 못 잡습니다. 공백/따옴표/문장부호를 지운 뒤 비교해 줄바꿈이나 일부만 복사해도 잡습니다.
+const EVENT_QUESTION_RAW =
+  "우리 조직의 새로운 축, 어떠한 '축의 전환'이 필요할까요? 변화하는 환경 속에서 우리 조직이 나아가야 할 방향을 함께 고민해주세요.";
+
+function normalizeForQuestionMatch(text: string): string {
+  return text.toLowerCase().replace(/[\s'’‘"“”.,!?]/g, "");
+}
+
+const EVENT_QUESTION_NORMALIZED = normalizeForQuestionMatch(EVENT_QUESTION_RAW);
+const QUESTION_RESTATED_MIN_LENGTH = 15;
+
+function isEventQuestionRestated(trimmed: string): boolean {
+  const normalized = normalizeForQuestionMatch(trimmed);
+  if (normalized.length < QUESTION_RESTATED_MIN_LENGTH) return false;
+  return (
+    EVENT_QUESTION_NORMALIZED.includes(normalized) || normalized.includes(EVENT_QUESTION_NORMALIZED)
+  );
+}
+
 // 의심되는 이유가 있으면 그 이유를, 없으면 null을 반환합니다.
 // name을 함께 넘기면 참석자 명단에 없는 이름인지도 확인합니다.
 export function getSuspiciousReason(content: string, name?: string): SuspiciousReason | null {
@@ -131,6 +154,7 @@ export function getSuspiciousReason(content: string, name?: string): SuspiciousR
   if (LAUGH_CRY_ONLY_PATTERN.test(trimmed)) return "laugh_cry_only";
   if (PLACEHOLDER_WORDS.has(compact.toLowerCase())) return "placeholder_word";
   if (containsPlaceholderInShortContent(compact)) return "placeholder_word";
+  if (isEventQuestionRestated(trimmed)) return "question_restated";
   if (OFF_TOPIC_PHRASES.has(compact.toLowerCase())) return "off_topic";
   if (name && !isKnownAttendee(name)) return "not_attendee";
 
