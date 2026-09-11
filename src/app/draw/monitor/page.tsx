@@ -7,6 +7,7 @@ import AdminSubNav from "@/components/AdminSubNav";
 import RefreshButton from "@/components/RefreshButton";
 import WrittenCardModal from "@/components/WrittenCardModal";
 import { resolveWinnerDisplay } from "@/lib/format";
+import { getSuspiciousReason } from "@/lib/moderation";
 import { PRIZE_ROUNDS } from "@/lib/prizeRounds";
 
 type Entry = {
@@ -19,7 +20,12 @@ type Entry = {
   won_at: string | null;
   prize_rank: number | null;
   created_at: string;
+  ai_off_topic?: boolean | null;
 };
+
+function isEntrySuspicious(entry: Entry): boolean {
+  return getSuspiciousReason(entry.content, entry.name) !== null || entry.ai_off_topic === true;
+}
 
 const REFRESH_INTERVAL_MS = 5000;
 
@@ -63,7 +69,10 @@ export default function MonitorPage() {
         .sort((a, b) => (a.won_at ?? "").localeCompare(b.won_at ?? "")),
     [drawGroup]
   );
-  const remaining = drawGroup.length - winners.length;
+  // 미당첨 인원은 "전체 지역단장 접수"가 아니라 문제카드를 제외한 유효 인원 기준으로
+  // 계산해, 실제 추첨 대상(draw/route.ts에서 문제카드는 제외하고 추첨함)과 일치시킵니다.
+  const validDrawCount = drawGroup.filter((e) => !isEntrySuspicious(e)).length;
+  const remaining = validDrawCount - winners.length;
 
   return (
     <main className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
