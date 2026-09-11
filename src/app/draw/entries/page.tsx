@@ -24,6 +24,7 @@ type Entry = {
   created_at: string;
   ai_off_topic?: boolean | null;
   ai_reason?: string | null;
+  reviewed_clean?: boolean;
 };
 
 function formatEntryTime(createdAt: string): string {
@@ -34,7 +35,10 @@ function formatEntryTime(createdAt: string): string {
 
 type Filter = "all" | "draw" | "no_draw" | "suspicious";
 
+// 관리자가 확인 후 "정상카드"로 되돌린 접수는 휴리스틱/AI 판별과 무관하게
+// 정상카드로 취급합니다.
 function isEntrySuspicious(entry: Entry): boolean {
+  if (entry.reviewed_clean) return false;
   return getSuspiciousReason(entry.content, entry.name) !== null || entry.ai_off_topic === true;
 }
 
@@ -134,6 +138,22 @@ export default function EntriesListPage() {
       return;
     }
     setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+  }
+
+  // 문제카드(!)를 관리자가 직접 확인한 뒤 정상카드로 되돌립니다. 휴리스틱/AI
+  // 판별과 무관하게 정상카드로 취급되어 추첨 대상에도 다시 포함됩니다.
+  async function handleMarkClean(entry: Entry) {
+    const res = await fetch(`/api/admin/entries/${entry.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reviewedClean: true }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      window.alert(data?.error ?? "정상카드로 되돌리지 못했습니다.");
+      return;
+    }
+    setEntries((prev) => prev.map((e) => (e.id === entry.id ? { ...e, reviewed_clean: true } : e)));
   }
 
   const filtered = useMemo(() => {
@@ -278,7 +298,12 @@ export default function EntriesListPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} onDelete={() => handleDelete(entry)} />
+              <EntryCard
+                key={entry.id}
+                entry={entry}
+                onDelete={() => handleDelete(entry)}
+                onMarkClean={() => handleMarkClean(entry)}
+              />
             ))}
           </div>
         )}
@@ -326,7 +351,15 @@ function FilterTab({
   );
 }
 
-function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) {
+function EntryCard({
+  entry,
+  onDelete,
+  onMarkClean,
+}: {
+  entry: Entry;
+  onDelete: () => void;
+  onMarkClean: () => void;
+}) {
   const heuristicReason = getSuspiciousReason(entry.content, entry.name);
   const isSuspicious = isEntrySuspicious(entry);
   const reasonLabel = heuristicReason
@@ -416,6 +449,15 @@ function EntryCard({ entry, onDelete }: { entry: Entry; onDelete: () => void }) 
             <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-600">
               당첨
             </span>
+          )}
+          {isSuspicious && (
+            <button
+              type="button"
+              onClick={onMarkClean}
+              className="rounded-full px-2 py-0.5 text-[11px] font-medium text-blue-600 hover:bg-blue-50"
+            >
+              정상카드로
+            </button>
           )}
           <button
             type="button"

@@ -21,9 +21,11 @@ type Entry = {
   prize_rank: number | null;
   created_at: string;
   ai_off_topic?: boolean | null;
+  reviewed_clean?: boolean;
 };
 
 function isEntrySuspicious(entry: Entry): boolean {
+  if (entry.reviewed_clean) return false;
   return getSuspiciousReason(entry.content, entry.name) !== null || entry.ai_off_topic === true;
 }
 

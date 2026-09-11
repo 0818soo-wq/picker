@@ -22,13 +22,42 @@ async function classifyInBackground(items: { id: string; content: string }[]) {
   await Promise.all(Array.from({ length: Math.min(AI_CLASSIFY_CONCURRENCY, items.length) }, worker));
 }
 
+type EntryRow = {
+  id: string;
+  department: string;
+  name: string;
+  content: string;
+  group_type: "draw" | "no_draw";
+  is_winner: boolean;
+  won_at: string | null;
+  prize_rank: number | null;
+  created_at: string;
+  reviewed_clean?: boolean;
+};
+
 export async function GET() {
   const supabase = createServiceRoleClient();
 
-  const { data, error } = await supabase
+  // reviewed_clean 컬럼(관리자가 문제카드를 정상카드로 되돌리는 기능)은
+  // supabase/schema.sql의 alter table을 실행해야 생깁니다. 아직 실행하지 않은
+  // 환경에서도 목록 조회 자체는 계속 동작해야 하므로, 컬럼이 없다는 오류(42703)면
+  // 그 컬럼 없이 다시 조회합니다.
+  let hasReviewedColumn = true;
+  let data: EntryRow[] | null;
+  let error: { code?: string; message?: string } | null;
+
+  ({ data, error } = await supabase
     .from("entries")
-    .select("id, department, name, content, group_type, is_winner, won_at, prize_rank, created_at")
-    .order("created_at", { ascending: true });
+    .select("id, department, name, content, group_type, is_winner, won_at, prize_rank, created_at, reviewed_clean")
+    .order("created_at", { ascending: true }));
+
+  if (error && (error.code === "42703" || /reviewed_clean/i.test(error.message ?? ""))) {
+    hasReviewedColumn = false;
+    ({ data, error } = await supabase
+      .from("entries")
+      .select("id, department, name, content, group_type, is_winner, won_at, prize_rank, created_at")
+      .order("created_at", { ascending: true }));
+  }
 
   if (error) {
     console.error("list entries failed", error);
@@ -38,7 +67,12 @@ export async function GET() {
   const rows = data ?? [];
   const entries = rows.map((entry) => {
     const cached = getCachedClassification(entry.id);
-    return { ...entry, ai_off_topic: cached?.offTopic ?? null, ai_reason: cached?.reason ?? null };
+    return {
+      ...entry,
+      reviewed_clean: hasReviewedColumn ? Boolean(entry.reviewed_clean) : false,
+      ai_off_topic: cached?.offTopic ?? null,
+      ai_reason: cached?.reason ?? null,
+    };
   });
 
   const uncached = rows.filter((r) => getCachedClassification(r.id) === undefined);

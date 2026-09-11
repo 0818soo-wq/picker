@@ -105,3 +105,13 @@ begin
     returning e.*;
 end;
 $$;
+
+-- ⚠️ 아래는 이미 운영 중인(entries에 데이터가 쌓인) DB에 안전하게 추가로 실행하는
+-- 구문입니다. 이 파일 맨 위의 "drop table" / "create table" 부분을 다시 실행하면
+-- 지금까지 쌓인 접수 데이터가 전부 삭제되니 절대 다시 실행하지 마시고, 아래
+-- alter table 구문만 Supabase SQL Editor에 붙여넣어 실행해 주세요.
+--
+-- 문제카드(!)로 표시된 접수를 관리자가 직접 확인한 뒤 "정상카드"로 되돌릴 수 있게
+-- 해주는 컬럼입니다. true면 휴리스틱/AI 판별과 무관하게 정상카드로 취급하고
+-- 추첨 대상에도 포함됩니다.
+alter table public.entries add column if not exists reviewed_clean boolean not null default false;

@@ -56,7 +56,7 @@ function pickWinnersWithPriority<T extends { department: string; name: string }>
   return picked;
 }
 
-type EligibleRow = { id: string; department: string; name: string; content: string };
+type EligibleRow = { id: string; department: string; name: string; content: string; reviewed_clean?: boolean };
 type UpdatedRow = { id: string; department: string; name: string; content: string; prize_rank: number | null };
 
 export async function POST(req: Request) {
@@ -70,11 +70,23 @@ export async function POST(req: Request) {
   const supabase = createServiceRoleClient();
   const round = rank !== null ? getPrizeRound(rank as PrizeRank) : null;
 
-  const { data: eligible, error } = await supabase
+  // reviewed_clean 컬럼(관리자가 정상카드로 되돌리는 기능)이 아직 DB에 없는 환경에서도
+  // 추첨 자체는 계속 동작해야 하므로, 컬럼 없다는 오류(42703)면 그 컬럼 없이 재조회합니다.
+  let eligible: EligibleRow[] | null;
+  let error: { code?: string; message?: string } | null;
+  ({ data: eligible, error } = await supabase
     .from("entries")
-    .select("id, department, name, content")
+    .select("id, department, name, content, reviewed_clean")
     .eq("group_type", "draw")
-    .eq("is_winner", false);
+    .eq("is_winner", false));
+
+  if (error && (error.code === "42703" || /reviewed_clean/i.test(error.message ?? ""))) {
+    ({ data: eligible, error } = await supabase
+      .from("entries")
+      .select("id, department, name, content")
+      .eq("group_type", "draw")
+      .eq("is_winner", false));
+  }
 
   if (error) {
     console.error("fetch eligible entries failed", error);
@@ -85,9 +97,11 @@ export async function POST(req: Request) {
   }
 
   // 관리자 화면에서 "!" 의심 표시가 뜨는 접수(휴리스틱 판별)는 확인이 끝나기 전까지
-  // 추첨 대상에서 제외합니다. AI 판별은 "작성카드보기 > 문제카드확인" 화면에서 미리
-  // 걸러내는 용도로만 쓰고, 추첨 시점에는 실시간 AI 호출 없이 빠르게 진행합니다.
-  const clean = eligible.filter((e) => getSuspiciousReason(e.content, e.name) === null);
+  // 추첨 대상에서 제외합니다. 다만 관리자가 이미 확인하고 "정상카드"로 되돌린
+  // 접수(reviewed_clean)는 휴리스틱 판별과 무관하게 추첨 대상에 포함합니다.
+  // AI 판별은 "작성카드보기 > 문제카드확인" 화면에서 미리 걸러내는 용도로만 쓰고,
+  // 추첨 시점에는 실시간 AI 호출 없이 빠르게 진행합니다.
+  const clean = eligible.filter((e) => e.reviewed_clean || getSuspiciousReason(e.content, e.name) === null);
 
   if (clean.length === 0) {
     return NextResponse.json(
