@@ -78,6 +78,13 @@ export default function StatusPage() {
     [entries]
   );
 
+  const drawCount = useMemo(() => entries.filter((e) => e.group_type === "draw").length, [entries]);
+  const staffCount = useMemo(() => entries.filter((e) => e.group_type === "no_draw").length, [entries]);
+  const winnerCount = useMemo(
+    () => entries.filter((e) => e.group_type === "draw" && e.is_winner).length,
+    [entries]
+  );
+  const remainingCount = drawCount - winnerCount;
   const validDrawCount = useMemo(
     () => entries.filter((e) => e.group_type === "draw" && !isEntrySuspicious(e)).length,
     [entries]
@@ -111,12 +118,17 @@ export default function StatusPage() {
           <p className="mt-1 text-sm text-slate-500">{REFRESH_INTERVAL_MS / 1000}초마다 자동으로 갱신됩니다.</p>
         </div>
 
-        <div className="mb-6 grid max-w-xs grid-cols-1">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-6">
+          <DashboardStat label="전체 접수" value={entries.length} />
+          <DashboardStat label="지역단장 접수" value={drawCount} />
+          <DashboardStat label="본사파트장 접수" value={staffCount} />
           <DashboardStat
-            label={`유효 접수 (최소 ${MIN_VALID_ENTRIES}명)`}
+            label={`유효 접수 (최소 ${MIN_VALID_ENTRIES}명/문제카드제외)`}
             value={validDrawCount}
             badge={minReached ? "최소인원 달성" : undefined}
           />
+          <DashboardStat label="당첨자" value={winnerCount} />
+          <DashboardStat label="미당첨자" value={remainingCount} />
         </div>
 
         <input

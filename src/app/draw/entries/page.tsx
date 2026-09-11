@@ -221,14 +221,14 @@ export default function EntriesListPage() {
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-6">
           <DashboardStat label="전체 접수" value={entries.length} />
           <DashboardStat label="지역단장 접수" value={drawCount} />
-          <DashboardStat label="파트장 접수" value={staffCount} />
-          <DashboardStat label="미당첨" value={remainingCount} />
-          <DashboardStat label="당첨자" value={winnerCount} />
+          <DashboardStat label="본사파트장 접수" value={staffCount} />
           <DashboardStat
-            label={`유효 접수 (최소 ${MIN_VALID_ENTRIES}명)`}
+            label={`유효 접수 (최소 ${MIN_VALID_ENTRIES}명/문제카드제외)`}
             value={validDrawCount}
             badge={minReached ? "최소인원 달성" : undefined}
           />
+          <DashboardStat label="당첨자" value={winnerCount} />
+          <DashboardStat label="미당첨자" value={remainingCount} />
         </div>
 
         <div className="mb-6 flex gap-2">
