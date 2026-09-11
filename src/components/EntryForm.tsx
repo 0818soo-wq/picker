@@ -370,11 +370,11 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
             {isManualMode && (
               <div className="flex flex-col gap-3 rounded-lg bg-amber-50 px-3 py-3 text-sm leading-relaxed text-amber-700">
                 <p>
-                  입력하신 사번을 명단에서 찾을 수 없습니다. 사번을 다시 확인해 주세요.
+                  전략회의 참석대상자의 사번이 아닙니다. 사번을 다시 확인해주세요.
                   <br />
-                  그래도 조회되지 않는다면, 아래에 소속과 이름을 직접 입력해 의견을 제출하실 수 있습니다.
+                  참석대상자가 아니어도 아래에 소속과 이름을 직접 입력해 의견을 제출하실 수 있습니다.
                   <br />
-                  (단, 이 경우 추첨 대상에서는 제외됩니다)
+                  (단, 이 경우 추첨대상에서는 제외됩니다)
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input
