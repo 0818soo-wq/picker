@@ -105,6 +105,19 @@ function containsRepeatedPlaceholder(compact: string): boolean {
   return false;
 }
 
+// 반복은 안 됐지만 "작성테스트 완료"처럼 짧은 내용 속에 명백한 테스트/키보드매싱성
+// 단어가 1번만 섞여 있는 경우도 잡습니다. "없음", "몰라" 같은 단어는 실제 짧은
+// 의견에도 자연스럽게 등장할 수 있어(예: "차별 없음이 필요해요") 제외하고, 진짜
+// 의견에는 나올 일이 거의 없는 명백한 단어만 부분일치로 확인합니다.
+const UNAMBIGUOUS_PLACEHOLDER_WORDS = ["test", "테스트", "패스", "pass", "asdf", "ㅁㄴㅇㄹ"];
+const SHORT_PLACEHOLDER_MAX_LENGTH = 15;
+
+function containsPlaceholderInShortContent(compact: string): boolean {
+  if (compact.length > SHORT_PLACEHOLDER_MAX_LENGTH) return false;
+  const lower = compact.toLowerCase();
+  return UNAMBIGUOUS_PLACEHOLDER_WORDS.some((word) => lower.includes(word));
+}
+
 // 의심되는 이유가 있으면 그 이유를, 없으면 null을 반환합니다.
 // name을 함께 넘기면 참석자 명단에 없는 이름인지도 확인합니다.
 export function getSuspiciousReason(content: string, name?: string): SuspiciousReason | null {
@@ -117,6 +130,7 @@ export function getSuspiciousReason(content: string, name?: string): SuspiciousR
   if (containsRepeatedPlaceholder(compact)) return "placeholder_word";
   if (LAUGH_CRY_ONLY_PATTERN.test(trimmed)) return "laugh_cry_only";
   if (PLACEHOLDER_WORDS.has(compact.toLowerCase())) return "placeholder_word";
+  if (containsPlaceholderInShortContent(compact)) return "placeholder_word";
   if (OFF_TOPIC_PHRASES.has(compact.toLowerCase())) return "off_topic";
   if (name && !isKnownAttendee(name)) return "not_attendee";
 

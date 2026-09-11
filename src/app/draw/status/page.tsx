@@ -106,11 +106,14 @@ export default function StatusPage() {
     () => entries.filter((e) => e.group_type === "draw" && e.is_winner).length,
     [entries]
   );
-  const remainingCount = drawCount - winnerCount;
   const validDrawCount = useMemo(
     () => entries.filter((e) => e.group_type === "draw" && !isEntrySuspicious(e)).length,
     [entries]
   );
+  // 미당첨자는 "전체 지역단장 접수"가 아니라 "유효 접수"(문제카드 제외) 기준으로 계산해,
+  // 당첨자+미당첨자의 합이 유효 접수 수와 일치하도록 합니다. 실제 추첨도 문제카드는
+  // 대상에서 제외하고 진행되므로(draw/route.ts), 이 기준이 실제 추첨 가능 인원과 맞습니다.
+  const remainingCount = validDrawCount - winnerCount;
   const minReached = validDrawCount >= MIN_VALID_ENTRIES;
 
   const attendees = useMemo(() => ATTENDEES.filter((a) => a.attending), []);
