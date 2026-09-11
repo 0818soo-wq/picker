@@ -323,6 +323,38 @@ export function isLeaderTitle(title: string): boolean {
   return LEADER_TITLES.has(title);
 }
 
+// 확정된 추첨대상 명단 기준으로, 직책은 지역단장/사업단장이 아니지만 예외적으로
+// 추첨 대상에 포함되는 인원(FP센터 파트장, 일부 지원파트장)입니다.
+const EXTRA_DRAW_ELIGIBLE: { department: string; name: string }[] = [
+  { department: "강남FP센터", name: "홍동우" },
+  { department: "경원FP센터", name: "이승민" },
+  { department: "서울FP센터", name: "김동욱" },
+  { department: "경인FP센터", name: "이원철" },
+  { department: "부산FP센터", name: "김은아" },
+  { department: "대구FP센터", name: "김연창" },
+  { department: "호남FP센터", name: "최대영" },
+  { department: "충청FP센터", name: "류호선" },
+  { department: "서울법인지역단", name: "김승현" },
+  { department: "신채널사업단", name: "주영하" },
+];
+const EXTRA_DRAW_ELIGIBLE_KEYS = new Set(
+  EXTRA_DRAW_ELIGIBLE.map((e) => `${e.department}::${e.name}`)
+);
+
+// 확정된 추첨대상 명단에서 제외하기로 한 인원입니다. 직책상으로는 지역단장/
+// 사업단장이어도 이 목록에 있으면 추첨 대상에서 빠집니다.
+const DRAW_EXCLUDED: { department: string; name: string }[] = [{ department: "", name: "박종민" }];
+const DRAW_EXCLUDED_KEYS = new Set(DRAW_EXCLUDED.map((e) => `${e.department}::${e.name}`));
+
+// 실제 추첨(draw) 대상 여부를 최종적으로 판단하는 함수입니다. 접수 저장(entries/route.ts)과
+// 내 접수 내용 조회(entries/mine/route.ts)에서 이 함수 하나로만 판단해야, 두 곳의 기준이
+// 어긋나 "접수할 땐 추첨 대상이었는데 수정하려니 아니라고 나오는" 것 같은 불일치가 생기지 않습니다.
+export function isDrawEligibleAttendee(attendee: Attendee): boolean {
+  const key = `${attendee.department}::${attendee.name}`;
+  if (DRAW_EXCLUDED_KEYS.has(key)) return false;
+  return isLeaderTitle(attendee.title) || EXTRA_DRAW_ELIGIBLE_KEYS.has(key);
+}
+
 export function findAttendeeByName(name: string): Attendee | undefined {
   const cleaned = name.trim();
   const candidates = ATTENDEES.filter((a) => a.name === cleaned);

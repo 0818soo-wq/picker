@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { resolveAttendeeByEmployeeId } from "@/lib/employeeDirectory";
-import { isLeaderTitle } from "@/lib/attendees";
+import { isDrawEligibleAttendee } from "@/lib/attendees";
 
 export const runtime = "nodejs";
 
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   }
 
   // /api/entries의 저장 로직과 동일하게, 실제 직책(명단 기준)만으로 판단합니다.
-  const effectiveGroupType = attendee.attending && isLeaderTitle(attendee.title) ? "draw" : "no_draw";
+  const effectiveGroupType = attendee.attending && isDrawEligibleAttendee(attendee) ? "draw" : "no_draw";
 
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase

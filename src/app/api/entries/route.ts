@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { resolveAttendeeByEmployeeId } from "@/lib/employeeDirectory";
-import { isLeaderTitle } from "@/lib/attendees";
+import { isDrawEligibleAttendee } from "@/lib/attendees";
 
 export const runtime = "nodejs";
 
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
   // groupType)와 무관하게 사번으로 조회한 실제 직책만으로 추첨 대상 여부를
   // 판단합니다. 지역단장/사업단장(및 참석 예정자)만 추첨(draw) 대상이고,
   // 파트장을 포함한 그 외 직책이나 명단에 없는 분은 의견 제출만 가능합니다.
-  const effectiveGroupType = attendee?.attending && isLeaderTitle(attendee.title) ? "draw" : "no_draw";
+  const effectiveGroupType = attendee?.attending && isDrawEligibleAttendee(attendee) ? "draw" : "no_draw";
   const skipDuplicateCheck = !attendee;
 
   let existingId: string | null = null;
