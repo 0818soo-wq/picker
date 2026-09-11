@@ -62,7 +62,13 @@ export async function classifyOffTopic(id: string, content: string): Promise<AiM
 
     if (!res.ok) {
       console.error("[aiModeration] Claude API 호출 실패", res.status, await res.text().catch(() => ""));
-      return { offTopic: false, reason: null };
+      // 크레딧 부족처럼 재시도해도 계속 실패하는 오류를 캐시 없이 두면, 화면을
+      // 새로고침할 때마다 미판별 카드 전부에 대해 다시 API를 호출하게 됩니다.
+      // 실패도 캐시해 불필요한 반복 호출을 막습니다(서버가 재배포되면 캐시가
+      // 초기화되어, 이후엔 다시 시도됩니다).
+      const result: AiModerationResult = { offTopic: false, reason: null };
+      cache.set(id, result);
+      return result;
     }
 
     const json = await res.json();
@@ -76,6 +82,8 @@ export async function classifyOffTopic(id: string, content: string): Promise<AiM
     return result;
   } catch (err) {
     console.error("[aiModeration] 판별 중 오류", err);
-    return { offTopic: false, reason: null };
+    const result: AiModerationResult = { offTopic: false, reason: null };
+    cache.set(id, result);
+    return result;
   }
 }
