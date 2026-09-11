@@ -6,14 +6,18 @@ import EventBanner from "@/components/EventBanner";
 type Status = "idle" | "submitting" | "success" | "error";
 type GroupType = "draw" | "no_draw";
 type LookupState = "idle" | "checking" | "found" | "not_found";
-type EntriesOpenState = "checking" | "open" | "closed";
+type EntriesOpenState = "open" | "closed";
 
 const CONTENT_ROWS = 9;
 const MAX_CONTENT_LENGTH = 2000;
 const MAX_EMPLOYEE_ID_LENGTH = 20;
 
 export default function EntryForm({ groupType }: { groupType: GroupType }) {
-  const [entriesOpen, setEntriesOpen] = useState<EntriesOpenState>("checking");
+  // 접수 마감 여부를 서버에 확인하는 동안 폼 전체를 가리고 "불러오는 중..."만
+  // 보여주면, 그 응답을 기다리는 시간만큼 페이지가 느리게 느껴집니다. 접수는
+  // 거의 항상 열려있는 상태이므로, 우선 열린 것으로 보고 폼을 바로 보여주고
+  // 뒤에서 확인해 실제로 마감된 경우에만 화면을 바꿉니다.
+  const [entriesOpen, setEntriesOpen] = useState<EntriesOpenState>("open");
   const [editIntent, setEditIntent] = useState(false);
   const [employeeId, setEmployeeId] = useState("");
   const [content, setContent] = useState("");
@@ -237,14 +241,6 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
     );
   }
 
-  if (entriesOpen === "checking") {
-    return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-[#f5f5f7] px-6 py-24 text-center">
-        <p className="text-sm text-slate-400">불러오는 중...</p>
-      </main>
-    );
-  }
-
   if (reviewMode) {
     return (
       <main className="flex flex-1 flex-col items-center bg-[#f5f5f7] px-4 py-8 sm:px-6 sm:py-12">
@@ -374,9 +370,11 @@ export default function EntryForm({ groupType }: { groupType: GroupType }) {
             {isManualMode && (
               <div className="flex flex-col gap-3 rounded-lg bg-amber-50 px-3 py-3 text-sm leading-relaxed text-amber-700">
                 <p>
-                  조회되는 사번이 아닙니다. 사번을 다시 확인해 주세요.
+                  입력하신 사번을 명단에서 찾을 수 없습니다. 사번을 다시 확인해 주세요.
                   <br />
-                  다시 확인해도 나오지 않는다면, 추첨 대상에서는 제외되지만 의견은 아래에 직접 입력해 제출하실 수 있습니다.
+                  그래도 조회되지 않는다면, 아래에 소속과 이름을 직접 입력해 의견을 제출하실 수 있습니다.
+                  <br />
+                  (단, 이 경우 추첨 대상에서는 제외됩니다)
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input
