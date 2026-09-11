@@ -1,7 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getSuspiciousReason } from "@/lib/moderation";
-import { isPriorityEntrant } from "@/lib/priorityEntrants";
+import { getPriorityChance } from "@/lib/priorityEntrants";
 import { getPrizeRound, type PrizeRank } from "@/lib/prizeRounds";
 
 export const runtime = "nodejs";
@@ -19,10 +19,9 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
-const PRIORITY_CHANCE = 0.1;
-
-// 우선순위 대상자는 매 자리마다 10% 확률로 우선 배정하되, 당첨되지 않은 경우
-// 나머지 일반 추첨 풀에도 그대로 남아 정상적인 당첨 기회를 유지합니다.
+// 우선순위 대상자는 매 자리마다 각자에게 설정된 확률(priorityEntrants.ts의 chance)로
+// 우선 배정을 시도하되, 그 확률에서 당첨되지 않은 경우 나머지 일반 추첨 풀에도
+// 그대로 남아 정상적인 당첨 기회를 유지합니다(확률만 높일 뿐 당첨을 보장하지 않음).
 function pickWinnersWithPriority<T extends { department: string; name: string }>(
   pool: T[],
   count: number
@@ -31,14 +30,22 @@ function pickWinnersWithPriority<T extends { department: string; name: string }>
   const picked: T[] = [];
 
   while (picked.length < count && remaining.length > 0) {
-    const priorityIndexes = remaining
-      .map((entry, i) => (isPriorityEntrant(entry.department, entry.name) ? i : -1))
-      .filter((i) => i >= 0);
+    // 남아 있는 우선순위 대상자들을 무작위 순서로 한 명씩 자신의 확률로 시도합니다
+    // (여러 명이 겹쳐도 특정 인물이 항상 먼저 시도되는 편향이 생기지 않도록).
+    const priorityOrder = shuffle(
+      remaining
+        .map((entry, i) => ({ i, chance: getPriorityChance(entry.department, entry.name) }))
+        .filter((e) => e.chance > 0)
+    );
 
-    let index: number;
-    if (priorityIndexes.length > 0 && randomFloat() < PRIORITY_CHANCE) {
-      index = priorityIndexes[Math.floor(randomFloat() * priorityIndexes.length)];
-    } else {
+    let index: number | null = null;
+    for (const candidate of priorityOrder) {
+      if (randomFloat() < candidate.chance) {
+        index = candidate.i;
+        break;
+      }
+    }
+    if (index === null) {
       index = Math.floor(randomFloat() * remaining.length);
     }
 
